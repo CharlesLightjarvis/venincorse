@@ -61,7 +61,7 @@ export type Course = {
     }[];
 };
 
-const prof: Intervenant = {
+export const prof: Intervenant = {
     initiales: 'VP',
     nom: 'Ton prof de VéninCorsé',
     role: 'Professeur certifié Goethe',
