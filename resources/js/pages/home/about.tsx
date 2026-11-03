@@ -29,7 +29,7 @@ const methodPillars = [
     {
         icon: Target,
         title: "Objectifs & examens",
-        detail: "A1.1 → B2.2 du CECRL, préparation Goethe, TELC, ÖSD et DSD avec mock tests corrigés.",
+        detail: "A1.1 → B2.2 du CECRL, préparation ÖSD et TELC avec examens blancs corrigés.",
     },
 ] as const;
 
@@ -68,10 +68,11 @@ export default function About() {
                         </h1>
 
                         <p className="mb-4 max-w-xl text-lg text-foreground/60">
-                            Depuis sept ans, j'accompagne des élèves de tous
-                            horizons : débutants complets, cadres en entreprise,
-                            adolescents du lycée francophone et candidats aux
-                            examens Goethe.
+                            Depuis sept ans, j'accompagne des francophones de la
+                            diaspora : débutants complets, cadres en mutation,
+                            étudiants en voyage d'études et candidats aux
+                            examens ÖSD et TELC — de A1.1 à B2.2, toujours 100 %
+                            en visio.
                         </p>
 
                         <p className="mb-8 max-w-xl text-lg text-foreground/60">
@@ -172,9 +173,9 @@ export default function About() {
                     </h2>
 
                     <p className="max-w-xl text-foreground/60">
-                        Un examen à passer, une mutation professionnelle, le
-                        lycée pour ta fille ? Dis-moi où tu veux aller, je
-                        construis le chemin.
+                        Un examen ÖSD ou TELC à passer, une mutation
+                        professionnelle, un projet d'études ? Dis-moi où tu
+                        veux aller, je construis le chemin.
                     </p>
 
                     <div className="flex flex-col justify-center gap-3 sm:flex-row">
@@ -198,7 +199,7 @@ export default function About() {
                             className="rounded-full"
                             asChild
                         >
-                            <Link href="/courses">Voir les cours</Link>
+                            <Link href="/courses">Voir les parcours</Link>
                         </Button>
                     </div>
                 </motion.section>

@@ -6,32 +6,46 @@ import {
 } from "@icons-pack/react-simple-icons";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, Globe, Mail, Phone } from "lucide-react";
+import { Link } from "@inertiajs/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const footerLinks = [
     {
-        title: "Cours",
+        title: "Parcours",
         links: [
-            "Grammaire pas à pas",
-            "Conversation orale",
-            "Examens Goethe & TELC",
-            "Allemand des affaires",
+            { label: "A1 — Premiers pas", href: "/courses/a1" },
+            { label: "A2 — Autonomie", href: "/courses/a2" },
+            { label: "B1 — Confiance", href: "/courses/b1" },
+            { label: "B2 — Précision", href: "/courses/b2" },
         ],
     },
     {
-        title: "Plateforme",
+        title: "Offres",
         links: [
-            "Comment ça marche",
-            "Prochaines sessions",
-            "Questions fréquentes",
-            "À propos",
+            { label: "Prépa ÖSD & TELC", href: "/examens" },
+            { label: "Ateliers ciblés", href: "/ateliers" },
+            { label: "Stage de vacances", href: "/ateliers" },
+            { label: "Tarifs", href: "/tarifs" },
+        ],
+    },
+    {
+        title: "Ressources",
+        links: [
+            { label: "Bilan de niveau", href: "/bilan" },
+            { label: "Blog", href: "/blog" },
+            { label: "À propos", href: "/about" },
+            { label: "Contact", href: "/contact" },
         ],
     },
     {
         title: "Légal",
-        links: ["Confidentialité", "CGU", "Mentions légales"],
+        links: [
+            { label: "Confidentialité", href: "#" },
+            { label: "CGU", href: "#" },
+            { label: "Mentions légales", href: "#" },
+        ],
     },
 ];
 
@@ -86,10 +100,10 @@ export function Footer() {
                         </motion.div>
 
                         <p className="mb-4 max-w-md text-sm text-muted-foreground">
-                            Des cours privés d'allemand 100 % en visio, adaptés
-                            à ton niveau et à tes objectifs — grammaire,
-                            conversation, examens Goethe & TELC et allemand des
-                            affaires.
+                            L'allemand pour les francophones de la diaspora :
+                            parcours A1 → B2, prépa ÖSD & TELC et ateliers
+                            ciblés — 100 % en visio, en mini-groupe, en duo ou
+                            en 1:1.
                         </p>
 
                         {/* Newsletter */}
@@ -163,7 +177,7 @@ export function Footer() {
                                 <ul className="space-y-2">
                                     {section.links.map((link, linkIndex) => (
                                         <motion.li
-                                            key={link}
+                                            key={link.label}
                                             initial={{ opacity: 0, x: -10 }}
                                             whileInView={{ opacity: 1, x: 0 }}
                                             viewport={{ once: true }}
@@ -171,20 +185,20 @@ export function Footer() {
                                                 delay: linkIndex * 0.05,
                                             }}
                                         >
-                                            <motion.a
-                                                href="#"
+                                            <motion.div
                                                 whileHover={
                                                     shouldReduceMotion
                                                         ? undefined
-                                                        : {
-                                                              x: 5,
-                                                              color: "hsl(var(--primary))",
-                                                          }
+                                                        : { x: 5 }
                                                 }
-                                                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                                             >
-                                                {link}
-                                            </motion.a>
+                                                <Link
+                                                    href={link.href}
+                                                    className="inline-block text-sm text-muted-foreground transition-colors hover:text-primary"
+                                                >
+                                                    {link.label}
+                                                </Link>
+                                            </motion.div>
                                         </motion.li>
                                     ))}
                                 </ul>

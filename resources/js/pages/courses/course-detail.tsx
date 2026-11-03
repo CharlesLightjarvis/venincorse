@@ -3,1051 +3,597 @@ import { motion } from 'framer-motion';
 import {
     ArrowLeft,
     ArrowRight,
-    Blocks,
-    BookOpen,
-    Briefcase,
     CalendarDays,
     Check,
     ChevronRight,
-    ChevronUp,
     Clock,
-    FileText,
     GraduationCap,
-    MapPin,
-    MessageCircle,
-    MessagesSquare,
     Sparkles,
-    SpellCheck,
     Users,
-    Video,
-    type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { courses as coursesRoute } from '@/routes';
-import { allCourses, prof, type Course } from './courses-data';
-import { CourseCard } from './partials/course-card';
-
-const typeMeta: Record<
-    string,
-    { icon: LucideIcon; text: string; tile: string }
-> = {
-    Standard: {
-        icon: BookOpen,
-        text: 'text-primary',
-        tile: 'bg-primary/10 text-primary',
-    },
-    Grammaire: {
-        icon: SpellCheck,
-        text: 'text-chart-4',
-        tile: 'bg-chart-4/10 text-chart-4',
-    },
-    Conversation: {
-        icon: MessagesSquare,
-        text: 'text-chart-2',
-        tile: 'bg-chart-2/10 text-chart-2',
-    },
-    Examens: {
-        icon: GraduationCap,
-        text: 'text-chart-1',
-        tile: 'bg-chart-1/10 text-chart-1',
-    },
-    Affaires: {
-        icon: Briefcase,
-        text: 'text-chart-3',
-        tile: 'bg-chart-3/10 text-chart-3',
-    },
-    Soutien: {
-        icon: Blocks,
-        text: 'text-chart-5',
-        tile: 'bg-chart-5/10 text-chart-5',
-    },
-};
-
-const levelClasses: Record<string, string> = {
-    A1: 'bg-chart-2/10 text-chart-2',
-    A2: 'bg-chart-4/10 text-chart-4',
-    B1: 'bg-chart-1/10 text-chart-1',
-    B2: 'bg-chart-3/10 text-chart-3',
-};
-
-const statusClasses: Record<
-    Course['status'],
-    { text: string; dot: string }
-> = {
-    Ouvert: { text: 'text-primary', dot: 'bg-primary' },
-    Bientôt: { text: 'text-chart-1', dot: 'bg-chart-1' },
-    Complet: { text: 'text-destructive', dot: 'bg-destructive' },
-    Terminé: { text: 'text-foreground/50', dot: 'bg-foreground/40' },
-};
-
-const includedPerCourse = [
-    {
-        icon: Video,
-        title: 'Visio en direct',
-        detail: 'Chaque séance se tient en visioconférence, sans déplacement.',
-    },
-    {
-        icon: CalendarDays,
-        title: 'Planning flexible',
-        detail: 'Les créneaux sont calés ensemble, selon ton agenda.',
-    },
-    {
-        icon: FileText,
-        title: 'Supports dédiés',
-        detail: 'Fiches, exercices et corrections envoyés après chaque cours.',
-    },
-    {
-        icon: MessageCircle,
-        title: 'Suivi personnalisé',
-        detail: 'Un compte-rendu clair après chaque séance et un point régulier.',
-    },
-] as const;
-
-const teacherStats = [
-    { value: '7 ans', label: "d'enseignement de l'allemand" },
-    { value: '200+', label: 'élèves accompagnés' },
-    { value: '5,0', label: 'note moyenne des élèves' },
-] as const;
-
-function levelGroup(level: string): string {
-    return level.split('.')[0];
-}
-
-function seatsLabel(seats: number, capacity: number): string {
-    if (seats === 0) {
-        return 'Complet';
-    }
-
-    if (capacity <= 1) {
-        return 'Disponible';
-    }
-
-    return `${seats} place${seats > 1 ? 's' : ''} restante${seats > 1 ? 's' : ''} sur ${capacity}`;
-}
-
-function seatsBarClass(seats: number, capacity: number): string {
-    const ratio = seats / capacity;
-
-    if (ratio <= 0.2) {
-        return 'bg-destructive';
-    }
-
-    if (ratio <= 0.5) {
-        return 'bg-chart-4';
-    }
-
-    return 'bg-primary';
-}
-
-function seatsTextClass(seats: number, capacity: number): string {
-    const ratio = seats / capacity;
-
-    if (ratio <= 0.2) {
-        return 'text-destructive';
-    }
-
-    if (ratio <= 0.5) {
-        return 'text-chart-4';
-    }
-
-    return 'text-primary';
-}
-
-function FormulePicker({ course }: { course: Course }) {
-    const [selected, setSelected] = useState(0);
-    const formules = course.formules ?? [];
-
-    if (formules.length === 0) {
-        return null;
-    }
-
-    return (
-        <div className="flex flex-col gap-3">
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-foreground/40 uppercase">
-                Choisir une formule
-            </p>
-
-            <div className="flex flex-col gap-2">
-                {formules.map((formule, index) => {
-                    const isSelected = index === selected;
-
-                    return (
-                        <button
-                            key={formule.nom}
-                            type="button"
-                            onClick={() => setSelected(index)}
-                            aria-pressed={isSelected}
-                            className={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
-                                isSelected
-                                    ? 'border-primary bg-primary/[0.04] dark:bg-primary/[0.08]'
-                                    : 'border-border/40 bg-background/60 hover:border-primary/30 dark:border-border/50'
-                            }`}
-                        >
-                            <span className="flex items-start gap-2.5">
-                                <span
-                                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                                        isSelected
-                                            ? 'border-primary'
-                                            : 'border-border/60'
-                                    }`}
-                                    aria-hidden="true"
-                                >
-                                    {isSelected && (
-                                        <span className="h-2 w-2 rounded-full bg-primary" />
-                                    )}
-                                </span>
-
-                                <span>
-                                    <span className="block text-sm font-semibold text-foreground">
-                                        {formule.nom}
-                                    </span>
-
-                                    {formule.avantages && (
-                                        <span className="mt-0.5 block text-xs leading-relaxed text-foreground/50">
-                                            {formule.avantages}
-                                        </span>
-                                    )}
-                                </span>
-                            </span>
-
-                            <span className="shrink-0 font-mono text-xs font-semibold text-foreground">
-                                {formule.prix}
-                            </span>
-                        </button>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
-function BookingDetails({ course }: { course: Course }) {
-    const minPrice = course.formules?.[0]?.prix;
-
-    return (
-        <div className="flex flex-col gap-5 p-6 md:p-7">
-            <div>
-                <div className="flex items-baseline gap-2">
-                    {minPrice ? (
-                        <>
-                            <span className="text-[10px] font-semibold tracking-[0.2em] text-foreground/40 uppercase">
-                                À partir de
-                            </span>
-                            <span className="font-mono text-2xl font-semibold text-foreground">
-                                {minPrice}
-                            </span>
-                        </>
-                    ) : (
-                        <span className="text-lg font-semibold text-foreground">
-                            Tarifs sur demande
-                        </span>
-                    )}
-                </div>
-
-                <p className="mt-1 text-sm text-foreground/50">
-                    {course.nbSeances > 1
-                        ? `${course.nbSeances} séances en visio`
-                        : 'Séance en visio · 100 % à distance'}
-                </p>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/[0.05] px-4 py-3 text-sm dark:border-primary/25 dark:bg-primary/[0.08]">
-                <CalendarDays
-                    className="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                    aria-hidden="true"
-                />
-
-                <span className="text-foreground/70">
-                    Début :{' '}
-                    <strong className="text-foreground">
-                        {course.dateDebut}
-                    </strong>
-                    {course.dateFin && ` jusqu'au ${course.dateFin}`}
-                </span>
-            </div>
-
-            <FormulePicker course={course} />
-
-            <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                    <span
-                        className={`font-medium ${seatsTextClass(course.placesRestantes, course.capacite)}`}
-                    >
-                        {seatsLabel(
-                            course.placesRestantes,
-                            course.capacite,
-                        )}
-                    </span>
-
-                    <span className="font-mono text-xs text-foreground/40">
-                        {course.capacite > 1
-                            ? `${course.capacite} max`
-                            : 'Cours privé'}
-                    </span>
-                </div>
-
-                <div className="h-1.5 overflow-hidden rounded-full bg-foreground/10">
-                    <div
-                        className={`h-full rounded-full ${seatsBarClass(course.placesRestantes, course.capacite)}`}
-                        style={{
-                            width: `${((course.capacite - course.placesRestantes) / course.capacite) * 100}%`,
-                        }}
-                    />
-                </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-                {course.placesRestantes === 0 ? (
-                    <Button
-                        size="lg"
-                        className="w-full rounded-full"
-                        disabled
-                    >
-                        Complet
-                    </Button>
-                ) : (
-                    <Button
-                        size="lg"
-                        className="w-full rounded-full"
-                        asChild
-                    >
-                        <Link href="/contact">Réserver ce cours</Link>
-                    </Button>
-                )}
-
-                <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full rounded-full"
-                    asChild
-                >
-                    <Link href="/contact">Poser une question</Link>
-                </Button>
-            </div>
-
-            <ul className="space-y-2 text-sm text-foreground/60">
-                <li className="flex items-center gap-2">
-                    <Check
-                        className="h-4 w-4 shrink-0 text-primary"
-                        aria-hidden="true"
-                    />
-                    Annulation gratuite jusqu'à 24 h avant
-                </li>
-
-                <li className="flex items-center gap-2">
-                    <Check
-                        className="h-4 w-4 shrink-0 text-primary"
-                        aria-hidden="true"
-                    />
-                    Compte-rendu envoyé après chaque séance
-                </li>
-
-                <li className="flex items-center gap-2">
-                    <Check
-                        className="h-4 w-4 shrink-0 text-primary"
-                        aria-hidden="true"
-                    />
-                    Supports et exercices inclus
-                </li>
-            </ul>
-        </div>
-    );
-}
-
-function BookingCard({ course }: { course: Course }) {
-    const meta = typeMeta[course.type] ?? typeMeta.Standard;
-    const TypeIcon = meta.icon;
-
-    return (
-        <div className="overflow-hidden rounded-3xl border border-border/40 bg-card dark:border-border/50">
-            <div className="relative h-44 overflow-hidden bg-muted">
-                <img
-                    src={course.image}
-                    alt={course.titre}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
-                        <TypeIcon className="h-3 w-3" aria-hidden="true" />
-                        {course.type}
-                    </span>
-
-                    {course.featured && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                            <Sparkles
-                                className="h-3 w-3"
-                                aria-hidden="true"
-                            />
-                            Populaire
-                        </span>
-                    )}
-                </div>
-
-                <span
-                    className={`absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold backdrop-blur ${statusClasses[course.status].text}`}
-                >
-                    <span
-                        className={`h-1.5 w-1.5 rounded-full ${statusClasses[course.status].dot}`}
-                        aria-hidden="true"
-                    />
-                    {course.status}
-                </span>
-
-                <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 text-xs font-medium text-white/85">
-                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                    {course.ville}
-                </span>
-            </div>
-
-            <BookingDetails course={course} />
-        </div>
-    );
-}
-
-function CourseNotFound() {
-    return (
-        <div className="relative py-20 md:py-28">
-            <Head title="Cours introuvable" />
-
-            <div className="relative mx-auto max-w-3xl px-6 text-center md:px-8">
-                <div className="rounded-3xl border border-dashed border-border/60 bg-card/50 px-6 py-16">
-                    <span className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground/40">
-                        <BookOpen className="h-6 w-6" aria-hidden="true" />
-                    </span>
-
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                        Ce cours n'existe pas encore
-                    </h1>
-
-                    <p className="mx-auto mt-3 max-w-md text-foreground/60">
-                        Le lien a peut-être changé. Retrouve toutes les
-                        formations disponibles dans le catalogue.
-                    </p>
-
-                    <Button className="mt-8 gap-2 rounded-full" asChild>
-                        <Link href={coursesRoute.url()}>
-                            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                            Retour au catalogue
-                        </Link>
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
-}
+import { CtaBand } from '@/components/marketing/cta-band';
+import { FaqSection } from '@/components/marketing/faq-section';
+import { OfferCard } from '@/components/marketing/offer-card';
+import { LevelCard } from '@/components/marketing/level-card';
+import { SectionHeading } from '@/components/marketing/section-heading';
+import { TierSwitcher } from '@/components/marketing/tier-switcher';
+import { cn } from '@/lib/utils';
+import {
+    faqs,
+    formatPrice,
+    getLevel,
+    included,
+    levels,
+    pricePerHour,
+    tierLabels,
+    type TierKey,
+} from '@/data/offer';
 
 export default function CourseDetail() {
-    const url = usePage().url;
-    const slug = url.split('/').filter(Boolean).pop() ?? '';
-    const [isBookingExpanded, setIsBookingExpanded] = useState(false);
-    const course = allCourses.find((item) => item.slug === slug);
+    const slug = usePage()
+        .url.split('?')[0]
+        .split('/')
+        .filter(Boolean)
+        .pop();
+    const level = getLevel(slug);
+    const [tier, setTier] = useState<TierKey>('group');
 
-    if (!course) {
-        return <CourseNotFound />;
-    }
+    if (!level) {
+        return (
+            <>
+                <Head title="Parcours introuvable" />
 
-    const meta = typeMeta[course.type] ?? typeMeta.Standard;
-    const TypeIcon = meta.icon;
-    const firstLevel = course.niveaux[0] ?? 'A1.1';
-    const levelBadge = levelClasses[levelGroup(firstLevel)] ?? levelClasses.A1;
-    const formules = course.formules ?? [];
-    const minPrice = formules[0]?.prix;
-    const teachers = course.intervenants?.length
-        ? course.intervenants
-        : [prof];
-    const relatedCourses = [
-        ...allCourses.filter(
-            (item) =>
-                item.slug !== course.slug &&
-                item.type === course.type &&
-                item.status !== 'Terminé',
-        ),
-        ...allCourses.filter(
-            (item) =>
-                item.slug !== course.slug &&
-                item.type !== course.type &&
-                item.status !== 'Terminé',
-        ),
-    ].slice(0, 3);
+                <section className="relative overflow-hidden py-24 md:py-32">
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        <div className="absolute top-0 left-1/3 h-[420px] w-[420px] rounded-full bg-primary/[0.04] blur-[150px] dark:bg-primary/[0.07]" />
+                    </div>
 
-    return (
-        <div className="relative min-h-screen pt-16 pb-28 md:pt-24 md:pb-28 lg:pb-0">
-            <Head title={course.titre} />
-
-            {/* blobs décoratifs */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute top-0 right-1/4 h-[420px] w-[420px] rounded-full bg-primary/[0.04] blur-[150px] dark:bg-primary/[0.07]" />
-                <div className="absolute bottom-0 left-1/4 h-[360px] w-[360px] rounded-full bg-foreground/[0.025] blur-[130px] dark:bg-foreground/[0.05]" />
-            </div>
-
-            <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
-                {/* fil d'Ariane */}
-                <motion.nav
-                    aria-label="Fil d'Ariane"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="mb-10 flex items-center gap-2 text-sm text-foreground/50"
-                >
-                    <Link
-                        href={coursesRoute.url()}
-                        className="transition-colors hover:text-foreground"
-                    >
-                        Catalogue
-                    </Link>
-
-                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
-
-                    <span className={meta.text}>{course.type}</span>
-
-                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
-
-                    <span className="truncate text-foreground/70">
-                        {course.titre}
-                    </span>
-                </motion.nav>
-
-                <div className="grid items-start gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-                    {/* en-tête */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7 }}
-                    >
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span
-                                className={`inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background px-3 py-1.5 text-xs font-semibold ${meta.text} dark:bg-background/40`}
-                            >
-                                <TypeIcon
-                                    className="h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                />
-                                {course.type}
-                            </span>
-
-                            <span
-                                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${levelBadge}`}
-                            >
-                                Niveau {course.niveaux.join(' · ')}
-                            </span>
-
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-foreground/70">
-                                <Video
-                                    className="h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                />
-                                {course.ville}
-                            </span>
+                    <div className="relative mx-auto max-w-xl px-6 text-center">
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/40 bg-secondary px-4 py-2 text-xs font-semibold tracking-[0.25em] text-secondary-foreground uppercase">
+                            Parcours
                         </div>
 
-                        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                            {course.titre}
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
+                            Ce parcours n’existe pas encore.
                         </h1>
 
-                        <p className="mt-5 max-w-xl text-lg text-foreground/60">
-                            {course.description}
+                        <p className="mt-4 text-foreground/60">
+                            Les quatre niveaux A1 à B2 sont en ligne. Si tu
+                            cherches une ancienne fiche, le programme a été
+                            réorganisé par niveau complet.
                         </p>
-
-                        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-border/30 py-5 text-sm text-foreground/60">
-                            <span className="flex items-center gap-2">
-                                <CalendarDays
-                                    className="h-4 w-4 text-primary"
-                                    aria-hidden="true"
-                                />
-                                Début le {course.dateDebut}
-                            </span>
-
-                            <span className="flex items-center gap-2">
-                                <Clock
-                                    className="h-4 w-4 text-primary"
-                                    aria-hidden="true"
-                                />
-                                {course.nbSeances > 1
-                                    ? `${course.nbSeances} séances`
-                                    : 'Séance à l’unité'}
-                            </span>
-
-                            <span className="flex items-center gap-2">
-                                <Users
-                                    className="h-4 w-4 text-primary"
-                                    aria-hidden="true"
-                                />
-                                {course.capacite > 1
-                                    ? `${course.capacite} places max`
-                                    : 'Cours privé 1:1'}
-                            </span>
-                        </div>
-
-                        {course.objectifs && (
-                            <ul className="mt-8 space-y-3">
-                                {course.objectifs.map((objective) => (
-                                    <li
-                                        key={objective.titre}
-                                        className="flex items-start gap-3"
-                                    >
-                                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                            <Check
-                                                className="h-3.5 w-3.5"
-                                                aria-hidden="true"
-                                            />
-                                        </span>
-
-                                        <span className="text-sm text-foreground/70 md:text-base">
-                                            <strong className="font-semibold text-foreground">{`${objective.titre}.`}</strong>{' '}
-                                            {objective.description}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </motion.div>
-
-                    {/* carte réservation sticky */}
-                    <motion.aside
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.15 }}
-                        className="hidden lg:sticky lg:top-24 lg:block"
-                    >
-                        <BookingCard course={course} />
-                    </motion.aside>
-                </div>
-
-                {/* au programme */}
-                {course.programme && course.programme.length > 0 && (
-                    <motion.section
-                        id="programme"
-                        initial={{ opacity: 0, y: 24 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-60px' }}
-                        transition={{ duration: 0.6 }}
-                        className="mt-20 scroll-mt-28"
-                    >
-                        <div className="mb-6">
-                            <p className="mb-1 text-[10px] font-semibold tracking-[0.25em] text-foreground/40 uppercase">
-                                Déroulement
-                            </p>
-                            <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                                Au programme
-                            </h2>
-                        </div>
-
-                        <Accordion
-                            type="single"
-                            collapsible
-                            defaultValue="seance-0"
-                        >
-                            {course.programme.map((bloc, index) => (
-                                <AccordionItem
-                                    key={bloc.numero}
-                                    value={`seance-${index}`}
-                                    className="mb-3 overflow-hidden rounded-2xl border border-border/40 bg-card px-5 dark:border-border/50"
-                                >
-                                    <AccordionTrigger className="hover:no-underline">
-                                        <span className="flex items-center gap-4 text-left">
-                                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-mono text-sm font-semibold text-primary">
-                                                {bloc.numero}
-                                            </span>
-
-                                            <span className="font-semibold text-foreground">
-                                                {bloc.label}
-                                            </span>
-                                        </span>
-                                    </AccordionTrigger>
-
-                                    <AccordionContent>
-                                        <div className="divide-y divide-border/30 border-t border-border/30">
-                                            {bloc.sessions.map((seance) => (
-                                                <div
-                                                    key={`${bloc.numero}-${seance.titre}`}
-                                                    className="flex flex-col gap-1 py-3 sm:flex-row sm:items-start sm:gap-4"
-                                                >
-                                                    <span className="shrink-0 pt-0.5 font-mono text-xs text-foreground/40 sm:w-28">
-                                                        {seance.heure}
-                                                    </span>
-
-                                                    <span>
-                                                        <span className="block text-sm font-medium text-foreground">
-                                                            {seance.titre}
-                                                        </span>
-
-                                                        {seance.intervenant && (
-                                                            <span className="mt-0.5 block text-xs text-foreground/50">
-                                                                {
-                                                                    seance.intervenant
-                                                                }
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </motion.section>
-                )}
-
-                {/* inclus */}
-                <motion.section
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-60px' }}
-                    transition={{ duration: 0.6 }}
-                    className="mt-20"
-                >
-                    <div className="mb-6">
-                        <p className="mb-1 text-[10px] font-semibold tracking-[0.25em] text-foreground/40 uppercase">
-                            Tout est prévu
-                        </p>
-                        <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                            Inclus dans ce cours
-                        </h2>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        {includedPerCourse.map((item) => (
-                            <div
-                                key={item.title}
-                                className="rounded-2xl border border-border/40 bg-card p-5 transition-colors hover:border-primary/30 dark:border-border/50"
-                            >
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                    <item.icon
-                                        className="h-5 w-5"
-                                        aria-hidden="true"
-                                    />
-                                </span>
-
-                                <h3 className="mt-4 font-semibold text-foreground">
-                                    {item.title}
-                                </h3>
-
-                                <p className="mt-1 text-sm text-foreground/60">
-                                    {item.detail}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </motion.section>
-
-                {/* prof */}
-                <motion.section
-                    id="professeur"
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-60px' }}
-                    transition={{ duration: 0.6 }}
-                    className="mt-20 scroll-mt-28"
-                >
-                    <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
-                        <div>
-                            <p className="mb-1 text-[10px] font-semibold tracking-[0.25em] text-foreground/40 uppercase">
-                                Qui t'accompagne
-                            </p>
-
-                            <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                                {teachers.length > 1
-                                    ? 'Tes professeurs'
-                                    : 'Ton professeur'}
-                            </h2>
-
-                            <p className="mt-4 flex flex-wrap items-baseline gap-x-2 text-sm">
-                                <span className="font-semibold text-foreground">
-                                    {teachers[0].nom}
-                                </span>
-                                <span className="text-foreground/45">
-                                    · {teachers[0].role}
-                                </span>
-                            </p>
-
-                            {teachers[0].bio && (
-                                <p className="mt-5 max-w-xl text-lg text-foreground/60">
-                                    {teachers[0].bio}
-                                </p>
-                            )}
-
-                            <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border/30 pt-6 sm:grid-cols-3">
-                                {teacherStats.map((stat) => (
-                                    <div key={stat.label}>
-                                        <div className="text-2xl font-semibold text-foreground">
-                                            {stat.value}
-                                        </div>
-
-                                        <div className="mt-1 text-sm text-foreground/50">
-                                            {stat.label}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {teachers.length > 1 && (
-                                <ul className="mt-6 flex flex-wrap gap-2">
-                                    {teachers.slice(1).map((teacher) => (
-                                        <li
-                                            key={teacher.nom}
-                                            className="rounded-full border border-border/40 bg-background px-3 py-1.5 text-xs font-medium text-foreground/60"
-                                        >
-                                            {teacher.nom} · {teacher.role}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-
-                        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-                            <div
-                                className="pointer-events-none absolute -inset-6 rounded-full bg-primary/[0.05] blur-3xl dark:bg-primary/[0.08]"
-                                aria-hidden="true"
-                            />
-
-                            <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-background/80 dark:border-border/50">
-                                <img
-                                    src="/images/hero-ref.png"
-                                    alt={`Portrait de ${teachers[0].nom}`}
-                                    className="w-full object-cover"
-                                    loading="lazy"
-                                    decoding="async"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </motion.section>
-
-                {/* témoignages */}
-                {course.temoignages && course.temoignages.length > 0 && (
-                    <motion.section
-                        initial={{ opacity: 0, y: 24 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-60px' }}
-                        transition={{ duration: 0.6 }}
-                        className="mt-20"
-                    >
-                        <div className="mb-6">
-                            <p className="mb-1 text-[10px] font-semibold tracking-[0.25em] text-foreground/40 uppercase">
-                                Retours d'expérience
-                            </p>
-                            <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                                Ils ont suivi ce cours
-                            </h2>
-                        </div>
-
-                        <div className="grid gap-5 md:grid-cols-2">
-                            {course.temoignages.map((testimonial) => (
-                                <div
-                                    key={testimonial.nom}
-                                    className="rounded-2xl border border-border/40 bg-card p-6 dark:border-border/50"
-                                >
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                                            {testimonial.initiales}
-                                        </span>
-
-                                        <div>
-                                            <p className="text-sm font-semibold text-foreground">
-                                                {testimonial.nom}
-                                            </p>
-                                            <p className="text-xs text-foreground/50">
-                                                {testimonial.role}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-sm leading-relaxed text-foreground/70 italic">
-                                        « {testimonial.texte} »
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.section>
-                )}
-
-                {/* CTA */}
-                <motion.section
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-60px' }}
-                    transition={{ duration: 0.6 }}
-                    className="mt-20 flex flex-col items-center gap-6 rounded-3xl border border-border/40 bg-muted/30 p-8 text-center md:p-10 dark:border-border/50 dark:bg-foreground/[0.02]"
-                >
-                    <h2 className="max-w-2xl text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                        Prêt(e) à rejoindre {course.titre} ?
-                    </h2>
-
-                    <p className="max-w-xl text-foreground/60">
-                        Une question sur le niveau, le planning ou les tarifs ?
-                        Écris-nous, la réponse arrive en quelques heures.
-                    </p>
-
-                    <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                        {course.placesRestantes === 0 ? (
-                            <Button
-                                size="lg"
-                                className="rounded-full"
-                                disabled
-                            >
-                                Complet
-                            </Button>
-                        ) : (
-                            <Button
-                                size="lg"
-                                className="group gap-2 rounded-full"
-                                asChild
-                            >
-                                <Link href="/contact">
-                                    Réserver ce cours
-                                    <ArrowRight
-                                        className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                        aria-hidden="true"
-                                    />
-                                </Link>
-                            </Button>
-                        )}
 
                         <Button
+                            className="mt-8 gap-2 rounded-full"
                             size="lg"
-                            variant="outline"
-                            className="rounded-full"
                             asChild
                         >
-                            <Link href={coursesRoute.url()}>
-                                Voir tous les cours
+                            <Link href="/courses">
+                                Voir les quatre niveaux
+                                <ArrowRight className="h-4 w-4" />
                             </Link>
                         </Button>
                     </div>
-                </motion.section>
+                </section>
+            </>
+        );
+    }
 
-                {/* autres cours */}
-                {relatedCourses.length > 0 && (
-                    <motion.section
-                        initial={{ opacity: 0, y: 24 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-60px' }}
-                        transition={{ duration: 0.6 }}
-                        className="mt-20"
+    const otherLevels = levels.filter(
+        (otherLevel) => otherLevel.slug !== level.slug,
+    );
+    const selectedPrice = level.price[tier];
+    const Icon = level.icon;
+
+    return (
+        <div className="relative pb-20 lg:pb-0">
+            <Head title={`Parcours ${level.code} — ${level.name}`} />
+
+            <section className="relative overflow-hidden pt-8 pb-16 md:pt-12 md:pb-20">
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div className="absolute top-0 right-1/4 h-[460px] w-[460px] rounded-full bg-primary/[0.04] blur-[150px] dark:bg-primary/[0.07]" />
+                    <div className="absolute bottom-0 left-1/4 h-[360px] w-[360px] rounded-full bg-foreground/[0.025] blur-[130px] dark:bg-foreground/[0.05]" />
+                </div>
+
+                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <nav
+                        aria-label="Fil d’Ariane"
+                        className="mb-8 flex flex-wrap items-center gap-1.5 text-xs text-foreground/50"
                     >
-                        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-                            <div>
-                                <p className="mb-1 text-[10px] font-semibold tracking-[0.25em] text-foreground/40 uppercase">
-                                    À découvrir
-                                </p>
-                                <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                                    Autres cours
-                                </h2>
+                        <Link
+                            href="/"
+                            className="transition-colors hover:text-foreground"
+                        >
+                            Accueil
+                        </Link>
+                        <ChevronRight
+                            className="h-3.5 w-3.5 text-foreground/30"
+                            aria-hidden="true"
+                        />
+                        <Link
+                            href="/courses"
+                            className="transition-colors hover:text-foreground"
+                        >
+                            Parcours
+                        </Link>
+                        <ChevronRight
+                            className="h-3.5 w-3.5 text-foreground/30"
+                            aria-hidden="true"
+                        />
+                        <span className="font-medium text-foreground/70">
+                            Niveau {level.code}
+                        </span>
+                    </nav>
+
+                    <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-14">
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7 }}
+                        >
+                            <div
+                                className={cn(
+                                    'mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold',
+                                    level.accent.bg,
+                                    level.accent.text,
+                                )}
+                            >
+                                <Icon
+                                    className="h-3.5 w-3.5"
+                                    aria-hidden="true"
+                                />
+                                Niveau {level.code} · {level.hours} h
                             </div>
 
-                            <Button
-                                variant="outline"
-                                className="group gap-2 rounded-full"
-                                asChild
-                            >
-                                <Link href={coursesRoute.url()}>
-                                    Tout le catalogue
-                                    <ArrowRight
-                                        className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                        aria-hidden="true"
+                            <h1 className="text-4xl font-semibold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+                                {level.name}
+                            </h1>
+
+                            <p className="mt-3 text-lg font-medium text-foreground/80 md:text-xl">
+                                {level.tagline}
+                            </p>
+
+                            <p className="mt-5 max-w-2xl text-foreground/60">
+                                {level.description}
+                            </p>
+
+                            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                                <div className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/60 p-4 backdrop-blur-sm dark:border-border/50 dark:bg-background/40">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                        <Clock
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
+                                            Volume
+                                        </p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {level.hours} h · 2 sous-niveaux
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/60 p-4 backdrop-blur-sm dark:border-border/50 dark:bg-background/40">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                        <CalendarDays
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
+                                            Prochaine cohorte
+                                        </p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {level.nextCohort}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/60 p-4 backdrop-blur-sm dark:border-border/50 dark:bg-background/40">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                        <Users
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
+                                            Format
+                                        </p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            1:1, duo ou groupe 2–6
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/60 p-4 backdrop-blur-sm dark:border-border/50 dark:bg-background/40">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                        <GraduationCap
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
+                                            Validation
+                                        </p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            2 checkpoints oraux & écrits
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                                <Button
+                                    size="lg"
+                                    className="group gap-2 rounded-full"
+                                    asChild
+                                >
+                                    <Link href="/bilan">
+                                        Vérifier mon niveau
+                                        <ArrowRight
+                                            className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                                            aria-hidden="true"
+                                        />
+                                    </Link>
+                                </Button>
+
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
+                                    asChild
+                                >
+                                    <Link href="/tarifs">
+                                        Voir tous les tarifs
+                                    </Link>
+                                </Button>
+                            </div>
+                        </motion.div>
+
+                        <motion.aside
+                            initial={{ opacity: 0, x: 24 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.75, delay: 0.15 }}
+                            className="lg:sticky lg:top-24"
+                        >
+                            <div className="overflow-hidden rounded-3xl border border-border/40 bg-card shadow-sm dark:border-border/50">
+                                <div
+                                    className={cn(
+                                        'border-b border-border/30 bg-gradient-to-br p-6',
+                                        level.accent.gradient,
+                                    )}
+                                >
+                                    <p className="text-[10px] font-semibold tracking-[0.2em] text-foreground/45 uppercase">
+                                        Parcours complet · {level.hours} h
+                                    </p>
+
+                                    <div className="mt-3 flex items-end gap-2">
+                                        <p className="font-mono text-4xl font-semibold tracking-tight text-foreground">
+                                            {formatPrice(selectedPrice)}
+                                        </p>
+                                        <span className="pb-1 text-xs text-foreground/50">
+                                            / parcours
+                                        </span>
+                                    </div>
+
+                                    <p className="mt-1 text-xs text-foreground/55">
+                                        {tierLabels[tier]} ·{' '}
+                                        {pricePerHour(selectedPrice, level.hours)}{' '}
+                                        / h
+                                    </p>
+                                </div>
+
+                                <div className="p-6">
+                                    <TierSwitcher
+                                        value={tier}
+                                        onChange={setTier}
+                                        className="w-full"
                                     />
-                                </Link>
-                            </Button>
+
+                                    <ul className="mt-5 space-y-2.5">
+                                        {[
+                                            '60 h de cours en visio',
+                                            'Supports et corrections inclus',
+                                            '2 checkpoints par niveau',
+                                            'Replay disponible 30 jours',
+                                        ].map((feature) => (
+                                            <li
+                                                key={feature}
+                                                className="flex items-start gap-2.5 text-sm text-foreground/60"
+                                            >
+                                                <Check
+                                                    className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                                                    aria-hidden="true"
+                                                />
+                                                {feature}
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    <Button
+                                        className="mt-6 w-full rounded-full"
+                                        size="lg"
+                                        asChild
+                                    >
+                                        <Link href="/contact">
+                                            Réserver une place
+                                        </Link>
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        className="mt-2 w-full rounded-full border-border/50"
+                                        asChild
+                                    >
+                                        <Link href="/bilan">
+                                            Faire le bilan d’abord
+                                        </Link>
+                                    </Button>
+
+                                    <p className="mt-3 text-center text-[11px] text-foreground/50">
+                                        Paiement en 3× possible · +5 %
+                                    </p>
+
+                                    <div className="mt-5 rounded-xl border border-border/40 bg-muted/30 p-3 dark:border-border/50 dark:bg-foreground/[0.02]">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-foreground/60">
+                                                Cohorte du{' '}
+                                                {level.nextCohort}
+                                            </span>
+                                            <span className="font-semibold text-primary">
+                                                {level.seats.left} places
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border/60">
+                                            <div
+                                                className="h-full rounded-full bg-primary"
+                                                style={{
+                                                    width: `${(level.seats.left / level.seats.total) * 100}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.aside>
+                    </div>
+                </div>
+            </section>
+
+            <section className="relative overflow-hidden bg-muted/30 py-20 md:py-28 dark:bg-foreground/[0.02]">
+                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <SectionHeading
+                        eyebrow="Le programme"
+                        title="Deux sous-niveaux, deux caps."
+                        description="Chaque bloc de 30 heures se termine par un checkpoint. On ne passe pas au suivant parce que le calendrier l’a décidé, mais parce que les acquis sont là."
+                        className="mb-12"
+                    />
+
+                    <div className="grid gap-5 md:grid-cols-2">
+                        {level.subLevels.map((subLevel, index) => (
+                            <OfferCard
+                                key={subLevel.code}
+                                index={index}
+                                image={subLevel.image}
+                                alt={`${subLevel.code} — ${subLevel.title}`}
+                                badge={{ label: subLevel.code }}
+                                chip={{ value: String(subLevel.hours), label: 'h' }}
+                            >
+                                <h3 className="mb-2 text-base leading-snug font-semibold text-foreground">
+                                    {subLevel.title}
+                                </h3>
+
+                                <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-foreground/60">
+                                    {subLevel.outcome}
+                                </p>
+
+                                <div className="mb-4 flex flex-wrap gap-1.5">
+                                    {subLevel.focus.map((focus) => (
+                                        <span
+                                            key={focus}
+                                            className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-medium text-foreground/60 dark:border-border/60 dark:bg-background/30"
+                                        >
+                                            {focus}
+                                        </span>
+                                    ))}
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-wider text-foreground/40">
+                                            Inclus dans le parcours{' '}
+                                            {level.code}
+                                        </p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {subLevel.hours} h en visio
+                                        </p>
+                                    </div>
+
+                                    <Button variant="secondary" size="sm" asChild>
+                                        <Link href="/contact">
+                                            Réserver
+                                            <ArrowRight
+                                                className="h-3.5 w-3.5"
+                                                aria-hidden="true"
+                                            />
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </OfferCard>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className="relative py-20 md:py-28">
+                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+                        <div className="lg:sticky lg:top-24 lg:self-start">
+                            <SectionHeading
+                                eyebrow="Les acquis"
+                                title={`À la fin du ${level.code}, tu sauras…`}
+                                description="Des compétences concrètes, vérifiées au checkpoint final — pas une liste de chapitres survolés."
+                            />
+
+                            <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-border/40 bg-background/60 px-4 py-2 text-xs text-foreground/55 backdrop-blur-sm dark:border-border/50 dark:bg-background/40">
+                                <Sparkles
+                                    className="h-3.5 w-3.5 text-primary"
+                                    aria-hidden="true"
+                                />
+                                Niveau {level.code} du CECRL · {level.hours} h
+                            </div>
                         </div>
 
-                        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                            {relatedCourses.map((relatedCourse, index) => (
-                                <CourseCard
-                                    key={relatedCourse.slug}
-                                    course={relatedCourse}
-                                    index={index}
-                                />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {level.canDo.map((item, index) => (
+                                <motion.div
+                                    key={item}
+                                    initial={{ opacity: 0, y: 16 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{
+                                        duration: 0.45,
+                                        delay: index * 0.05,
+                                    }}
+                                    className="flex items-start gap-3 rounded-2xl border border-border/40 bg-card p-4 dark:border-border/50"
+                                >
+                                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                        <Check
+                                            className="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <p className="text-sm leading-relaxed text-foreground/70">
+                                        {item}
+                                    </p>
+                                </motion.div>
                             ))}
                         </div>
-                    </motion.section>
-                )}
-            </div>
-
-            {/* barre de réservation mobile */}
-            <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
-                {isBookingExpanded && (
-                    <div
-                        id="reservation-mobile"
-                        className="max-h-[68dvh] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-border/40 bg-background shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.15)]"
-                    >
-                        <div className="sticky top-0 z-10 flex justify-center border-b border-border/30 bg-background/95 py-2.5 backdrop-blur">
-                            <span
-                                className="h-1.5 w-10 rounded-full bg-foreground/15"
-                                aria-hidden="true"
-                            />
-                        </div>
-
-                        <div className="border-b border-border/30 px-6 pt-4 pb-3">
-                            <p className="text-sm font-semibold text-foreground">
-                                {course.titre}
-                            </p>
-                            <p className="mt-0.5 text-xs text-foreground/50">
-                                {minPrice ?? 'Tarifs sur demande'} ·{' '}
-                                {course.ville}
-                            </p>
-                        </div>
-
-                        <BookingDetails course={course} />
                     </div>
-                )}
+                </div>
+            </section>
 
-                <div className="border-t border-border/40 bg-background shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.15)]">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setIsBookingExpanded((current) => !current)
-                            }
-                            aria-expanded={isBookingExpanded}
-                            aria-controls="reservation-mobile"
-                            className="flex items-center gap-2.5 text-left"
+            <section className="relative border-y border-border/30 bg-muted/20 py-16 dark:bg-foreground/[0.015]">
+                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <div className="mb-9 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
+                                Inclus
+                            </p>
+                            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+                                Le socle, dans chaque formule.
+                            </h2>
+                        </div>
+
+                        <Link
+                            href="/tarifs"
+                            className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground/60 transition-colors hover:text-foreground"
                         >
-                            <span>
-                                <span className="block text-[10px] font-semibold tracking-[0.2em] text-foreground/40 uppercase">
-                                    À partir de
-                                </span>
-                                <span className="block font-mono text-sm font-semibold text-foreground">
-                                    {minPrice ?? 'Sur demande'}
-                                </span>
-                            </span>
-
-                            <ChevronUp
-                                className={`h-4 w-4 text-foreground/40 transition-transform ${isBookingExpanded ? 'rotate-180' : ''}`}
+                            Voir les tarifs
+                            <ArrowRight
+                                className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1"
                                 aria-hidden="true"
                             />
-                        </button>
-
-                        {course.placesRestantes === 0 ? (
-                            <Button
-                                size="lg"
-                                className="rounded-full px-6"
-                                disabled
-                            >
-                                Complet
-                            </Button>
-                        ) : (
-                            <Button
-                                size="lg"
-                                className="rounded-full px-6"
-                                onClick={() => setIsBookingExpanded(true)}
-                            >
-                                Réserver
-                            </Button>
-                        )}
+                        </Link>
                     </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {included.map((item) => (
+                            <div
+                                key={item.title}
+                                className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/60 p-4 backdrop-blur-sm dark:border-border/50 dark:bg-background/40"
+                            >
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                    <item.icon
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                </span>
+
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">
+                                        {item.title}
+                                    </p>
+                                    <p className="text-xs text-foreground/50">
+                                        {item.detail}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className="relative py-20 md:py-28">
+                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <SectionHeading
+                            eyebrow="Continuer"
+                            title="Les autres niveaux."
+                            description="Un parcours peut commencer à n’importe quel niveau, après un checkpoint d’entrée."
+                        />
+
+                        <Link
+                            href="/courses"
+                            className="group inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-foreground/60 transition-colors hover:text-foreground"
+                        >
+                            <ArrowLeft
+                                className="h-4 w-4 text-primary transition-transform group-hover:-translate-x-1"
+                                aria-hidden="true"
+                            />
+                            Tous les parcours
+                        </Link>
+                    </div>
+
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        {otherLevels.map((otherLevel, index) => (
+                            <LevelCard
+                                key={otherLevel.slug}
+                                level={otherLevel}
+                                index={index}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <FaqSection
+                items={faqs.slice(0, 4)}
+                title={`Le ${level.code}, en pratique`}
+                description="Rythme, formats, annulation : les réponses avant de réserver."
+            />
+
+            <CtaBand
+                eyebrow={`Niveau ${level.code}`}
+                title="On commence quand tu veux."
+                description="Réserve ta place dans la prochaine cohorte, ou passe d’abord par un bilan de niveau pour valider le point de départ."
+                primary={{ label: 'Réserver une place', href: '/contact' }}
+                secondary={{ label: 'Faire le bilan', href: '/bilan' }}
+            />
+
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/40 bg-background/95 px-4 py-3 backdrop-blur-lg lg:hidden dark:border-border/50">
+                <div className="mx-auto flex max-w-7xl items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
+                            {level.code} · {tierLabels[tier]}
+                        </p>
+                        <p className="font-mono text-lg font-semibold text-foreground">
+                            {formatPrice(selectedPrice)}
+                        </p>
+                    </div>
+
+                    <Button className="rounded-full" asChild>
+                        <Link href="/contact">Réserver</Link>
+                    </Button>
                 </div>
             </div>
         </div>

@@ -31,63 +31,63 @@ const events: EventItem[] = [
     {
         id: 1,
         image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80",
-        type: "Stage intensif",
-        titre: "Goethe-Zertifikat B2 : stage de préparation en mini-groupe",
+        type: "Stage de vacances",
+        titre: "Stage de vacances : cinq jours pour débloquer un niveau",
         description:
-            "Un stage intensif en visio pour travailler les 4 compétences, t'entraîner sur des sujets type examen et arriver serein le jour J.",
+            "Un stage intensif en visio, en mini-groupe : le matin on apprend, l'après-midi on pratique. Idéal avant un examen ou une rentrée.",
         pays: "100 % visio",
         ville: "En ligne",
-        dateDebut: "15 juin 2026",
-        nbJours: 10,
-        capacite: 8,
-        placesRestantes: 3,
-        prixDepuis: "45 000 FCFA",
+        dateDebut: "1 février 2027",
+        nbJours: 5,
+        capacite: 6,
+        placesRestantes: 4,
+        prixDepuis: "240 €",
         featured: true,
     },
     {
         id: 2,
         image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80",
-        type: "Mini-groupe",
-        titre: "Conversation orale : sessions hebdomadaires",
+        type: "Cohorte A1",
+        titre: "Parcours A1 — Premiers pas : cohorte de janvier",
         description:
-            "Une séance par semaine pour gagner en confiance à l'oral : débats, mises en situation et corrections personnalisées.",
+            "60 heures pour poser les fondations, de zéro à ta première vraie conversation. Un checkpoint à mi-parcours, un objectif clair à la fin.",
         pays: "100 % visio",
         ville: "En ligne",
-        dateDebut: "12 juin 2026",
-        nbJours: 1,
+        dateDebut: "11 janvier 2027",
+        nbJours: 10,
         capacite: 6,
-        placesRestantes: 2,
-        prixDepuis: "5 000 FCFA",
+        placesRestantes: 4,
+        prixDepuis: "720 €",
     },
     {
         id: 3,
         image: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=800&q=80",
-        type: "Atelier pratique",
-        titre: "Atelier grammaire : Der, Die, Das et déclinaisons",
+        type: "Atelier",
+        titre: "Atelier Articles & cas : der, die, das sans hésiter",
         description:
-            "Un atelier ciblé pour enfin maîtriser les cas allemands et construire des phrases solides sans hésiter.",
+            "Quatre séances de 90 minutes pour enfin choisir le bon article et construire tes cas sans deviner.",
         pays: "100 % visio",
         ville: "En ligne",
-        dateDebut: "18 juin 2026",
+        dateDebut: "19 janvier 2027",
         nbJours: 1,
         capacite: 10,
-        placesRestantes: 6,
-        prixDepuis: "4 000 FCFA",
+        placesRestantes: 5,
+        prixDepuis: "120 €",
     },
     {
         id: 4,
-        image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80",
-        type: "Cours d'essai",
-        titre: "Cours d'essai : l'allemand pour débutants complets",
+        image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80",
+        type: "Bilan de niveau",
+        titre: "Bilan de niveau : 45 minutes pour un plan écrit",
         description:
-            "Une première séance pour te lancer : prononciation, salutations et phrases utiles du quotidien.",
+            "Niveau réel, parcours recommandé, budget clair : un plan écrit envoyé sous 48 h, crédité si tu t'inscris sous 7 jours.",
         pays: "100 % visio",
         ville: "En ligne",
-        dateDebut: "05 juillet 2026",
+        dateDebut: "8 janvier 2027",
         nbJours: 1,
-        capacite: 12,
-        placesRestantes: 9,
-        prixDepuis: "3 000 FCFA",
+        capacite: 10,
+        placesRestantes: 10,
+        prixDepuis: "39 €",
     },
 ];
 
@@ -122,6 +122,13 @@ const itemVariants: Variants = {
     },
 };
 
+const eventLinks: Record<number, string> = {
+    1: "/ateliers",
+    2: "/courses/a1",
+    3: "/ateliers",
+    4: "/bilan",
+};
+
 export function Courses() {
     const featured = events.find((e) => e.featured) ?? events[0];
     const others = events.filter((e) => e.id !== featured.id).slice(0, 3);
@@ -150,9 +157,9 @@ export function Courses() {
                             Les prochaines dates à ne pas manquer
                         </h2>
                         <p className="max-w-xl text-lg text-foreground/60">
-                            Stages intensifs, mini-groupes et cours d'essai : les
-                            dates à venir, le nombre de places et la réservation
-                            au même endroit.
+                            Stages, cohortes de parcours et ateliers : les dates
+                            de 2027, les places restantes et la réservation au
+                            même endroit.
                         </p>
                     </div>
                     <Button
@@ -161,7 +168,7 @@ export function Courses() {
                         asChild
                     >
                         <Link href="/courses" preserveState prefetch>
-                            Voir toutes les sessions
+                            Voir les parcours
                             <ArrowRight
                                 className="ml-2 h-4 w-4"
                                 aria-hidden="true"
@@ -294,7 +301,7 @@ export function Courses() {
                                     </div>
                                 </div>
                                 <Button className="rounded-full" asChild>
-                                    <Link href={`/events/${featured.id}`}>
+                                    <Link href="/ateliers">
                                         Réserver ma place
                                         <ArrowRight
                                             className="ml-2 h-4 w-4"
@@ -394,7 +401,9 @@ export function Courses() {
                                             className="rounded-full text-xs"
                                             asChild
                                         >
-                                            <Link href={`/events/${event.id}`}>
+                                            <Link
+                                                href={eventLinks[event.id]}
+                                            >
                                                 Voir
                                                 <ArrowRight
                                                     className="ml-1 h-3.5 w-3.5"

@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@inertiajs/react";
-import { register } from "@/routes";
 
 export function Cta() {
     return (
@@ -30,9 +29,9 @@ export function Cta() {
                     </h2>
 
                     <p className="mx-auto mb-10 max-w-xl text-lg text-foreground/60">
-                        Choisis ton format, réserve ton créneau et rejoins ton
-                        professeur en visio. Sans engagement : tu avances à ton
-                        rythme, une séance après l'autre.
+                        Choisis ton parcours, réserve ta place et rejoins ta
+                        cohorte en visio. Ton plan est écrit, ton budget clair —
+                        tu avances à ton rythme, une séance après l'autre.
                     </p>
 
                     <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -41,8 +40,8 @@ export function Cta() {
                             className="group gap-2 rounded-full px-8 text-base tracking-[0.2em] uppercase"
                             asChild
                         >
-                            <Link href={register()}>
-                                Réserver un cours
+                            <Link href="/bilan">
+                                Commencer par le bilan
                                 <ArrowRight
                                     className="h-4 w-4 transition-transform group-hover:translate-x-1"
                                     aria-hidden="true"

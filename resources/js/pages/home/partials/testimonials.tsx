@@ -6,22 +6,22 @@ const avis = [
         initiales: "AK",
         nom: "Amina K.",
         role: "Débutante complète",
-        entreprise: "A1 → A2 en 3 mois",
+        entreprise: "A1 → A2 en 4 mois",
         contenu:
-            "Je partais de zéro et je pensais l'allemand impossible. Après trois mois de cours privés, je tiens une conversation simple et je regarde des séries sans sous-titres.",
+            "Je partais de zéro et je pensais l'allemand impossible. En quatre mois de parcours, je tiens une conversation simple et je regarde des séries sans sous-titres.",
     },
     {
         initiales: "GM",
         nom: "Grâce M.",
-        role: "Préparation Goethe B2",
-        entreprise: "Goethe-Zertifikat obtenu",
+        role: "Prépa TELC B2",
+        entreprise: "TELC B2 obtenu",
         contenu:
-            "Les mock tests corrigés et l'entraînement à l'oral m'ont vraiment préparée : j'ai obtenu mon Zertifikat B2 du premier coup.",
+            "Les examens blancs corrigés et l'entraînement à l'oral m'ont vraiment préparée : je suis arrivée le jour J en connaissant déjà le format par cœur.",
     },
     {
         initiales: "TB",
         nom: "Thomas B.",
-        role: "Allemand des affaires",
+        role: "B1 professionnel",
         entreprise: "1:1 du soir, en visio",
         contenu:
             "Mes cours après le travail, 100 % en visio. En quatre mois, je menais mes réunions avec l'équipe de Munich sans traducteur.",
@@ -29,26 +29,26 @@ const avis = [
     {
         initiales: "SN",
         nom: "Sarah N.",
-        role: "Soutien scolaire",
-        entreprise: "D'8/20 à 15/20 en un semestre",
+        role: "Bilan de niveau",
+        entreprise: "Partie du bon niveau",
         contenu:
-            "Ma fille détestait l'allemand. Avec les séances du mercredi et les bilans réguliers, elle est remontée de 8 à 15 en un semestre.",
+            "Le bilan m'a évité de payer pour un parcours inutile. J'ai commencé au bon endroit, avec le bon rythme, et je progresse depuis sans décrocher.",
     },
     {
         initiales: "DJ",
         nom: "David J.",
-        role: "Cours d'essai A1",
-        entreprise: "Réservé en moins de 2 min",
+        role: "Cohorte A1",
+        entreprise: "Groupe de 4, janvier",
         contenu:
-            "J'ai réservé mon cours d'essai en moins de deux minutes et la même semaine je livrais mes premières phrases. Le suivi après chaque séance fait toute la différence.",
+            "J'ai rejoint la cohorte de janvier et dès la première semaine je livrais mes premières phrases. Le checkpoint à mi-parcours fait toute la différence.",
     },
     {
         initiales: "LF",
         nom: "Léa F.",
         role: "Conversation orale B1",
-        entreprise: "Mini-groupe hebdomadaire",
+        entreprise: "Ateliers ciblés",
         contenu:
-            "Les sessions de conversation de chaque semaine me débloquent : je parle enfin sans traduire mot à mot dans ma tête.",
+            "Les ateliers et les séances de conversation me débloquent : je parle enfin sans traduire mot à mot dans ma tête.",
     },
 ] as const;
 
@@ -72,9 +72,8 @@ export function Testimonials() {
                     </h2>
 
                     <p className="mx-auto max-w-xl text-lg text-foreground/60">
-                        Du premier cours d'essai jusqu'à l'examen Goethe :
-                        chaque parcours est différent, mais les résultats sont
-                        là.
+                        Du bilan de niveau jusqu'à l'examen ÖSD ou TELC : chaque
+                        parcours est différent, mais les résultats sont là.
                     </p>
                 </div>
             </div>

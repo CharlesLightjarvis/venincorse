@@ -15,10 +15,10 @@ import {
     trendingArticles,
     type Article,
 } from './blog-data';
-import { courses } from '@/data/courses';
+import { formatPrice, getLevel } from '@/data/offer';
 
 const related = (article: Article) =>
-    courses.find((c) => c.slug === relatedCourses[article.categories[0]]);
+    getLevel(relatedCourses[article.categories[0]]);
 
 const trending = (current: Article) =>
     trendingArticles
@@ -168,11 +168,13 @@ export default function BlogArticle() {
                                         Va plus loin
                                     </p>
                                     <p className="text-lg font-semibold text-foreground">
-                                        {course.title}
+                                        Parcours {course.code} —{' '}
+                                        {course.name}
                                     </p>
                                     <p className="mt-0.5 text-sm text-foreground/50">
-                                        {course.price} FCFA ·{' '}
-                                        {course.sessionLabel}
+                                        Dès{' '}
+                                        {formatPrice(course.price.group)} · 60 h
+                                        par niveau
                                     </p>
                                 </div>
                                 <Button
@@ -180,7 +182,7 @@ export default function BlogArticle() {
                                     asChild
                                 >
                                     <Link href={`/courses/${course.slug}`}>
-                                        Voir le cours
+                                        Voir le parcours
                                         <ArrowRight className="h-4 w-4" />
                                     </Link>
                                 </Button>
@@ -207,15 +209,15 @@ export default function BlogArticle() {
                         {course && (
                             <div className="mb-8 rounded-2xl border border-border/40 bg-background/80 p-5 backdrop-blur-sm">
                                 <p className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-[0.2em] text-foreground/35 uppercase">
-                                    Cours lié
+                                    Parcours lié
                                     <ArrowUpRight className="h-3 w-3 text-primary" />
                                 </p>
                                 <p className="mb-1 text-sm leading-snug font-semibold text-foreground">
-                                    {course.title}
+                                    Parcours {course.code} — {course.name}
                                 </p>
                                 <p className="mb-4 text-xs text-foreground/45">
-                                    {course.price} FCFA ·{' '}
-                                    {course.sessionLabel}
+                                    Dès {formatPrice(course.price.group)} · 60 h
+                                    par niveau
                                 </p>
                                 <Button
                                     variant="outline"
@@ -224,7 +226,7 @@ export default function BlogArticle() {
                                     asChild
                                 >
                                     <Link href={`/courses/${course.slug}`}>
-                                        Voir le cours
+                                        Voir le parcours
                                     </Link>
                                 </Button>
                             </div>

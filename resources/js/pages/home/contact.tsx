@@ -40,13 +40,12 @@ const contactChannels = [
 ] as const;
 
 const subjectOptions = [
-    { value: "essai", label: "Réserver un cours d'essai" },
-    { value: "standard", label: "Cours standard (A1 → B2)" },
-    { value: "grammaire", label: "Atelier grammaire" },
-    { value: "conversation", label: "Conversation orale" },
-    { value: "examens", label: "Préparation aux examens" },
-    { value: "affaires", label: "Allemand des affaires" },
-    { value: "soutien", label: "Soutien scolaire (8–15 ans)" },
+    { value: "parcours", label: "Parcours A1 → B2" },
+    { value: "bilan", label: "Bilan de niveau (39 €)" },
+    { value: "examens", label: "Prépa ÖSD & TELC" },
+    { value: "ateliers", label: "Ateliers & stage" },
+    { value: "tarifs", label: "Tarifs & paiement" },
+    { value: "formats", label: "Formule 1:1, duo ou groupe" },
 ] as const;
 
 const socialLinks = [
@@ -87,8 +86,9 @@ export default function Contact() {
                     </h1>
 
                     <p className="text-lg text-foreground/60">
-                        Une question sur un cours, un examen ou un planning ?
-                        Écris-moi — la réponse arrive en quelques heures.
+                        Une question sur un parcours, une prépa d'examen ou un
+                        planning ? Écris-moi — la réponse arrive en quelques
+                        heures.
                     </p>
                 </motion.div>
 
@@ -246,7 +246,7 @@ export default function Contact() {
                             <textarea
                                 id="message"
                                 rows={5}
-                                placeholder="Ex : je vise le Goethe B2 en mars, je travaille dans la logistique…"
+                                placeholder="Ex : je vise l'ÖSD B2 en mars, je travaille dans la logistique…"
                                 className={`${inputClasses} resize-none`}
                             />
                         </div>

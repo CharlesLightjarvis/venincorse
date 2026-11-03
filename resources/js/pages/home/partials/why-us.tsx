@@ -12,39 +12,39 @@ import { Card, CardContent } from "@/components/ui/card";
 const services = [
     {
         icon: UserCheck,
-        title: "Cours privés 1:1",
+        title: "Sur mesure, 1:1 ou mini-groupe",
         description:
-            "Un enseignement individualisé qui s'adapte à ton niveau, tes objectifs et ton rythme d'apprentissage.",
+            "Un enseignement adapté à ton niveau, tes objectifs et ton agenda — en 1:1, en duo ou en groupe de 3 à 6.",
     },
     {
         icon: CalendarDays,
         title: "Horaires flexibles",
         description:
-            "Réserve tes sessions quand tu veux — en semaine, le soir ou le week-end, selon tes disponibilités.",
+            "Des séances en semaine, le soir ou le samedi : le planning suit ta vie, pas l'inverse.",
     },
     {
         icon: GraduationCap,
-        title: "Préparation aux examens",
+        title: "Prépa ÖSD & TELC",
         description:
-            "Goethe, TELC, ÖSD ou DSD : des exercices ciblés et des mock tests corrigés pour réussir le jour J.",
+            "Stratégie par épreuve, examens blancs corrigés et rétroplanning calé sur ta date d'examen.",
     },
     {
         icon: MessagesSquare,
         title: "Conversation active",
         description:
-            "Pratique l'oral dès la première séance : prononciation, vocabulaire utile et mises en situation réelles.",
+            "Tu parles dès la première séance : prononciation, vocabulaire utile et mises en situation réelles.",
     },
     {
         icon: TrendingUp,
-        title: "Suivi de progression",
+        title: "Checkpoints & bilans",
         description:
-            "Des bilans réguliers te montrent où tu en es et ce qu'il reste à travailler pour atteindre ton objectif.",
+            "Un checkpoint tous les 30 heures et un plan écrit : tu sais toujours où tu en es et ce qui vient.",
     },
     {
         icon: FileCheck2,
-        title: "Grammaire pas à pas",
+        title: "Ateliers ciblés",
         description:
-            "Des explications claires, des tableaux synthétiques et des exercices appliqués pour ancrer chaque règle.",
+            "Articles, temps, subordonnées : un atelier ponctuel pour régler le point qui bloque, en quatre séances.",
     },
 ] as const;
 

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { motion, type Variants } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { Link } from "@inertiajs/react";
 import { useEffect, useRef } from "react";
 
 type Point = {
@@ -18,16 +19,16 @@ interface WaveConfig {
 
 // Pills fonctionnalités clés
 const highlightPills = [
-    "Cours privés 1:1",
-    "Horaires flexibles",
-    "Préparation examens",
+    "Parcours A1 → B2",
+    "Prépa ÖSD & TELC",
+    "Bilan de niveau 39 €",
 ] as const;
 
 // Statistiques adaptées au projet
 const heroStats: { label: string; value: string }[] = [
     { label: "Élèves accompagnés", value: "200+" },
-    { label: "Réservation de cours", value: "< 2 min" },
-    { label: "Niveaux", value: "A1 → C2" },
+    { label: "Heures de programme", value: "240 h" },
+    { label: "Niveaux", value: "A1 → B2" },
 ];
 
 const containerVariants: Variants = {
@@ -292,7 +293,7 @@ export function Hero() {
         <section
             className="relative isolate flex min-h-screen w-full items-center overflow-hidden bg-background"
             role="region"
-            aria-label="Hero plateforme de cours privés d'allemand"
+            aria-label="Hero plateforme de cours d'allemand en visio"
         >
             {/* fond avec dégradés */}
             <div className="pointer-events-none absolute inset-0 z-0">
@@ -338,7 +339,7 @@ export function Hero() {
                             className="h-4 w-4 text-primary"
                             aria-hidden="true"
                         />
-                        Cours privés d'allemand
+                        Cours d'allemand en visio
                     </motion.div>
 
                     <motion.h1
@@ -347,16 +348,16 @@ export function Hero() {
                     >
                         Apprends l'allemand.
                         <br />
-                        À ton rythme.
+                        De A1 à B2.
                     </motion.h1>
 
                     <motion.p
                         variants={itemVariants}
                         className="mx-auto mb-10 max-w-2xl text-lg text-foreground/70 md:text-2xl"
                     >
-                        Des cours d'allemand privés et structurés, avec un suivi
-                        clair — de la grammaire à la conversation, jusqu'à la
-                        préparation de tes examens.
+                        Des parcours guidés pour les francophones de la
+                        diaspora : grammaire, conversation et prépa ÖSD &
+                        TELC — en visio, en mini-groupe, en duo ou en 1:1.
                     </motion.p>
 
                     <motion.div
@@ -366,20 +367,24 @@ export function Hero() {
                         <Button
                             size="lg"
                             className="group gap-2 rounded-full px-8 text-base tracking-[0.2em] uppercase"
+                            asChild
                         >
-                            Réserver un cours
-                            <ArrowRight
-                                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                aria-hidden="true"
-                            />
+                            <Link href="/courses">
+                                Trouver mon parcours
+                                <ArrowRight
+                                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                                    aria-hidden="true"
+                                />
+                            </Link>
                         </Button>
 
                         <Button
                             variant="secondary"
                             size="lg"
                             className="rounded-full"
+                            asChild
                         >
-                            Découvrir les formules
+                            <Link href="/tarifs">Découvrir les formules</Link>
                         </Button>
                     </motion.div>
 

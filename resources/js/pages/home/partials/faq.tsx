@@ -4,45 +4,44 @@ import { Plus } from "lucide-react";
 
 const questions = [
     {
-        question: "Comment se déroule un cours privé ?",
+        question: "Comment se déroule un parcours ?",
         reponse:
-            "Chaque séance se déroule en visio avec ton professeur : reprise de la séance précédente, points de grammaire ciblés, pratique orale guidée et corrections personnalisées. Un compte-rendu détaillé te parvient après chaque séance.",
+            "Chaque parcours couvre un niveau complet en 60 heures, divisé en deux sous-niveaux de 30 heures. Tu suis deux à trois séances par semaine en visio, et chaque sous-niveau se termine par un checkpoint oral et écrit.",
     },
     {
-        question: "Comment réserver un cours ?",
+        question: "Comment réserver ?",
         reponse:
-            "Choisis ton format (cours privé, mini-groupe ou stage intensif), sélectionne un créneau disponible et confirme ta réservation. Tu reçois une confirmation avec le lien de ta session en visio.",
+            "Fais d'abord le bilan de niveau si tu hésites, puis choisis ton parcours, ta prépa ou un atelier. Tu confirmes ton créneau, tu reçois le lien visio et les supports — rien d'autre à préparer.",
     },
     {
         question: "Faut-il déjà avoir des bases pour commencer ?",
         reponse:
-            "Non. Tu peux démarrer à zéro : la première séance sert à évaluer ton niveau et à construire un plan sur mesure — grammaire, vocabulaire, oral. Aucune connaissance préalable n'est requise.",
+            "Non. Tu peux démarrer à zéro : le bilan sert justement à mesurer ton niveau réel et à construire un plan sur mesure. Aucune connaissance préalable n'est requise.",
     },
     {
-        question:
-            "Quelle est la différence entre un cours privé et un mini-groupe ?",
+        question: "Quelle est la différence entre le 1:1, le duo et le groupe ?",
         reponse:
-            "Le cours privé est taillé sur mesure : contenu, rythme et horaires sont construits autour de toi. Le mini-groupe (4 à 6 élèves maximum) mise sur la dynamique du collectif, avec un tarif réduit à la séance.",
+            "Le 1:1 est entièrement taillé sur mesure. Le duo permet de partager le cours à deux. Le groupe réunit 3 à 6 élèves : le tarif baisse et la dynamique change, tout en gardant les corrections individuelles.",
     },
     {
         question: "Peut-on annuler ou déplacer une séance ?",
         reponse:
-            "Oui. Tu peux reporter ou déplacer une séance sans frais jusqu'à 24 h avant son début. En cas d'impondérable, un report est proposé dans la mesure du possible.",
+            "Oui. Tu peux reporter une séance sans frais jusqu'à 24 h avant son début. Les séances manquées en groupe sont enregistrées et disponibles pendant 30 jours.",
     },
     {
         question: "Quels examens préparez-vous ?",
         reponse:
-            "Nous préparons principalement le Goethe-Zertifikat, le TELC, l'ÖSD et le DSD. Le stage intensif comprend des mock tests complets corrigés et un entraînement ciblé aux épreuves orales de chaque examen.",
+            "Nous préparons principalement l'ÖSD et le TELC. La prépa comprend des examens blancs complets corrigés, un entraînement chronométré par épreuve et un plan de révision pour les derniers jours.",
     },
     {
-        question: "Les cours conviennent-ils aux enfants et adolescents ?",
+        question: "Peut-on payer en plusieurs fois ?",
         reponse:
-            "Oui. Le soutien scolaire démarre dès 8 ans et suit les programmes de l'école avec des méthodes adaptées : jeux, exercices courts et encouragements. Les parents reçoivent un bilan régulier des progrès.",
+            "Oui. Le paiement en trois fois est possible avec +5 %, par carte, PayPal ou virement. Les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada.",
     },
     {
         question: "Comment suis-je mes progrès ?",
         reponse:
-            "Après chaque séance, tu reçois un compte-rendu avec tes points forts, ton exercice personnalisé et le prochain objectif. Chaque mois, un bilan complet permet d'ajuster le rythme et le contenu.",
+            "Après chaque séance, tu reçois un compte-rendu avec tes points forts et tes exercices. Tous les 30 heures, un checkpoint valide ta progression et prépare le sous-niveau suivant.",
     },
 ] as const;
 
@@ -73,8 +72,8 @@ export function Faq() {
                     </h2>
 
                     <p className="mx-auto max-w-xl text-lg text-foreground/60">
-                        Retrouve les réponses essentielles sur les cours privés,
-                        les sessions en visio, la réservation, les examens et le
+                        Retrouve les réponses essentielles sur les parcours, la
+                        prépa ÖSD & TELC, le bilan de niveau, le paiement et le
                         suivi de progression.
                     </p>
                 </motion.div>

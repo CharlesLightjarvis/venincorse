@@ -5,30 +5,30 @@ const steps = [
     {
         number: '01',
         icon: BookOpen,
-        title: 'Choisis ton cours',
+        title: 'Fais ton bilan',
         description:
-            'Grammaire, conversation, examens ou allemand professionnel : trouve le format adapté à ton objectif et à ton niveau.',
+            '45 minutes avec ton professeur : niveau réel, objectif, heures et budget. Les 39 € sont crédités sur ton premier parcours.',
     },
     {
         number: '02',
         icon: CalendarCheck,
-        title: 'Réserve ta séance',
+        title: 'Choisis ton parcours',
         description:
-            'Sélectionne un créneau qui t’arrange — en semaine, le soir ou le week-end — et confirme ta réservation en quelques minutes.',
+            'A1 à B2 : le niveau de départ est validé au bilan. Tu choisis le format — 1:1, duo ou groupe de 3 à 6.',
     },
     {
         number: '03',
         icon: Video,
-        title: 'Rejoins ta session en visio',
+        title: 'Rejoins la cohorte en visio',
         description:
-            'Cours privé 1:1 avec ton professeur : prises de parole, corrections et supports adaptés à ton rythme, en direct.',
+            'Deux à trois séances par semaine en direct : cours, corrections et supports, sans déplacer ta vie.',
     },
     {
         number: '04',
         icon: TrendingUp,
-        title: 'Suis ta progression',
+        title: 'Mesure ta progression',
         description:
-            'Compte-rendu après chaque séance, exercices corrigés et bilans réguliers pour mesurer tes progrès vers ton objectif.',
+            'Un checkpoint tous les 30 heures, des corrections précises entre les séances et un objectif mesurable à chaque niveau.',
     },
 ] as const;
 
@@ -53,13 +53,13 @@ export function Process() {
                     </div>
 
                     <h2 className="mb-4 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                        Réserver ton cours devient simple
+                        Commencer, c'est simple
                     </h2>
 
                     <p className="mx-auto max-w-2xl text-lg text-foreground/60">
                         Pas de dossier compliqué ni de calendrier imposé : tu
-                        trouves ton cours, tu fixes ton créneau, tu apprends et
-                        tu mesures tes progrès au même endroit.
+                        fais ton bilan, tu choisis ton parcours et tu mesures
+                        tes progrès au même endroit.
                     </p>
                 </motion.div>
 

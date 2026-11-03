@@ -118,9 +118,9 @@ export const trendingArticles = [
 ]
 
 export const relatedCourses: Record<string, string> = {
-  Examens: 'stage-goethe-b2',
-  Goethe: 'stage-goethe-b2',
-  Grammaire: 'atelier-der-die-das',
+  Examens: 'b2',
+  Goethe: 'b2',
+  Grammaire: 'a1',
 }
 
 export type SidebarSection =

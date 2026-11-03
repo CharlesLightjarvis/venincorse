@@ -4,17 +4,17 @@ const stats = [
     {
         value: "95 %",
         label: "Taux de réussite aux examens",
-        detail: "Goethe, TELC, ÖSD et DSD",
+        detail: "ÖSD et TELC",
     },
     {
         value: "1 500+",
         label: "Heures de cours données",
-        detail: "Cours privés et ateliers en visio",
+        detail: "Parcours et ateliers en visio",
     },
     {
         value: "7 ans",
         label: "Expérience d'enseignement",
-        detail: "Allemand, tous niveaux",
+        detail: "Allemand, de A1 à B2",
     },
     {
         value: "5,0",
@@ -22,14 +22,14 @@ const stats = [
         detail: "Évaluée après chaque session",
     },
     {
-        value: "40+",
-        label: "Entreprises accompagnées",
-        detail: "Allemand professionnel et commerce",
+        value: "39 €",
+        label: "Bilan de niveau",
+        detail: "Crédité sur ton premier parcours",
     },
     {
-        value: "6",
-        label: "Formats de cours",
-        detail: "Grammaire, oral, examens, business…",
+        value: "240 h",
+        label: "De A1 à B2",
+        detail: "4 niveaux · 1:1, duo ou groupe",
     },
 ] as const;
 

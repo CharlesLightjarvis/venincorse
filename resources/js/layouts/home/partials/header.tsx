@@ -17,11 +17,23 @@ import {
 } from "@/components/ui/navigation-menu";
 
 const simpleLinks = [
-    { label: "Nos Formations", href: "/courses" },
+    { label: "Parcours", href: "/courses" },
+    { label: "Examens", href: "/examens" },
+    { label: "Ateliers", href: "/ateliers" },
+    { label: "Tarifs", href: "/tarifs" },
     { label: "Blog", href: "/blog" },
+];
+
+const mobileLinks = [
+    ...simpleLinks,
+    { label: "Bilan de niveau", href: "/bilan" },
     { label: "À propos", href: "/about" },
     { label: "Contact", href: "/contact" },
 ];
+
+function isActivePath(currentUrl: string, href: string): boolean {
+    return href === "/" ? currentUrl === "/" : currentUrl.startsWith(href);
+}
 
 /* ------------------------------------------------------------------ */
 /* Header                                                             */
@@ -30,10 +42,12 @@ const simpleLinks = [
 export function Header() {
     const [open, setOpen] = React.useState(false);
     const scrolled = useScroll(10);
-    const { auth, canRegister } = usePage<{
+    const page = usePage<{
         auth: Auth;
         canRegister?: boolean;
-    }>().props;
+    }>();
+    const { auth, canRegister } = page.props;
+    const currentUrl = page.url.split("?")[0];
 
     React.useEffect(() => {
         document.body.style.overflow = open ? "hidden" : "";
@@ -70,9 +84,34 @@ export function Header() {
                                 <NavigationMenuItem key={link.label}>
                                     <NavigationMenuLink
                                         href={link.href}
-                                        className="inline-flex h-10 items-center justify-center px-4 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground focus:outline-none"
+                                        aria-current={
+                                            isActivePath(
+                                                currentUrl,
+                                                link.href,
+                                            )
+                                                ? "page"
+                                                : undefined
+                                        }
+                                        className={cn(
+                                            "inline-flex h-10 items-center justify-center gap-1.5 px-4 text-sm font-medium transition-colors focus:outline-none",
+                                            isActivePath(
+                                                currentUrl,
+                                                link.href,
+                                            )
+                                                ? "text-foreground"
+                                                : "text-foreground/60 hover:text-foreground",
+                                        )}
                                     >
                                         {link.label}
+                                        {isActivePath(
+                                            currentUrl,
+                                            link.href,
+                                        ) ? (
+                                            <span
+                                                className="h-1 w-1 rounded-full bg-primary"
+                                                aria-hidden="true"
+                                            />
+                                        ) : null}
                                     </NavigationMenuLink>
                                 </NavigationMenuItem>
                             ))}
@@ -130,7 +169,13 @@ export function Header() {
                 </Button>
             </nav>
 
-            <MobileMenu open={open} auth={auth} canRegister={canRegister} />
+            <MobileMenu
+                open={open}
+                auth={auth}
+                canRegister={canRegister}
+                currentUrl={currentUrl}
+                onClose={() => setOpen(false)}
+            />
         </header>
     );
 }
@@ -143,35 +188,48 @@ function MobileMenu({
     open,
     auth,
     canRegister,
+    currentUrl,
+    onClose,
 }: {
     open: boolean;
     auth: Auth;
     canRegister?: boolean;
+    currentUrl: string;
+    onClose: () => void;
 }) {
     if (!open || typeof window === "undefined") return null;
 
     return createPortal(
         <div
             id="mobile-menu"
-            className="fixed top-14 right-0 bottom-0 left-0 z-40 flex flex-col overflow-hidden border-y border-border/30 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/50 lg:hidden"
+            className="fixed top-14 right-0 bottom-0 left-0 z-40 flex flex-col overflow-hidden border-y border-border/30 bg-background lg:hidden"
         >
             <div
                 data-slot={open ? "open" : "closed"}
                 className="flex size-full flex-col justify-between overflow-y-auto p-4 ease-out data-[slot=open]:animate-in data-[slot=open]:zoom-in-97"
             >
                 <div className="flex flex-col gap-1">
-                    {simpleLinks.map((link) => (
-                        <a
-                            key={link.label}
-                            className={buttonVariants({
-                                variant: "ghost",
-                                className: "justify-start",
-                            })}
-                            href={link.href}
-                        >
-                            {link.label}
-                        </a>
-                    ))}
+                    {mobileLinks.map((link) => {
+                        const active = isActivePath(currentUrl, link.href);
+
+                        return (
+                            <Link
+                                key={link.label}
+                                href={link.href}
+                                onClick={onClose}
+                                aria-current={active ? "page" : undefined}
+                                className={buttonVariants({
+                                    variant: "ghost",
+                                    className: cn(
+                                        "justify-start",
+                                        active && "bg-primary/10 text-primary",
+                                    ),
+                                })}
+                            >
+                                {link.label}
+                            </Link>
+                        );
+                    })}
                 </div>
 
                 <div className="flex flex-col gap-3 border-t border-border/30 pt-4">
@@ -183,7 +241,9 @@ function MobileMenu({
                     </div>
                     {auth.user ? (
                         <Button variant="secondary" className="w-full" asChild>
-                            <Link href={dashboard()}>Dashboard</Link>
+                            <Link href={dashboard()} onClick={onClose}>
+                                Dashboard
+                            </Link>
                         </Button>
                     ) : (
                         <>
@@ -192,11 +252,15 @@ function MobileMenu({
                                 className="w-full"
                                 asChild
                             >
-                                <Link href={login()}>Connexion</Link>
+                                <Link href={login()} onClick={onClose}>
+                                    Connexion
+                                </Link>
                             </Button>
                             {canRegister !== false && (
                                 <Button className="w-full" asChild>
-                                    <Link href={register()}>S'inscrire</Link>
+                                    <Link href={register()} onClick={onClose}>
+                                        S'inscrire
+                                    </Link>
                                 </Button>
                             )}
                         </>
