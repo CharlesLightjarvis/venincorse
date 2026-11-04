@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { motion, type Variants } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { Link } from "@inertiajs/react";
-import { useEffect, useRef } from "react";
+import { Button } from '@/components/ui/button';
+import { motion, type Variants } from 'framer-motion';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 
 type Point = {
     x: number;
@@ -19,16 +19,16 @@ interface WaveConfig {
 
 // Pills fonctionnalités clés
 const highlightPills = [
-    "Parcours A1 → B2",
-    "Prépa ÖSD & TELC",
-    "Bilan de niveau 39 €",
+    'Parcours A1 → B2',
+    'Prépa Goethe, ÖSD & TELC',
+    '1:1 ou groupe',
 ] as const;
 
 // Statistiques adaptées au projet
 const heroStats: { label: string; value: string }[] = [
-    { label: "Élèves accompagnés", value: "200+" },
-    { label: "Heures de programme", value: "240 h" },
-    { label: "Niveaux", value: "A1 → B2" },
+    { label: 'Élèves accompagnés', value: '200+' },
+    { label: 'Heures de programme', value: '240 h' },
+    { label: 'Niveaux', value: 'A1 → B2' },
 ];
 
 const containerVariants: Variants = {
@@ -45,7 +45,7 @@ const itemVariants: Variants = {
     visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.6, ease: "easeOut" },
+        transition: { duration: 0.6, ease: 'easeOut' },
     },
 };
 
@@ -54,7 +54,7 @@ const statsVariants: Variants = {
     visible: {
         opacity: 1,
         scale: 1,
-        transition: { duration: 0.6, ease: "easeOut", staggerChildren: 0.08 },
+        transition: { duration: 0.6, ease: 'easeOut', staggerChildren: 0.08 },
     },
 };
 
@@ -67,7 +67,7 @@ export function Hero() {
         const canvas = canvasRef.current;
         if (!canvas) return undefined;
 
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext('2d');
         if (!ctx) return undefined;
 
         let animationId: number;
@@ -77,11 +77,11 @@ export function Hero() {
             const rootStyles = getComputedStyle(document.documentElement);
 
             const resolveColor = (variables: string[], alpha = 1) => {
-                const tempEl = document.createElement("div");
-                tempEl.style.position = "absolute";
-                tempEl.style.visibility = "hidden";
-                tempEl.style.width = "1px";
-                tempEl.style.height = "1px";
+                const tempEl = document.createElement('div');
+                tempEl.style.position = 'absolute';
+                tempEl.style.visibility = 'hidden';
+                tempEl.style.width = '1px';
+                tempEl.style.height = '1px';
                 document.body.appendChild(tempEl);
 
                 let color = `rgba(255, 255, 255, ${alpha})`;
@@ -95,7 +95,7 @@ export function Hero() {
 
                         if (
                             computedColor &&
-                            computedColor !== "rgba(0, 0, 0, 0)"
+                            computedColor !== 'rgba(0, 0, 0, 0)'
                         ) {
                             if (alpha < 1) {
                                 const rgbMatch = computedColor.match(
@@ -119,9 +119,9 @@ export function Hero() {
             };
 
             return {
-                backgroundTop: resolveColor(["--background"], 1),
+                backgroundTop: resolveColor(['--background'], 1),
                 backgroundBottom: resolveColor(
-                    ["--muted", "--background"],
+                    ['--muted', '--background'],
                     0.95,
                 ),
                 wavePalette: [
@@ -129,14 +129,14 @@ export function Hero() {
                         offset: 0,
                         amplitude: 70,
                         frequency: 0.003,
-                        color: resolveColor(["--primary"], 0.8),
+                        color: resolveColor(['--primary'], 0.8),
                         opacity: 0.45,
                     },
                     {
                         offset: Math.PI / 2,
                         amplitude: 90,
                         frequency: 0.0026,
-                        color: resolveColor(["--accent", "--primary"], 0.7),
+                        color: resolveColor(['--accent', '--primary'], 0.7),
                         opacity: 0.35,
                     },
                     {
@@ -144,7 +144,7 @@ export function Hero() {
                         amplitude: 60,
                         frequency: 0.0034,
                         color: resolveColor(
-                            ["--secondary", "--foreground"],
+                            ['--secondary', '--foreground'],
                             0.65,
                         ),
                         opacity: 0.3,
@@ -154,7 +154,7 @@ export function Hero() {
                         amplitude: 80,
                         frequency: 0.0022,
                         color: resolveColor(
-                            ["--primary-foreground", "--foreground"],
+                            ['--primary-foreground', '--foreground'],
                             0.25,
                         ),
                         opacity: 0.25,
@@ -163,7 +163,7 @@ export function Hero() {
                         offset: Math.PI * 2,
                         amplitude: 55,
                         frequency: 0.004,
-                        color: resolveColor(["--foreground"], 0.2),
+                        color: resolveColor(['--foreground'], 0.2),
                         opacity: 0.2,
                     },
                 ] satisfies WaveConfig[],
@@ -179,11 +179,11 @@ export function Hero() {
         const observer = new MutationObserver(handleThemeMutation);
         observer.observe(document.documentElement, {
             attributes: true,
-            attributeFilter: ["class", "data-theme"],
+            attributeFilter: ['class', 'data-theme'],
         });
 
         const prefersReducedMotion = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
+            '(prefers-reduced-motion: reduce)',
         ).matches;
 
         const mouseInfluence = prefersReducedMotion ? 10 : 70;
@@ -217,9 +217,9 @@ export function Hero() {
         resizeCanvas();
         recenterMouse();
 
-        window.addEventListener("resize", handleResize);
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseleave", handleMouseLeave);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseleave', handleMouseLeave);
 
         const drawWave = (wave: WaveConfig) => {
             ctx.save();
@@ -281,9 +281,9 @@ export function Hero() {
         animationId = window.requestAnimationFrame(animate);
 
         return () => {
-            window.removeEventListener("resize", handleResize);
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseleave", handleMouseLeave);
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseleave', handleMouseLeave);
             cancelAnimationFrame(animationId);
             observer.disconnect();
         };
@@ -355,9 +355,10 @@ export function Hero() {
                         variants={itemVariants}
                         className="mx-auto mb-10 max-w-2xl text-lg text-foreground/70 md:text-2xl"
                     >
-                        Des parcours guidés pour les francophones de la
-                        diaspora : grammaire, conversation et prépa ÖSD &
-                        TELC — en visio, en mini-groupe, en duo ou en 1:1.
+                        Des parcours guidés pour les francophones de la diaspora
+                        : grammaire, conversation et prépa Goethe, ÖSD & TELC —
+                        en visio, en mini-groupe ou en 1:1. Commence par une
+                        heure, ou teste ton niveau gratuitement.
                     </motion.p>
 
                     <motion.div
@@ -369,8 +370,8 @@ export function Hero() {
                             className="group gap-2 rounded-full px-8 text-base tracking-[0.2em] uppercase"
                             asChild
                         >
-                            <Link href="/courses">
-                                Trouver mon parcours
+                            <Link href="/trial">
+                                J'essaie 1 heure — 39 €
                                 <ArrowRight
                                     className="h-4 w-4 transition-transform group-hover:translate-x-1"
                                     aria-hidden="true"
@@ -384,7 +385,9 @@ export function Hero() {
                             className="rounded-full"
                             asChild
                         >
-                            <Link href="/tarifs">Découvrir les formules</Link>
+                            <Link href="/level-test">
+                                Tester mon niveau (gratuit)
+                            </Link>
                         </Button>
                     </motion.div>
 

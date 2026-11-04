@@ -1,52 +1,44 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
 
-const questions = [
+const faqs = [
     {
-        question: "Comment se déroule un parcours ?",
-        reponse:
-            "Chaque parcours couvre un niveau complet en 60 heures, divisé en deux sous-niveaux de 30 heures. Tu suis deux à trois séances par semaine en visio, et chaque sous-niveau se termine par un checkpoint oral et écrit.",
+        question: 'Comment se déroule un parcours ?',
+        answer: 'Chaque parcours couvre un niveau complet en 60 heures, divisé en deux sous-niveaux de 30 heures. Tu suis deux à trois séances par semaine en visio, et chaque sous-niveau se termine par un checkpoint oral et écrit.',
     },
     {
-        question: "Comment réserver ?",
-        reponse:
-            "Fais d'abord le bilan de niveau si tu hésites, puis choisis ton parcours, ta prépa ou un atelier. Tu confirmes ton créneau, tu reçois le lien visio et les supports — rien d'autre à préparer.",
+        question: 'Comment réserver ?',
+        answer: "Réserve d'abord une heure d'essai si tu veux tester la méthode, ou passe le test de niveau gratuit pour situer ton point de départ. Ensuite, choisis ton parcours, ta prépa ou un atelier : tu confirmes ton créneau et tu reçois le lien visio.",
     },
     {
-        question: "Faut-il déjà avoir des bases pour commencer ?",
-        reponse:
-            "Non. Tu peux démarrer à zéro : le bilan sert justement à mesurer ton niveau réel et à construire un plan sur mesure. Aucune connaissance préalable n'est requise.",
+        question: 'Faut-il déjà avoir des bases pour commencer ?',
+        answer: "Non. Le test gratuit te donne ton point de départ et le cours d'essai part de ton niveau réel. Aucune connaissance préalable n'est requise.",
     },
     {
-        question: "Quelle est la différence entre le 1:1, le duo et le groupe ?",
-        reponse:
-            "Le 1:1 est entièrement taillé sur mesure. Le duo permet de partager le cours à deux. Le groupe réunit 3 à 6 élèves : le tarif baisse et la dynamique change, tout en gardant les corrections individuelles.",
+        question: 'Quelle est la différence entre le 1:1 et le groupe ?',
+        answer: 'Le 1:1 est entièrement taillé sur mesure et coûte plus cher : toute la séance t’est consacrée. Le groupe réunit 3 à 6 élèves : tu partages le coût et tu gardes les corrections individuelles.',
     },
     {
-        question: "Peut-on annuler ou déplacer une séance ?",
-        reponse:
-            "Oui. Tu peux reporter une séance sans frais jusqu'à 24 h avant son début. Les séances manquées en groupe sont enregistrées et disponibles pendant 30 jours.",
+        question: 'Peut-on annuler ou déplacer une séance ?',
+        answer: "Oui. Tu peux reporter une séance sans frais jusqu'à 24 h avant son début. Les séances manquées en groupe sont enregistrées et disponibles pendant 30 jours.",
     },
     {
-        question: "Quels examens préparez-vous ?",
-        reponse:
-            "Nous préparons principalement l'ÖSD et le TELC. La prépa comprend des examens blancs complets corrigés, un entraînement chronométré par épreuve et un plan de révision pour les derniers jours.",
+        question: 'Quels examens préparez-vous ?',
+        answer: 'Goethe-Institut, ÖSD ou TELC, de A1 à B2. Tu peux préparer toutes les épreuves ou cibler l’écrit ou l’oral, avec un tarif adapté. Les simulations et corrections suivent le certificat visé. L’inscription à l’examen officiel reste à ta charge.',
     },
     {
-        question: "Peut-on payer en plusieurs fois ?",
-        reponse:
-            "Oui. Le paiement en trois fois est possible avec +5 %, par carte, PayPal ou virement. Les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada.",
+        question: 'Peut-on payer en plusieurs fois ?',
+        answer: 'Oui. Le paiement en trois fois est possible avec +5 %, par carte, PayPal ou virement. Les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada.',
     },
     {
-        question: "Comment suis-je mes progrès ?",
-        reponse:
-            "Après chaque séance, tu reçois un compte-rendu avec tes points forts et tes exercices. Tous les 30 heures, un checkpoint valide ta progression et prépare le sous-niveau suivant.",
+        question: 'Comment suis-je mes progrès ?',
+        answer: 'Après chaque séance, tu reçois un compte-rendu avec tes points forts et tes exercices. Tous les 30 heures, un checkpoint valide ta progression et prépare le sous-niveau suivant.',
     },
 ] as const;
 
 export function Faq() {
-    const [ouvert, setOuvert] = useState<number | null>(null);
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
         <section className="relative bg-muted/30 py-24 md:py-32 dark:bg-foreground/[0.02]">
@@ -73,8 +65,8 @@ export function Faq() {
 
                     <p className="mx-auto max-w-xl text-lg text-foreground/60">
                         Retrouve les réponses essentielles sur les parcours, la
-                        prépa ÖSD & TELC, le bilan de niveau, le paiement et le
-                        suivi de progression.
+                        prépa ÖSD & TELC, le cours d'essai, le test gratuit, le
+                        paiement et le suivi de progression.
                     </p>
                 </motion.div>
 
@@ -86,7 +78,7 @@ export function Faq() {
                     transition={{ duration: 0.6, delay: 0.15 }}
                     className="flex flex-col gap-3"
                 >
-                    {questions.map((item, index) => (
+                    {faqs.map((item, index) => (
                         <div
                             key={index}
                             className="overflow-hidden rounded-2xl border border-border/40 bg-background/60 backdrop-blur-sm dark:border-border/50 dark:bg-background/50"
@@ -94,10 +86,12 @@ export function Faq() {
                             <button
                                 type="button"
                                 onClick={() =>
-                                    setOuvert(ouvert === index ? null : index)
+                                    setOpenIndex(
+                                        openIndex === index ? null : index,
+                                    )
                                 }
                                 className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                                aria-expanded={ouvert === index}
+                                aria-expanded={openIndex === index}
                             >
                                 <span className="text-sm font-semibold text-foreground md:text-base">
                                     {item.question}
@@ -105,7 +99,7 @@ export function Faq() {
 
                                 <span
                                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/40 bg-background/60 text-foreground/60 transition-transform duration-300 dark:border-border/50 dark:bg-background/40 ${
-                                        ouvert === index ? "rotate-45" : ""
+                                        openIndex === index ? 'rotate-45' : ''
                                     }`}
                                     aria-hidden="true"
                                 >
@@ -114,19 +108,19 @@ export function Faq() {
                             </button>
 
                             <AnimatePresence initial={false}>
-                                {ouvert === index && (
+                                {openIndex === index && (
                                     <motion.div
                                         key="content"
                                         initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
                                         transition={{
                                             duration: 0.3,
-                                            ease: "easeInOut",
+                                            ease: 'easeInOut',
                                         }}
                                     >
                                         <div className="border-t border-border/30 px-6 pt-4 pb-5 text-sm leading-relaxed text-foreground/60">
-                                            {item.reponse}
+                                            {item.answer}
                                         </div>
                                     </motion.div>
                                 )}

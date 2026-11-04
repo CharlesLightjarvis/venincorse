@@ -1,10 +1,7 @@
 import { cn } from '@/lib/utils';
-import {
-    tierLabels,
-    type TierKey,
-} from '@/data/offer';
+import { tierLabels, type TierKey } from '@/data/offer';
 
-const tierOrder: TierKey[] = ['group', 'duo', 'solo'];
+const tierOrder: TierKey[] = ['group', 'solo'];
 
 type TierSwitcherProps = {
     value: TierKey;

@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import { getExamPackage, type ExamLevel } from '@/data/exam-booking';
 import {
     BookOpen,
     CalendarDays,
@@ -8,7 +9,6 @@ import {
     GraduationCap,
     MessagesSquare,
     Rocket,
-    Sparkles,
     Target,
     TrendingUp,
     Trophy,
@@ -18,11 +18,10 @@ import {
 } from 'lucide-react';
 
 export type LevelSlug = 'a1' | 'a2' | 'b1' | 'b2';
-export type TierKey = 'solo' | 'duo' | 'group';
+export type TierKey = 'solo' | 'group';
 
 export interface PriceSet {
     solo: number;
-    duo: number;
     group: number;
 }
 
@@ -34,6 +33,18 @@ export interface Accent {
     gradient: string;
 }
 
+export interface ProgramLesson {
+    title: string;
+    description: string;
+}
+
+export interface ProgramModule {
+    title: string;
+    hours: number;
+    description: string;
+    lessons: ProgramLesson[];
+}
+
 export interface SubLevel {
     code: string;
     title: string;
@@ -41,9 +52,10 @@ export interface SubLevel {
     focus: string[];
     outcome: string;
     image: string;
+    program: ProgramModule[];
 }
 
-export interface ParcoursLevel {
+export interface CourseLevel {
     slug: LevelSlug;
     code: string;
     name: string;
@@ -73,7 +85,7 @@ export interface TrainingFormat {
 }
 
 export interface ExamPrep {
-    id: string;
+    id: ExamLevel;
     level: string;
     title: string;
     subtitle: string;
@@ -85,19 +97,6 @@ export interface ExamPrep {
     includes: string[];
     accent: Accent;
     popular?: boolean;
-}
-
-export interface Atelier {
-    id: string;
-    title: string;
-    level: string;
-    volume: string;
-    sessions: number;
-    image: string;
-    price: PriceSet;
-    description: string;
-    outcomes: string[];
-    accent: Accent;
 }
 
 export interface Testimonial {
@@ -158,7 +157,7 @@ export const accents = {
     },
 } as const;
 
-export const levels: ParcoursLevel[] = [
+export const levels: CourseLevel[] = [
     {
         slug: 'a1',
         code: 'A1',
@@ -182,6 +181,64 @@ export const levels: ParcoursLevel[] = [
                 outcome:
                     'Tu te présentes, tu épelles ton nom et tu poses tes premières questions.',
                 image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Premiers contacts',
+                        hours: 15,
+                        description:
+                            'Se présenter, épeler, compter et poser les premières questions.',
+                        lessons: [
+                            {
+                                title: 'Se présenter',
+                                description:
+                                    'Nom, origine, âge : les phrases indispensables pour un premier échange.',
+                            },
+                            {
+                                title: 'Alphabet & sons',
+                                description:
+                                    'Épeler son nom et reconnaître les sons qui n’existent pas en français.',
+                            },
+                            {
+                                title: 'Nombres & heures',
+                                description:
+                                    'Compter, donner un prix, dire l’heure et fixer un rendez-vous.',
+                            },
+                            {
+                                title: 'Articles définis',
+                                description:
+                                    'Der, die, das : reconnaître le genre et choisir le bon article.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Mon quotidien',
+                        hours: 15,
+                        description:
+                            'Parler de sa journée, de ses goûts et de son environnement proche.',
+                        lessons: [
+                            {
+                                title: 'Présent régulier',
+                                description:
+                                    'Conjuguer les verbes du quotidien et construire une phrase simple.',
+                            },
+                            {
+                                title: 'Questions simples',
+                                description:
+                                    'W-Fragen et questions fermées pour demander une information.',
+                            },
+                            {
+                                title: 'Famille & logement',
+                                description:
+                                    'Décrire les personnes et le lieu où tu vis avec un vocabulaire de base.',
+                            },
+                            {
+                                title: 'Accusatif',
+                                description:
+                                    'Comprendre le complément d’objet direct et les premiers changements de forme.',
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 code: 'A1.2',
@@ -191,6 +248,64 @@ export const levels: ParcoursLevel[] = [
                 outcome:
                     'Tu commandes, tu demandes ton chemin et tu racontes ta journée au passé.',
                 image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Se déplacer et acheter',
+                        hours: 15,
+                        description:
+                            'Demander son chemin, commander et gérer les achats du quotidien.',
+                        lessons: [
+                            {
+                                title: 'Villes & transports',
+                                description:
+                                    'Demander son chemin, acheter un billet et comprendre une annonce.',
+                            },
+                            {
+                                title: 'Au restaurant',
+                                description:
+                                    'Commander, demander l’addition et exprimer une préférence.',
+                            },
+                            {
+                                title: 'Articles partitifs',
+                                description:
+                                    'Parler de quantités et commander sans te tromper.',
+                            },
+                            {
+                                title: 'Verbes de modalité',
+                                description:
+                                    'Pouvoir, devoir, vouloir : exprimer une capacité ou une obligation.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Raconter sa journée',
+                        hours: 15,
+                        description:
+                            'Utiliser le passé et les repères de temps pour raconter ton quotidien.',
+                        lessons: [
+                            {
+                                title: 'Parfait',
+                                description:
+                                    'Former le passé composé et raconter ce que tu as fait.',
+                            },
+                            {
+                                title: 'Heures & rendez-vous',
+                                description:
+                                    'Situer une action dans la journée et confirmer un horaire.',
+                            },
+                            {
+                                title: 'Loisirs',
+                                description:
+                                    'Parler de ce que tu aimes et proposer une activité.',
+                            },
+                            {
+                                title: 'Messages courts',
+                                description:
+                                    'Écrire un SMS ou un email simple avec les bonnes formules.',
+                            },
+                        ],
+                    },
+                ],
             },
         ],
         canDo: [
@@ -201,7 +316,7 @@ export const levels: ParcoursLevel[] = [
             'Poser des questions et répondre au présent',
             'Tenir cinq minutes de conversation guidée',
         ],
-        price: { solo: 2090, duo: 1080, group: 720 },
+        price: { solo: 2090, group: 720 },
         nextCohort: '11 janvier 2027',
         seats: { total: 6, left: 4 },
         icon: BookOpen,
@@ -213,7 +328,7 @@ export const levels: ParcoursLevel[] = [
         name: 'Autonomie',
         tagline: "Raconter, se débrouiller, comprendre l'imprévu.",
         description:
-            "Tu sors des phrases apprises par cœur. Tu racontes ton passé, tu donnes ton avis et tu gères les situations qui ne sont pas dans le livre.",
+            'Tu sors des phrases apprises par cœur. Tu racontes ton passé, tu donnes ton avis et tu gères les situations qui ne sont pas dans le livre.',
         hours: 60,
         image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=1200&q=80',
         subLevels: [
@@ -225,20 +340,131 @@ export const levels: ParcoursLevel[] = [
                 outcome:
                     'Tu racontes un week-end, tu décris un problème et tu demandes de l’aide.',
                 image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Récits du passé',
+                        hours: 15,
+                        description:
+                            'Raconter une histoire, un voyage ou une anecdote avec les temps du passé.',
+                        lessons: [
+                            {
+                                title: 'Prétérit',
+                                description:
+                                    'Raconter une histoire avec les verbes forts et faibles.',
+                            },
+                            {
+                                title: 'Parfait vs prétérit',
+                                description:
+                                    'Choisir le temps juste à l’oral et à l’écrit.',
+                            },
+                            {
+                                title: 'Datif',
+                                description:
+                                    'Identifier le complément d’attribution et les prépositions du datif.',
+                            },
+                            {
+                                title: 'Week-end & vacances',
+                                description:
+                                    'Décrire un voyage et raconter une anecdote au passé.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Situations de la vie',
+                        hours: 15,
+                        description:
+                            'Se débrouiller dans les situations concrètes : santé, logement, administration.',
+                        lessons: [
+                            {
+                                title: 'Santé',
+                                description:
+                                    'Décrire un symptôme et comprendre les consignes d’un médecin.',
+                            },
+                            {
+                                title: 'Logement',
+                                description:
+                                    'Chercher un appartement, comprendre une annonce et poser des questions.',
+                            },
+                            {
+                                title: 'Administration',
+                                description:
+                                    'Comprendre un formulaire et expliquer une situation simple.',
+                            },
+                            {
+                                title: 'Prépositions de lieu',
+                                description:
+                                    'Situer, orienter et décrire un trajet sans hésiter.',
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 code: 'A2.2',
                 title: 'Argumenter simplement',
                 hours: 30,
-                focus: [
-                    'Subordonnées',
-                    'Comparatif',
-                    'Travail',
-                    'Projets',
-                ],
+                focus: ['Subordonnées', 'Comparatif', 'Travail', 'Projets'],
                 outcome:
                     'Tu expliques un choix, tu compares deux options et tu parles de tes projets.',
                 image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a2f9?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Donner son avis',
+                        hours: 15,
+                        description:
+                            'Comparer, justifier un choix et relier ses idées simplement.',
+                        lessons: [
+                            {
+                                title: 'Comparatif',
+                                description:
+                                    'Comparer deux options et justifier un choix.',
+                            },
+                            {
+                                title: 'Subordonnées avec weil/dass',
+                                description:
+                                    'Relier deux idées et expliquer une raison.',
+                            },
+                            {
+                                title: 'Connecteurs simples',
+                                description:
+                                    'Structurer un propos avec d’abord, ensuite, enfin.',
+                            },
+                            {
+                                title: 'Emails personnels',
+                                description:
+                                    'Répondre, remercier et proposer quelque chose par écrit.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Projets & travail',
+                        hours: 15,
+                        description:
+                            'Parler de son avenir professionnel et se préparer aux premiers entretiens.',
+                        lessons: [
+                            {
+                                title: 'Futur',
+                                description:
+                                    'Parler de tes projets avec le futur et le présent.',
+                            },
+                            {
+                                title: 'Travail',
+                                description:
+                                    'Décrire ton métier, tes missions et tes conditions de travail.',
+                            },
+                            {
+                                title: 'Entretien simple',
+                                description:
+                                    'Répondre aux questions classiques d’un premier entretien.',
+                            },
+                            {
+                                title: 'Modaux au passé',
+                                description:
+                                    'Nuancer une obligation ou une possibilité au passé.',
+                            },
+                        ],
+                    },
+                ],
             },
         ],
         canDo: [
@@ -249,7 +475,7 @@ export const levels: ParcoursLevel[] = [
             'Décrire tes projets personnels et professionnels',
             'Tenir dix minutes d’échange sans revenir au français',
         ],
-        price: { solo: 2090, duo: 1080, group: 720 },
+        price: { solo: 2090, group: 720 },
         nextCohort: '18 janvier 2027',
         seats: { total: 6, left: 3 },
         icon: MessagesSquare,
@@ -273,20 +499,131 @@ export const levels: ParcoursLevel[] = [
                 outcome:
                     'Tu racontes une histoire, tu donnes ton opinion et tu réagis à l’actualité.',
                 image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Raconter et réagir',
+                        hours: 15,
+                        description:
+                            'Donner du relief à un récit et réagir à une information entendue.',
+                        lessons: [
+                            {
+                                title: 'Prétérit narratif',
+                                description:
+                                    'Enchaîner les actions et donner du rythme à un récit.',
+                            },
+                            {
+                                title: 'Konjunktiv II',
+                                description:
+                                    'Formuler une hypothèse, un souhait ou une demande polie.',
+                            },
+                            {
+                                title: 'Discours indirect',
+                                description:
+                                    'Rapporter les paroles de quelqu’un sans déformer l’idée.',
+                            },
+                            {
+                                title: 'Réagir à l’actualité',
+                                description:
+                                    'Donner son point de vue sur une information entendue.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Médias & société',
+                        hours: 15,
+                        description:
+                            'Comprendre les médias et participer à un échange sur des sujets de société.',
+                        lessons: [
+                            {
+                                title: 'Compréhension orale',
+                                description:
+                                    'Repérer l’essentiel d’une émission ou d’un reportage court.',
+                            },
+                            {
+                                title: 'Vocabulaire des médias',
+                                description:
+                                    'Comprendre les titres, les rubriques et les opinions.',
+                            },
+                            {
+                                title: 'Relatifs',
+                                description:
+                                    'Préciser une personne ou une chose avec der, die, das, den…',
+                            },
+                            {
+                                title: 'Débat simple',
+                                description:
+                                    'Donner un avis, rebondir et concéder un point.',
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 code: 'B1.2',
                 title: 'Argumenter',
                 hours: 30,
-                focus: [
-                    'Passif',
-                    'Relatifs',
-                    'Lettre formelle',
-                    'Société',
-                ],
+                focus: ['Passif', 'Relatifs', 'Lettre formelle', 'Société'],
                 outcome:
                     'Tu écris un email formel, tu structures un argument et tu défends une position.',
                 image: 'https://images.unsplash.com/photo-1471107340929-a87cd0f5b5f3?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Argumenter à l’écrit',
+                        hours: 15,
+                        description:
+                            'Écrire des textes structurés et défendre une position avec les bons connecteurs.',
+                        lessons: [
+                            {
+                                title: 'Lettre formelle',
+                                description:
+                                    'Choisir les formules, structurer une demande et conclure.',
+                            },
+                            {
+                                title: 'Passif',
+                                description:
+                                    'Mettre l’action au premier plan et adapter le registre.',
+                            },
+                            {
+                                title: 'Connecteurs logiques',
+                                description:
+                                    'Enchaîner cause, conséquence, opposition et but.',
+                            },
+                            {
+                                title: 'Correction & style',
+                                description:
+                                    'Relire un texte et corriger les erreurs récurrentes.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Débattre à l’oral',
+                        hours: 15,
+                        description:
+                            'Prendre la parole, nuancer son avis et défendre une idée en interaction.',
+                        lessons: [
+                            {
+                                title: 'Opinion nuancée',
+                                description:
+                                    'Employer einerseits, andererseits et les formules d’accord partiel.',
+                            },
+                            {
+                                title: 'Réunion courte',
+                                description:
+                                    'Prendre la parole, reformuler et proposer une solution.',
+                            },
+                            {
+                                title: 'Société',
+                                description:
+                                    'Parler de sujets de société avec un vocabulaire précis.',
+                            },
+                            {
+                                title: 'Présentation',
+                                description:
+                                    'Présenter un sujet en trois minutes avec un plan clair.',
+                            },
+                        ],
+                    },
+                ],
             },
         ],
         canDo: [
@@ -297,7 +634,7 @@ export const levels: ParcoursLevel[] = [
             'Gérer un entretien ou une réunion courte',
             'Tenir quinze minutes de conversation spontanée',
         ],
-        price: { solo: 2090, duo: 1080, group: 840 },
+        price: { solo: 2090, group: 840 },
         nextCohort: '25 janvier 2027',
         seats: { total: 6, left: 4 },
         icon: Compass,
@@ -317,15 +654,68 @@ export const levels: ParcoursLevel[] = [
                 code: 'B2.1',
                 title: 'Structurer',
                 hours: 30,
-                focus: [
-                    'Nominalisation',
-                    'Connecteurs',
-                    'Débat',
-                    'Études',
-                ],
+                focus: ['Nominalisation', 'Connecteurs', 'Débat', 'Études'],
                 outcome:
                     'Tu construis un exposé, tu relies tes idées et tu argumentes avec nuance.',
                 image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Structurer le discours',
+                        hours: 15,
+                        description:
+                            'Construire un propos clair et varier le registre à l’écrit comme à l’oral.',
+                        lessons: [
+                            {
+                                title: 'Nominalisation',
+                                description:
+                                    'Transformer les phrases et varier le registre à l’écrit.',
+                            },
+                            {
+                                title: 'Connecteurs avancés',
+                                description:
+                                    'Exprimer la concession, la restriction et la finalité avec précision.',
+                            },
+                            {
+                                title: 'Exposé',
+                                description:
+                                    'Construire une introduction, un développement et une conclusion.',
+                            },
+                            {
+                                title: 'Études & travail',
+                                description:
+                                    'Présenter un parcours et argumenter un projet professionnel.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Débat & nuance',
+                        hours: 15,
+                        description:
+                            'Défendre une position complexe et choisir le mot juste.',
+                        lessons: [
+                            {
+                                title: 'Débat contradictoire',
+                                description:
+                                    'Réfuter, concéder et défendre une position structurée.',
+                            },
+                            {
+                                title: 'Nuances lexicales',
+                                description:
+                                    'Distinguer les synonymes et choisir le mot juste.',
+                            },
+                            {
+                                title: 'Subordonnées complexes',
+                                description:
+                                    'Maîtriser les constructions imbriquées à l’écrit.',
+                            },
+                            {
+                                title: 'Oral spontané',
+                                description:
+                                    'Gagner en fluidité et gérer les hésitations.',
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 code: 'B2.2',
@@ -340,6 +730,64 @@ export const levels: ParcoursLevel[] = [
                 outcome:
                     'Tu gères les épreuves complexes et tu adaptes ton registre au contexte.',
                 image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80',
+                program: [
+                    {
+                        title: 'Style & synthèse',
+                        hours: 15,
+                        description:
+                            'Lire des textes longs, synthétiser et soigner la forme de tes écrits.',
+                        lessons: [
+                            {
+                                title: 'Synthèse de documents',
+                                description:
+                                    'Comparer plusieurs sources et rédiger une synthèse.',
+                            },
+                            {
+                                title: 'Style formel',
+                                description:
+                                    'Adapter le registre, la ponctuation et les formules.',
+                            },
+                            {
+                                title: 'Lecture longue',
+                                description:
+                                    'Repérer la thèse, les arguments et les nuances d’un texte.',
+                            },
+                            {
+                                title: 'Correction autonome',
+                                description:
+                                    'Diagnostiquer et corriger tes erreurs sans aide.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Épreuves d’examen',
+                        hours: 15,
+                        description:
+                            'Se préparer aux quatre épreuves TELC ou ÖSD en conditions réelles.',
+                        lessons: [
+                            {
+                                title: 'Compréhension écrite TELC/ÖSD',
+                                description:
+                                    'Gérer le temps et repérer les pièges du format.',
+                            },
+                            {
+                                title: 'Compréhension orale',
+                                description:
+                                    'Prendre des notes et répondre sous pression.',
+                            },
+                            {
+                                title: 'Expression écrite',
+                                description:
+                                    'Planifier, rédiger et relire une tâche d’examen.',
+                            },
+                            {
+                                title: 'Expression orale',
+                                description:
+                                    'Simuler l’entretien et l’exposé en conditions réelles.',
+                            },
+                        ],
+                    },
+                ],
             },
         ],
         canDo: [
@@ -350,7 +798,7 @@ export const levels: ParcoursLevel[] = [
             'Adapter ton registre au contexte professionnel',
             'Parler trente minutes sans perdre le fil',
         ],
-        price: { solo: 2090, duo: 1080, group: 900 },
+        price: { solo: 2090, group: 900 },
         nextCohort: '1 février 2027',
         seats: { total: 6, left: 2 },
         icon: Trophy,
@@ -406,16 +854,23 @@ export const formats: TrainingFormat[] = [
     },
 ];
 
+function examReferencePrice(level: ExamLevel): PriceSet {
+    return {
+        solo: getExamPackage('osd', level, 'full', 'solo').priceCents / 100,
+        group: getExamPackage('osd', level, 'full', 'group').priceCents / 100,
+    };
+}
+
 export const examPreps: ExamPrep[] = [
     {
-        id: 'a1-a2',
-        level: 'A1–A2',
-        title: 'Prépa découverte',
-        subtitle: 'Se familiariser avec le format',
+        id: 'a1',
+        level: 'A1',
+        title: 'Prépa A1',
+        subtitle: 'Les premières épreuves, bien préparées',
         volume: '4 × 90 min + 1 examen blanc',
         sessions: 4,
         image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80',
-        price: { solo: 350, duo: 240, group: 170 },
+        price: examReferencePrice('a1'),
         description:
             'Une préparation courte pour comprendre les épreuves, éviter les pièges de format et arriver sans surprise.',
         includes: [
@@ -427,6 +882,25 @@ export const examPreps: ExamPrep[] = [
         accent: accents.chart2,
     },
     {
+        id: 'a2',
+        level: 'A2',
+        title: 'Prépa A2',
+        subtitle: 'Gagner en autonomie à l’écrit et à l’oral',
+        volume: '6 × 90 min + 1 examen blanc',
+        sessions: 6,
+        image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=1200&q=80',
+        price: examReferencePrice('a2'),
+        description:
+            'Compréhension et expression, à l’écrit comme à l’oral : des entraînements ciblés pour arriver prêt aux épreuves A2.',
+        includes: [
+            '6 séances de 90 min',
+            '1 examen blanc complet corrigé',
+            'Expression écrite et orale',
+            'Stratégies de compréhension',
+        ],
+        accent: accents.chart4,
+    },
+    {
         id: 'b1',
         level: 'B1',
         title: 'Prépa B1',
@@ -434,7 +908,7 @@ export const examPreps: ExamPrep[] = [
         volume: '10 × 90 min + 2 examens blancs',
         sessions: 10,
         image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
-        price: { solo: 890, duo: 610, group: 430 },
+        price: examReferencePrice('b1'),
         description:
             'Le format complet : stratégie par épreuve, entraînement chronométré et deux passages blancs corrigés en détail.',
         includes: [
@@ -453,7 +927,7 @@ export const examPreps: ExamPrep[] = [
         volume: '10 × 90 min + 2 examens blancs',
         sessions: 10,
         image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
-        price: { solo: 950, duo: 650, group: 460 },
+        price: examReferencePrice('b2'),
         description:
             'La prépa la plus complète. On travaille la précision, la structure et la gestion du temps le jour J.',
         includes: [
@@ -465,77 +939,7 @@ export const examPreps: ExamPrep[] = [
         accent: accents.chart3,
         popular: true,
     },
-    {
-        id: 'focus',
-        level: 'B1–B2',
-        title: 'Focus oral ou écrit',
-        subtitle: 'Débloquer une épreuve précise',
-        volume: '4 × 90 min',
-        sessions: 4,
-        image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1200&q=80',
-        price: { solo: 290, duo: 200, group: 140 },
-        description:
-            'Tu as déjà le niveau, mais une épreuve te bloque. On cible uniquement l’oral ou uniquement l’écrit.',
-        includes: [
-            '4 séances ciblées',
-            'Diagnostic de l’épreuve',
-            'Exercices chronométrés',
-            'Plan de révision J-7',
-        ],
-        accent: accents.primary,
-    },
 ];
-
-export const ateliers: Atelier[] = [
-    {
-        id: 'articles',
-        title: 'Articles & cas',
-        level: 'A1–A2',
-        volume: '4 × 90 min',
-        sessions: 4,
-        image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80',
-        price: { solo: 240, duo: 165, group: 120 },
-        description:
-            'Der, die, das et les cas : arrête de deviner. Des astuces visuelles, des exercices courts et un système pour retenir.',
-        outcomes: [
-            'Choisir le bon article sans hésiter',
-            'Maîtriser nominatif, accusatif et datif',
-            'Repérer les terminaisons qui donnent le genre',
-            'Auto-corriger tes erreurs à l’oral',
-        ],
-        accent: accents.chart4,
-    },
-    {
-        id: 'temps',
-        title: 'Temps & subordonnées',
-        level: 'B1–B2',
-        volume: '4 × 90 min',
-        sessions: 4,
-        image: 'https://images.unsplash.com/photo-1471107340929-a87cd0f5b5f3?auto=format&fit=crop&w=1200&q=80',
-        price: { solo: 240, duo: 165, group: 120 },
-        description:
-            'Parfait, prétérit, weil, dass, obwohl : construis des phrases qui tiennent debout, à l’écrit comme à l’oral.',
-        outcomes: [
-            'Choisir le bon temps du passé',
-            'Construire des subordonnées correctes',
-            'Utiliser les connecteurs logiques',
-            'Gagner en précision à l’écrit',
-        ],
-        accent: accents.chart1,
-    },
-];
-
-export const stage = {
-    title: 'Stage de vacances',
-    subtitle: 'Cinq jours pour débloquer un niveau',
-    volume: '5 × 3 h',
-    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
-    price: { solo: 525, duo: 330, group: 240 },
-    description:
-        'Un stage intensif en mini-groupe, pendant les vacances scolaires. Le matin, on apprend ; l’après-midi, on pratique. Idéal avant un examen ou une rentrée.',
-    dates: ['Février 2027', 'Avril 2027', 'Juillet 2027'],
-    accent: accents.chart3,
-};
 
 export const teacher = {
     name: 'Ton prof de VéninCorsé',
@@ -574,65 +978,61 @@ export const testimonials: Testimonial[] = [
         initials: 'SN',
         name: 'Sarah N.',
         city: 'Montréal',
-        objective: 'Soutien scolaire',
-        quote: "Ma fille détestait l'allemand. Avec les séances du mercredi et les bilans réguliers, elle est remontée de 8 à 15 en un semestre.",
+        objective: 'Cours d’essai 1 h',
+        quote: "J'ai commencé par une heure d'essai pour voir si la méthode me convenait. Le courant est passé tout de suite : je me suis inscrite la semaine suivante.",
     },
     {
         initials: 'DJ',
         name: 'David J.',
         city: 'Londres',
         objective: 'A1 en cours du soir',
-        quote: "Le bilan de niveau m'a évité de payer pour un parcours inutile. J'ai commencé au bon endroit, avec le bon rythme.",
+        quote: "Le test gratuit m'a évité de payer pour un parcours inutile. J'ai commencé au bon endroit, avec le bon rythme.",
     },
     {
         initials: 'LF',
         name: 'Léa F.',
         city: 'Lyon',
         objective: 'Conversation B1',
-        quote: "Les séances de conversation me débloquent : je parle enfin sans traduire mot à mot dans ma tête.",
+        quote: 'Les séances de conversation me débloquent : je parle enfin sans traduire mot à mot dans ma tête.',
     },
 ];
 
 export const faqs: FaqItem[] = [
     {
         question: 'Comment se déroule un parcours ?',
-        answer:
-            'Chaque parcours couvre un niveau complet en 60 heures, divisé en deux sous-niveaux de 30 heures. Tu suis deux séances de 90 minutes ou trois séances d’une heure par semaine, selon le rythme choisi. Chaque sous-niveau se termine par un checkpoint oral et écrit.',
+        answer: 'Chaque parcours couvre un niveau complet en 60 heures, divisé en deux sous-niveaux de 30 heures. Tu choisis le 1:1 ou le groupe, puis ton rythme : extensif, accéléré, intensif ou super intensif. Chaque sous-niveau se termine par un checkpoint oral et écrit.',
     },
     {
-        question: 'Quelle est la différence entre le 1:1, le duo et le groupe ?',
-        answer:
-            'Le 1:1 est entièrement personnalisé. Le duo permet de partager le cours avec une autre personne de ton niveau. Le groupe réunit 3 à 6 élèves : le tarif baisse, la dynamique change, et tu bénéficies quand même des corrections individuelles.',
+        question: 'Quelle est la différence entre le 1:1 et le groupe ?',
+        answer: 'Le 1:1 est entièrement personnalisé : le professeur te consacre toute la séance, à un tarif plus élevé. Le groupe réunit 3 à 6 élèves : tu partages le coût et tu bénéficies de la dynamique collective et des corrections individuelles.',
     },
     {
-        question: 'Pourquoi le bilan de niveau est-il payant ?',
-        answer:
-            'Parce qu’il dure 45 minutes et qu’il produit un plan écrit : ton niveau réel, ton objectif, le nombre d’heures nécessaires et le budget. Les 39 € sont intégralement déduits de ton premier parcours si tu t’inscris sous 7 jours.',
+        question: 'Comment se passe le cours d’essai d’une heure ?',
+        answer: 'C’est une séance de 60 minutes en visio, en 1:1. On part de ton niveau réel : mises en situation, test oral et écrit rapide, puis discussion sur ton objectif et ton rythme. Les 39 € sont intégralement déduits de ton parcours si tu t’inscris sous 7 jours.',
     },
     {
         question: 'Puis-je commencer à n’importe quel moment ?',
-        answer:
-            'Les cohortes de parcours démarrent en janvier, avril et septembre. Les formats accéléré et intensif ont des rentrées plus fréquentes. Si tu as déjà le niveau, tu peux rejoindre un sous-niveau en cours après un checkpoint d’entrée.',
+        answer: 'Les cohortes de parcours démarrent en janvier, avril et septembre. Les formats accéléré et intensif ont des rentrées plus fréquentes. Si tu as déjà le niveau, tu peux rejoindre un sous-niveau en cours après un checkpoint d’entrée.',
     },
     {
-        question: 'Comment se passe la préparation ÖSD ou TELC ?',
-        answer:
-            'La prépa est calée sur ta date d’examen. On commence 8 à 10 semaines avant : stratégie par épreuve, entraînement chronométré, deux examens blancs corrigés et un plan de révision pour les derniers jours.',
+        question: 'Comment se passe la préparation Goethe, ÖSD ou TELC ?',
+        answer: 'Choisis le certificat, le niveau A1 à B2 et les épreuves à travailler : préparation complète, écrit ou oral. Le prix et le nombre de séances s’adaptent à ces choix. Tu sélectionnes ensuite un planning compatible avec ta date d’examen. L’inscription officielle et les frais du centre ne sont pas inclus.',
     },
     {
-        question: 'Les cours sont-ils payés en euros ?',
-        answer:
-            'Oui, tous les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada. Le paiement se fait par carte, PayPal ou virement. Un paiement en trois fois est possible avec +5 %.',
+        question: 'Le test de niveau est-il vraiment gratuit ?',
+        answer: 'Oui. Soixante questions, environ dix minutes, résultat immédiat : aucun paiement, aucun email et aucune inscription. Il te donne une estimation A1–B2 et le parcours recommandé. Le cours d’essai permet ensuite de confirmer ton niveau à l’oral.',
     },
     {
         question: 'Que se passe-t-il si le groupe n’ouvre pas ?',
-        answer:
-            'Un groupe ouvre à partir de 3 inscrits. À 2, tu peux démarrer au tarif Duo. Si le groupe ne peut pas ouvrir, tu choisis entre un report à la cohorte suivante et un remboursement intégral.',
+        answer: 'Un groupe ouvre à partir de 3 inscrits. Si le groupe ne peut pas ouvrir, tu choisis entre un report à la cohorte suivante et un remboursement intégral. Aucun changement vers le 1:1 ni supplément sans ton accord.',
     },
     {
         question: 'Puis-je annuler ou déplacer une séance ?',
-        answer:
-            'Tu peux reporter une séance sans frais jusqu’à 24 heures avant. Les séances manquées en groupe sont enregistrées et disponibles pendant 30 jours. Un parcours peut être annulé dans les 14 jours suivant l’inscription, conformément au droit de rétractation européen.',
+        answer: 'Tu peux reporter une séance sans frais jusqu’à 24 heures avant. Les séances manquées en groupe sont enregistrées et disponibles pendant 30 jours. Un parcours peut être annulé dans les 14 jours suivant l’inscription, conformément au droit de rétractation européen.',
+    },
+    {
+        question: 'Comment se passe le paiement ?',
+        answer: 'Tous les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada. Le paiement se fait par carte, PayPal ou virement. Un paiement en trois fois est possible avec +5 %.',
     },
 ];
 
@@ -654,12 +1054,12 @@ export const included = [
     },
     {
         icon: TrendingUp,
-        title: 'Deux bilans par niveau',
-        detail: 'Un checkpoint et un bilan écrit à chaque sous-niveau.',
+        title: 'Deux checkpoints par niveau',
+        detail: 'Un checkpoint et un retour écrit à chaque sous-niveau.',
     },
     {
         icon: Users,
-        title: 'Mini-groupe 2–6',
+        title: 'Mini-groupe 3–6',
         detail: 'Assez petit pour parler, assez grand pour progresser ensemble.',
     },
     {
@@ -682,20 +1082,18 @@ export const paymentOptions = [
     },
     {
         icon: GraduationCap,
-        title: 'Bilan crédité',
-        detail: 'Les 39 € du bilan sont déduits de ton parcours si tu t’inscris sous 7 jours.',
+        title: 'Cours d’essai crédité',
+        detail: 'Les 39 € de l’heure d’essai sont déduits de ton parcours si tu t’inscris sous 7 jours.',
     },
 ] as const;
 
 export const tierLabels: Record<TierKey, string> = {
     solo: '1:1',
-    duo: 'Duo (2)',
     group: 'Groupe (3–6)',
 };
 
 export const tierShortLabels: Record<TierKey, string> = {
     solo: '1:1',
-    duo: 'Duo',
     group: 'Groupe',
 };
 
@@ -711,6 +1109,6 @@ export function pricePerHour(value: number, hours: number): string {
     return formatPrice(Math.round(value / hours));
 }
 
-export function getLevel(slug: string | undefined): ParcoursLevel | undefined {
+export function getLevel(slug: string | undefined): CourseLevel | undefined {
     return levels.find((level) => level.slug === slug);
 }

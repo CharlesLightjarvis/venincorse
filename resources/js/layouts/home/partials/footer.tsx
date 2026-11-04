@@ -3,62 +3,63 @@ import {
     SiInstagram,
     SiWhatsapp,
     SiX,
-} from "@icons-pack/react-simple-icons";
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowUp, Globe, Mail, Phone } from "lucide-react";
-import { Link } from "@inertiajs/react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from '@icons-pack/react-simple-icons';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowUp, Globe, Mail, Phone } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const footerLinks = [
     {
-        title: "Parcours",
+        title: 'Parcours',
         links: [
-            { label: "A1 — Premiers pas", href: "/courses/a1" },
-            { label: "A2 — Autonomie", href: "/courses/a2" },
-            { label: "B1 — Confiance", href: "/courses/b1" },
-            { label: "B2 — Précision", href: "/courses/b2" },
+            { label: 'A1 — Premiers pas', href: '/courses/a1' },
+            { label: 'A2 — Autonomie', href: '/courses/a2' },
+            { label: 'B1 — Confiance', href: '/courses/b1' },
+            { label: 'B2 — Précision', href: '/courses/b2' },
         ],
     },
     {
-        title: "Offres",
+        title: 'Offres',
         links: [
-            { label: "Prépa ÖSD & TELC", href: "/examens" },
-            { label: "Ateliers ciblés", href: "/ateliers" },
-            { label: "Stage de vacances", href: "/ateliers" },
-            { label: "Tarifs", href: "/tarifs" },
+            { label: "Cours d'essai 1 h", href: '/trial' },
+            { label: 'Prépa Goethe, ÖSD & TELC', href: '/exams' },
+            { label: 'Packs de grammaire', href: '/workshops#grammar' },
+            { label: 'Ateliers pratiques', href: '/workshops#practice' },
+            { label: 'Tarifs', href: '/pricing' },
         ],
     },
     {
-        title: "Ressources",
+        title: 'Ressources',
         links: [
-            { label: "Bilan de niveau", href: "/bilan" },
-            { label: "Blog", href: "/blog" },
-            { label: "À propos", href: "/about" },
-            { label: "Contact", href: "/contact" },
+            { label: 'Test de niveau gratuit', href: '/level-test' },
+            { label: 'Blog', href: '/blog' },
+            { label: 'À propos', href: '/about' },
+            { label: 'Contact', href: '/contact' },
         ],
     },
     {
-        title: "Légal",
+        title: 'Légal',
         links: [
-            { label: "Confidentialité", href: "#" },
-            { label: "CGU", href: "#" },
-            { label: "Mentions légales", href: "#" },
+            { label: 'Confidentialité', href: '#' },
+            { label: 'CGU', href: '#' },
+            { label: 'Mentions légales', href: '#' },
         ],
     },
 ];
 
 const socialLinks = [
-    { icon: SiWhatsapp, label: "WhatsApp", href: "#" },
-    { icon: SiX, label: "Twitter", href: "#" },
-    { icon: SiFacebook, label: "Facebook", href: "#" },
-    { icon: SiInstagram, label: "Instagram", href: "#" },
+    { icon: SiWhatsapp, label: 'WhatsApp', href: '#' },
+    { icon: SiX, label: 'Twitter', href: '#' },
+    { icon: SiFacebook, label: 'Facebook', href: '#' },
+    { icon: SiInstagram, label: 'Instagram', href: '#' },
 ];
 
 export function Footer() {
     const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const shouldReduceMotion = useReducedMotion();
@@ -101,9 +102,10 @@ export function Footer() {
 
                         <p className="mb-4 max-w-md text-sm text-muted-foreground">
                             L'allemand pour les francophones de la diaspora :
-                            parcours A1 → B2, prépa ÖSD & TELC et ateliers
-                            ciblés — 100 % en visio, en mini-groupe, en duo ou
-                            en 1:1.
+                            parcours A1 → B2, prépa Goethe, ÖSD & TELC et
+                            ateliers ciblés — 100 % en visio, en mini-groupe ou
+                            en 1:1. Commence par une heure d'essai ou par le
+                            test de niveau gratuit.
                         </p>
 
                         {/* Newsletter */}
@@ -233,7 +235,7 @@ export function Footer() {
                                 whileInView={{ scale: 1 }}
                                 viewport={{ once: true }}
                                 transition={{
-                                    type: "spring",
+                                    type: 'spring',
                                     stiffness: 300,
                                     damping: 20,
                                     delay: 0.6 + index * 0.05,

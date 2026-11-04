@@ -9,7 +9,6 @@ import {
     FileText,
     GraduationCap,
     Sparkles,
-    Target,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -19,34 +18,39 @@ import { OfferCard } from '@/components/marketing/offer-card';
 import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeading } from '@/components/marketing/section-heading';
 import { TierSwitcher } from '@/components/marketing/tier-switcher';
+import { exam as bookExam } from '@/routes/booking';
+import { workshops as workshopsRoute } from '@/routes';
+import {
+    grammarPacks,
+    practiceWorkshops,
+    workshopVolume,
+} from '@/data/workshop-catalog';
 import { cn } from '@/lib/utils';
 import {
-    ateliers,
     examPreps,
     faqs,
     formatPrice,
     levels,
     pricePerHour,
-    stage,
     tierLabels,
     tierShortLabels,
     type TierKey,
 } from '@/data/offer';
 
-const tierOrder: TierKey[] = ['group', 'duo', 'solo'];
+const tierOrder: TierKey[] = ['group', 'solo'];
 
 const services = [
     {
-        icon: Target,
-        title: 'Bilan de niveau',
+        icon: Sparkles,
+        title: 'Cours d’essai',
         price: '39 €',
-        detail: '45 minutes en visio, plan écrit sous 48 h. Crédité sur ton premier parcours sous 7 jours.',
+        detail: '60 minutes en visio, en 1:1. Crédité sur ton premier parcours sous 7 jours.',
     },
     {
-        icon: Sparkles,
-        title: 'Pack découverte',
-        price: '140 €',
-        detail: 'Bilan + première séance de 60 minutes en 1:1. Tarif duo : 100 €.',
+        icon: Clock,
+        title: 'Cours à l’unité',
+        price: '45 €/h',
+        detail: 'Une séance ponctuelle en 1:1, sans engagement. Idéal pour débloquer un point précis.',
     },
     {
         icon: FileText,
@@ -62,7 +66,7 @@ const services = [
     },
 ] as const;
 
-const pricingFaqs = [faqs[2], faqs[5], faqs[6], faqs[7]];
+const pricingFaqs = [faqs[2], faqs[5], faqs[8], faqs[7]];
 
 const includedPoints = [
     'Supports et exercices inclus',
@@ -86,11 +90,11 @@ export default function Pricing() {
                         <span className="text-primary">en euros.</span>
                     </>
                 }
-                description="Groupe, duo ou 1:1 : le prix baisse quand le groupe grandit, jamais l’exigence. Tous les tarifs sont par personne, sans frais cachés."
+                description="Groupe ou 1:1 : le prix baisse quand le groupe grandit, jamais l’exigence. Tous les tarifs sont par personne, sans frais cachés."
             >
                 <Button size="lg" className="group gap-2 rounded-full" asChild>
-                    <Link href="/bilan">
-                        Faire le bilan de niveau
+                    <Link href="/trial">
+                        Réserver mon cours d’essai
                         <ArrowRight
                             className="h-4 w-4 transition-transform group-hover:translate-x-1"
                             aria-hidden="true"
@@ -104,7 +108,7 @@ export default function Pricing() {
                     className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
                     asChild
                 >
-                    <Link href="/contact">Poser une question</Link>
+                    <Link href="/level-test">Tester mon niveau</Link>
                 </Button>
             </PageHero>
 
@@ -147,7 +151,10 @@ export default function Pricing() {
                                 image={level.image}
                                 alt={`Parcours ${level.code} — ${level.name}`}
                                 badge={{ label: level.code }}
-                                chip={{ value: String(level.hours), label: 'h' }}
+                                chip={{
+                                    value: String(level.hours),
+                                    label: 'h',
+                                }}
                                 flag={
                                     level.featured
                                         ? 'Le plus demandé'
@@ -181,7 +188,7 @@ export default function Pricing() {
                                     </div>
                                 </div>
 
-                                <div className="mb-4 space-y-2 flex-1">
+                                <div className="mb-4 flex-1 space-y-2">
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-foreground/50">
                                         {tierOrder.map((priceTier) => (
                                             <span
@@ -249,8 +256,8 @@ export default function Pricing() {
                 <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
                     <SectionHeading
                         eyebrow="Prépa examens"
-                        title="ÖSD & TELC, du format court au complet."
-                        description="Les prix sont par personne. L’inscription à l’examen reste à ta charge."
+                        title="Goethe, ÖSD & TELC : choisis tes épreuves."
+                        description="Référence ci-dessous : préparation complète ÖSD, par personne. Le tarif dépend du certificat et des épreuves. Prix de démonstration ; inscription officielle à l’examen non incluse."
                         className="mb-10"
                     />
 
@@ -319,7 +326,18 @@ export default function Pricing() {
                                         className="shrink-0 rounded-full border-border/50"
                                         asChild
                                     >
-                                        <Link href="/examens">Voir</Link>
+                                        <Link
+                                            href={bookExam({
+                                                query: {
+                                                    provider: 'osd',
+                                                    level: prep.id,
+                                                    scope: 'full',
+                                                    tier,
+                                                },
+                                            })}
+                                        >
+                                            Configurer
+                                        </Link>
                                     </Button>
                                 </div>
                             </div>
@@ -331,76 +349,84 @@ export default function Pricing() {
             <section className="relative py-16 md:py-24">
                 <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
                     <SectionHeading
-                        eyebrow="Ateliers & stage"
-                        title="Les formats courts."
-                        description="Par personne, supports et replay inclus. Les groupes ouvrent à partir de 3 inscrits."
+                        eyebrow="Grammaire & pratique"
+                        title="Un pack par niveau, ou une séance pour pratiquer."
+                        description="Packs de grammaire A1 à B2, Sprechen, Schreiben et Wortschatz à l’unité. Tarifs de démonstration par personne ; les groupes réunissent 3 à 6 élèves de même niveau."
                         className="mb-10"
                     />
 
                     <div className="overflow-hidden rounded-3xl border border-border/40 bg-card dark:border-border/50">
-                        {[...ateliers, { ...stage, id: 'stage' }].map(
-                            (item, index) => (
-                                <div
-                                    key={item.id}
-                                    className={cn(
-                                        'flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:px-6',
-                                        index > 0 &&
-                                            'border-t border-border/30',
-                                    )}
-                                >
-                                    <div className="min-w-0">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <p className="text-sm font-semibold text-foreground">
-                                                {item.title}
-                                            </p>
-                                            <span className="rounded-full border border-border/50 px-2.5 py-1 text-[10px] font-medium text-foreground/50 dark:border-border/60">
-                                                {item.volume}
-                                            </span>
-                                        </div>
-
-                                        <p className="mt-1 text-xs text-foreground/50">
-                                            {item.description}
+                        {[
+                            ...grammarPacks.map((pack) => ({
+                                ...pack,
+                                volume: workshopVolume(
+                                    pack.sessions,
+                                    pack.durationMinutes,
+                                ),
+                                href: `${workshopsRoute.url()}#grammar`,
+                            })),
+                            ...practiceWorkshops.map((workshop) => ({
+                                ...workshop,
+                                volume: workshopVolume(
+                                    1,
+                                    workshop.durationMinutes,
+                                ),
+                                href: `${workshopsRoute.url()}#practice`,
+                            })),
+                        ].map((item, index) => (
+                            <div
+                                key={item.id}
+                                className={cn(
+                                    'flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:px-6',
+                                    index > 0 && 'border-t border-border/30',
+                                )}
+                            >
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {item.title}
                                         </p>
+                                        <span className="rounded-full border border-border/50 px-2.5 py-1 text-[10px] font-medium text-foreground/50 dark:border-border/60">
+                                            {item.volume}
+                                        </span>
                                     </div>
 
-                                    <div className="flex items-center justify-between gap-4 sm:justify-end">
-                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-foreground/50">
-                                            {tierOrder.map((priceTier) => (
-                                                <span
-                                                    key={priceTier}
-                                                    className={cn(
-                                                        priceTier === tier &&
-                                                            'font-semibold text-primary',
-                                                    )}
-                                                >
-                                                    {tierShortLabels[
-                                                        priceTier
-                                                    ]}{' '}
-                                                    <span className="font-mono">
-                                                        {formatPrice(
-                                                            item.price[
-                                                                priceTier
-                                                            ],
-                                                        )}
-                                                    </span>
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="shrink-0 rounded-full border-border/50"
-                                            asChild
-                                        >
-                                            <Link href="/ateliers">
-                                                Voir
-                                            </Link>
-                                        </Button>
-                                    </div>
+                                    <p className="mt-1 text-xs text-foreground/50">
+                                        {item.description}
+                                    </p>
                                 </div>
-                            ),
-                        )}
+
+                                <div className="flex items-center justify-between gap-4 sm:justify-end">
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-foreground/50">
+                                        {tierOrder.map((priceTier) => (
+                                            <span
+                                                key={priceTier}
+                                                className={cn(
+                                                    priceTier === tier &&
+                                                        'font-semibold text-primary',
+                                                )}
+                                            >
+                                                {tierShortLabels[priceTier]}{' '}
+                                                <span className="font-mono">
+                                                    {formatPrice(
+                                                        item.price[priceTier],
+                                                    )}
+                                                </span>
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="shrink-0 rounded-full border-border/50"
+                                        asChild
+                                    >
+                                        <Link href={item.href}>Voir</Link>
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -462,15 +488,17 @@ export default function Pricing() {
                                     Tu hésites encore sur le format ?
                                 </p>
                                 <p className="text-xs text-foreground/55">
-                                    Le bilan de niveau recommande la formule la
-                                    plus économique pour ton objectif — pas la
-                                    plus chère.
+                                    Le test de niveau gratuit te recommande la
+                                    formule la plus économique pour ton objectif
+                                    — pas la plus chère.
                                 </p>
                             </div>
                         </div>
 
                         <Button className="rounded-full" asChild>
-                            <Link href="/bilan">Faire le bilan — 39 €</Link>
+                            <Link href="/level-test">
+                                Tester mon niveau — gratuit
+                            </Link>
                         </Button>
                     </div>
                 </div>
@@ -524,15 +552,21 @@ export default function Pricing() {
                 items={pricingFaqs}
                 eyebrow="Tarifs & paiement"
                 title="Questions d’argent, réponses claires."
-                description="Bilan, euros, ouverture des groupes et annulation : on ne laisse pas de flou."
+                description="Cours d’essai, test gratuit, euros, ouverture des groupes et annulation : on ne laisse pas de flou."
             />
 
             <CtaBand
                 eyebrow="Le bon point de départ"
-                title="Un bilan, un plan, un budget."
-                description="En 45 minutes, tu sais quel niveau viser, combien d’heures prévoir et quelle formule est la plus économique pour toi. Les 39 € sont crédités si tu t’inscris sous 7 jours."
-                primary={{ label: 'Réserver le bilan', href: '/bilan' }}
-                secondary={{ label: 'Voir les parcours', href: '/courses' }}
+                title="Une heure d’essai, un plan clair."
+                description="Réserve une heure en 1:1 pour tester la méthode et confirmer ton niveau. Les 39 € sont déduits si tu t’inscris sous 7 jours. Pas sûr de ton niveau ? Le test gratuit te situe en dix minutes."
+                primary={{
+                    label: 'Réserver mon cours d’essai',
+                    href: '/trial',
+                }}
+                secondary={{
+                    label: 'Passer le test gratuit',
+                    href: '/level-test',
+                }}
             />
         </>
     );

@@ -1,349 +1,548 @@
 import { Head, Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Check, Clock, Compass, Sparkles, Users } from 'lucide-react';
+import {
+    ArrowRight,
+    BookOpen,
+    Check,
+    Clock,
+    Gamepad2,
+    MessagesSquare,
+    PenLine,
+} from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { CtaBand } from '@/components/marketing/cta-band';
 import { FaqSection } from '@/components/marketing/faq-section';
 import { OfferCard } from '@/components/marketing/offer-card';
 import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeading } from '@/components/marketing/section-heading';
 import { TierSwitcher } from '@/components/marketing/tier-switcher';
+import { selectClassName } from '@/components/trial-slot-picker';
 import {
-    ateliers,
-    faqs,
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
     formatPrice,
-    stage,
+    tierLabels,
+    type FaqItem,
+    type LevelSlug,
     type TierKey,
 } from '@/data/offer';
+import {
+    getWorkshopSelection,
+    grammarPacks,
+    practiceWorkshops,
+    workshopLevels,
+    workshopVolume,
+} from '@/data/workshop-catalog';
+import { contact, courses, levelTest } from '@/routes';
 
-const workshopSteps = [
-    {
-        icon: Compass,
-        title: 'Tu choisis le point qui bloque',
-        description:
-            'Articles, temps, subordonnées : un seul sujet par atelier. Pas de programme fourre-tout.',
-    },
-    {
-        icon: Clock,
-        title: 'Quatre séances de 90 minutes',
-        description:
-            'Chaque séance : un système visuel, des exercices courts et une mise en pratique orale immédiate.',
-    },
-    {
-        icon: Sparkles,
-        title: 'Tu repars avec une méthode',
-        description:
-            'Pas une liste de règles à oublier. Un réflexe utilisable le lendemain, à l’écrit comme à l’oral.',
-    },
-] as const;
+const practiceIcons = {
+    sprechen: MessagesSquare,
+    schreiben: PenLine,
+    wortschatz: Gamepad2,
+};
 
-const atelierFaqs = [faqs[1], faqs[2], faqs[6], faqs[7]];
+const workshopFaqs: FaqItem[] = [
+    {
+        question: 'Le pack de grammaire remplace-t-il un parcours complet ?',
+        answer: 'Non. Il sert à travailler les structures essentielles d’un niveau avec des explications et des exercices. Il ne couvre pas à lui seul toute la compréhension, le vocabulaire et la communication d’un parcours A1 à B2, et ne certifie pas un niveau.',
+    },
+    {
+        question: 'Puis-je venir uniquement à un atelier pratique ?',
+        answer: 'Oui. Tu peux choisir Sprechen, Schreiben ou Wortschatz sans acheter un pack de grammaire ni suivre un parcours chez nous. Tu sélectionnes simplement le niveau qui te correspond.',
+    },
+    {
+        question: 'Les niveaux sont-ils mélangés dans un groupe ?',
+        answer: 'Non. Une séance de groupe réunit 3 à 6 personnes de niveau comparable, sur le même objectif. Les thèmes et les consignes changent entre A1, A2, B1 et B2.',
+    },
+    {
+        question: 'Comment choisir mon niveau ?',
+        answer: 'Pars du niveau que tu travailles actuellement. Si les bases restent fragiles, prends le pack du niveau précédent. Le test gratuit peut t’orienter ; on peut aussi en discuter avant de choisir une séance.',
+    },
+    {
+        question: 'Est-ce un cours enregistré ou un atelier en direct ?',
+        answer: 'Les deux offres sont animées en direct, en visio, avec un professeur. Le pack se suit sur plusieurs séances ; les ateliers pratiques peuvent se prendre à l’unité. Les supports et les retours utiles sont inclus.',
+    },
+    {
+        question: 'Puis-je déjà réserver et payer ?',
+        answer: 'Cette page présente une proposition de catalogue et des prix de démonstration. Le bouton de sélection prépare une demande à discuter ; il ne réserve pas de créneau, ne déclenche aucun paiement et n’envoie aucun email.',
+    },
+];
 
 export default function Workshops() {
     const [tier, setTier] = useState<TierKey>('group');
+    const [level, setLevel] = useState<LevelSlug>('a1');
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const selected = selectedId
+        ? getWorkshopSelection(selectedId, level, tier)
+        : undefined;
 
     return (
         <>
-            <Head title="Ateliers & stage" />
-
+            <Head title="Packs de grammaire & ateliers pratiques" />
             <PageHero
-                eyebrow="Ateliers & stage"
+                eyebrow="À la carte"
                 title={
                     <>
-                        Un point précis.{' '}
-                        <span className="text-primary">
-                            Réglé en quatre séances.
-                        </span>
+                        La grammaire à ton niveau.
+                        <br />
+                        L’allemand en pratique.
                     </>
                 }
-                description="Les ateliers ciblent une difficulté concrète. Le stage de vacances débloque un niveau en cinq jours. Dans les deux cas, tu repars avec une méthode, pas une pile de photocopies."
+                description="Tu veux comprendre les règles sans suivre un parcours complet ? Ou simplement pratiquer davantage ? Choisis un pack de grammaire A1 à B2, ou un atelier pour parler, écrire et jouer avec les mots."
             >
-                <Button size="lg" className="group gap-2 rounded-full" asChild>
-                    <Link href="/tarifs">
-                        Voir les tarifs
-                        <ArrowRight
-                            className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                            aria-hidden="true"
-                        />
-                    </Link>
+                <Button asChild size="lg" className="rounded-full">
+                    <a href="#grammar">
+                        Explorer les packs de grammaire
+                        <ArrowRight />
+                    </a>
                 </Button>
-
                 <Button
+                    asChild
                     size="lg"
                     variant="outline"
-                    className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
-                    asChild
+                    className="rounded-full"
                 >
-                    <Link href="/contact">Nous écrire</Link>
+                    <a href="#practice">Trouver un atelier pratique</a>
                 </Button>
             </PageHero>
 
-            <section className="relative pb-20 md:pb-28">
-                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
-                    <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                        <SectionHeading
-                            eyebrow="Les ateliers"
-                            title="Deux blocages, deux réponses."
-                            description="Les tarifs sont par personne et incluent les supports, les corrections et le replay."
-                        />
+            <section className="pb-14">
+                <div className="mx-auto grid max-w-7xl gap-4 px-6 md:grid-cols-2 md:px-8 lg:px-12">
+                    <a
+                        href="#grammar"
+                        className="flex items-start gap-4 rounded-2xl border border-border/50 bg-muted/20 p-5 transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-primary"
+                    >
+                        <BookOpen className="mt-1 size-6 shrink-0 text-primary" />
+                        <div>
+                            <h2 className="text-lg font-semibold">
+                                « Je veux comprendre la grammaire. »
+                            </h2>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Un pack cohérent par niveau, plusieurs séances
+                                et des règles appliquées à des exemples
+                                concrets.
+                            </p>
+                        </div>
+                    </a>
+                    <a
+                        href="#practice"
+                        className="flex items-start gap-4 rounded-2xl border border-border/50 bg-muted/20 p-5 transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-primary"
+                    >
+                        <MessagesSquare className="mt-1 size-6 shrink-0 text-primary" />
+                        <div>
+                            <h2 className="text-lg font-semibold">
+                                « Je veux surtout pratiquer. »
+                            </h2>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Une séance de Sprechen, Schreiben ou Wortschatz.
+                                Un objectif précis, à ton niveau, sans pack
+                                obligatoire.
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            </section>
 
-                        <div className="shrink-0">
-                            <p className="mb-2 text-[10px] font-semibold tracking-[0.2em] text-foreground/40 uppercase">
-                                Afficher les prix
+            <section id="grammar" className="scroll-mt-24 pb-20 md:pb-28">
+                <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                        <SectionHeading
+                            eyebrow="Les packs de grammaire"
+                            title="Remettre les règles dans le bon ordre."
+                            description="Un pack par niveau, à prendre indépendamment. On explique, on s’exerce et on réutilise les structures dans de courtes productions."
+                        />
+                        <div className="flex shrink-0 flex-col gap-2">
+                            <p className="text-xs text-muted-foreground">
+                                Afficher les tarifs pour
                             </p>
                             <TierSwitcher value={tier} onChange={setTier} />
                         </div>
                     </div>
-
+                    <p className="mb-6 text-sm text-muted-foreground">
+                        Tarifs et programmes de démonstration, à affiner.{' '}
+                        {tier === 'group'
+                            ? 'Prix par personne, pour un groupe de 3 à 6 élèves de même niveau.'
+                            : 'En 1:1, le professeur te consacre toute la séance ; le tarif est plus élevé.'}
+                    </p>
                     <div className="grid gap-5 md:grid-cols-2">
-                        {ateliers.map((atelier, index) => (
+                        {grammarPacks.map((pack, index) => (
                             <OfferCard
-                                key={atelier.id}
+                                key={pack.id}
                                 index={index}
-                                image={atelier.image}
-                                alt={`Atelier ${atelier.title}`}
-                                badge={{ label: atelier.level }}
+                                image={pack.image}
+                                alt={`Pack de grammaire ${pack.level.toUpperCase()}`}
+                                badge={{ label: pack.level.toUpperCase() }}
                                 chip={{
-                                    value: String(atelier.sessions),
+                                    value: String(pack.sessions),
                                     label: 'séances',
                                 }}
                             >
-                                <h3 className="mb-1 text-base leading-snug font-semibold text-foreground">
-                                    {atelier.title}
+                                <h3 className="text-xl font-semibold">
+                                    {pack.title}
                                 </h3>
-
-                                <p className="mb-3 text-sm leading-relaxed text-foreground/60">
-                                    {atelier.description}
+                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                                    {pack.description}
                                 </p>
-
-                                <ul className="mb-4 space-y-1.5 flex-1">
-                                    {atelier.outcomes.map((outcome) => (
-                                        <li
-                                            key={outcome}
-                                            className="flex items-start gap-2.5 text-sm text-foreground/60"
-                                        >
-                                            <Check
-                                                className="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                                                aria-hidden="true"
-                                            />
-                                            {outcome}
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                <div className="flex items-center justify-between border-t border-border/30 pt-4">
+                                <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Clock className="size-3.5" />
+                                    {workshopVolume(
+                                        pack.sessions,
+                                        pack.durationMinutes,
+                                    )}{' '}
+                                    · en direct
+                                </p>
+                                <Accordion
+                                    type="single"
+                                    collapsible
+                                    className="my-4"
+                                >
+                                    <AccordionItem
+                                        value={pack.id}
+                                        className="border-y border-border/40"
+                                    >
+                                        <AccordionTrigger className="text-sm hover:no-underline">
+                                            Voir le programme des{' '}
+                                            {pack.sessions} séances
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <ol className="flex flex-col gap-4">
+                                                {pack.program.map(
+                                                    (item, sessionIndex) => (
+                                                        <li
+                                                            key={item.title}
+                                                            className="flex items-start gap-3"
+                                                        >
+                                                            <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
+                                                                {sessionIndex +
+                                                                    1}
+                                                            </span>
+                                                            <div>
+                                                                <p className="text-sm font-medium">
+                                                                    {item.title}
+                                                                </p>
+                                                                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                                                    {
+                                                                        item.description
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                        </li>
+                                                    ),
+                                                )}
+                                            </ol>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                                <p className="mb-5 flex flex-1 items-start gap-2 text-sm">
+                                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                                    {pack.outcome}
+                                </p>
+                                <div className="flex flex-wrap items-end justify-between gap-3">
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-foreground/40">
-                                            {atelier.volume} · par personne
+                                        <p className="text-xs text-muted-foreground">
+                                            Le pack · {tierLabels[tier]}
+                                            {tier === 'group' &&
+                                                ' · par personne'}
                                         </p>
-                                        <p className="font-mono text-sm font-semibold text-foreground">
-                                            {formatPrice(atelier.price[tier])}
+                                        <p className="mt-1 font-mono text-xl font-semibold">
+                                            {formatPrice(pack.price[tier])}
                                         </p>
                                     </div>
-
                                     <Button
                                         variant="secondary"
-                                        size="sm"
-                                        asChild
+                                        onClick={() => setSelectedId(pack.id)}
                                     >
-                                        <Link href="/contact">
-                                            Réserver
-                                            <ArrowRight
-                                                className="h-3.5 w-3.5"
-                                                aria-hidden="true"
-                                            />
-                                        </Link>
+                                        Choisir ce pack
+                                        <ArrowRight />
                                     </Button>
                                 </div>
                             </OfferCard>
                         ))}
                     </div>
-                </div>
-            </section>
-
-            <section className="relative overflow-hidden bg-muted/30 py-20 md:py-28 dark:bg-foreground/[0.02]">
-                <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className="absolute top-0 left-1/4 h-[380px] w-[380px] rounded-full bg-primary/[0.04] blur-[140px] dark:bg-primary/[0.06]" />
-                </div>
-
-                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
-                    <div className="mx-auto max-w-xl">
-                        <OfferCard
-                            index={0}
-                            image={stage.image}
-                            alt="Stage de vacances d'allemand"
-                            badge={{ label: 'Stage' }}
-                            chip={{ value: '5', label: 'jours' }}
-                        >
-                            <h3 className="mb-1 text-base leading-snug font-semibold text-foreground">
-                                {stage.title}
-                            </h3>
-
-                            <p className="mb-3 text-xs font-medium text-primary">
-                                {stage.subtitle}
-                            </p>
-
-                            <p className="mb-4 text-sm leading-relaxed text-foreground/60">
-                                {stage.description}
-                            </p>
-
-                            <div className="mb-4 flex flex-wrap gap-1.5 flex-1">
-                                {stage.dates.map((date) => (
-                                    <span
-                                        key={date}
-                                        className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-medium text-foreground/60 dark:border-border/60 dark:bg-background/30"
-                                    >
-                                        {date}
-                                    </span>
-                                ))}
-                            </div>
-
-                            <div className="flex items-center justify-between border-t border-border/30 pt-4">
-                                <div>
-                                    <p className="text-[10px] uppercase tracking-wider text-foreground/40">
-                                        À partir de
-                                    </p>
-                                    <p className="font-mono text-sm font-semibold text-foreground">
-                                        {formatPrice(stage.price.group)}{' '}
-                                        <span className="text-foreground/50">
-                                            · duo{' '}
-                                            {formatPrice(stage.price.duo)} ·
-                                            1:1{' '}
-                                            {formatPrice(stage.price.solo)}
-                                        </span>
-                                    </p>
-                                </div>
-
-                                <Button variant="secondary" size="sm" asChild>
-                                    <Link href="/bilan">
-                                        Réserver
-                                        <ArrowRight
-                                            className="h-3.5 w-3.5"
-                                            aria-hidden="true"
-                                        />
-                                    </Link>
-                                </Button>
-                            </div>
-                        </OfferCard>
-                    </div>
-                </div>
-            </section>
-
-            <section className="relative py-20 md:py-28">
-                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
-                    <SectionHeading
-                        eyebrow="Comment ça marche"
-                        title="Trois séances pour comprendre, une pour ancrer."
-                        description="Le format est court exprès : on cible, on pratique, on repart avec un réflexe."
-                        align="center"
-                        className="mb-12"
-                    />
-
-                    <div className="grid gap-5 md:grid-cols-3">
-                        {workshopSteps.map((step, index) => (
-                            <motion.div
-                                key={step.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{
-                                    duration: 0.5,
-                                    delay: index * 0.07,
-                                }}
-                                className="rounded-2xl border border-border/40 bg-card p-6 dark:border-border/50"
-                            >
-                                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                    <step.icon
-                                        className="h-5 w-5"
-                                        aria-hidden="true"
-                                    />
-                                </span>
-
-                                <h3 className="mt-5 font-semibold text-foreground">
-                                    {step.title}
-                                </h3>
-
-                                <p className="mt-2 text-sm leading-relaxed text-foreground/60">
-                                    {step.description}
-                                </p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <section className="relative pb-20 md:pb-28">
-                <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-primary/15 bg-primary/[0.05] p-6 md:flex-row md:items-center md:p-8 dark:border-primary/20 dark:bg-primary/[0.07]"
-                    >
-                        <div className="max-w-xl">
-                            <p className="text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
-                                Pack découverte
-                            </p>
-                            <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                                Bilan + première séance, pour tester avant de
-                                t’engager.
-                            </h2>
-                            <p className="mt-2 text-sm text-foreground/60">
-                                45 minutes de bilan, puis une séance de 60
-                                minutes pour goûter à la méthode. Le montant est
-                                crédité si tu poursuis.
-                            </p>
-                        </div>
-
-                        <div className="flex shrink-0 flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-4">
-                            <div>
-                                <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
-                                    1:1
-                                </p>
-                                <p className="font-mono text-2xl font-semibold text-foreground">
-                                    140 €
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-semibold tracking-[0.16em] text-foreground/40 uppercase">
-                                    Duo
-                                </p>
-                                <p className="font-mono text-2xl font-semibold text-foreground">
-                                    100 €
-                                </p>
-                            </div>
-                            <Button className="rounded-full" asChild>
-                                <Link href="/bilan">Réserver</Link>
-                            </Button>
-                        </div>
-                    </motion.div>
-
-                    <p className="mt-4 flex items-center gap-2 text-xs text-foreground/50">
-                        <Users
-                            className="h-3.5 w-3.5 text-primary"
-                            aria-hidden="true"
-                        />
-                        Les ateliers et stages ouvrent à partir de 3 inscrits.
-                        En dessous, on bascule en duo au tarif correspondant.
+                    <p className="mt-6 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                        Ces packs consolident la grammaire d’un niveau. Ils ne
+                        remplacent pas un parcours complet et ne promettent pas
+                        de « passer B2 » en quelques séances.
                     </p>
                 </div>
             </section>
 
+            <section
+                id="practice"
+                className="scroll-mt-24 bg-muted/30 py-20 md:py-28"
+            >
+                <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
+                    <SectionHeading
+                        eyebrow="Les ateliers pratiques"
+                        title="Moins de théorie. À toi de jouer."
+                        description="Un atelier à l’unité, une vraie mise en pratique. Choisis ton niveau pour découvrir les thèmes et les activités proposés."
+                        className="mb-8"
+                    />
+                    <div className="mb-8 flex flex-col gap-5 rounded-2xl border border-border/50 bg-background/70 p-5 sm:flex-row sm:items-end sm:justify-between">
+                        <div className="flex flex-col gap-2 sm:min-w-48">
+                            <Label htmlFor="practice-level">
+                                Ton niveau de pratique
+                            </Label>
+                            <select
+                                id="practice-level"
+                                className={selectClassName}
+                                value={level}
+                                onChange={(event) =>
+                                    setLevel(event.target.value as LevelSlug)
+                                }
+                            >
+                                {workshopLevels.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item.toUpperCase()}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <p className="text-xs text-muted-foreground">
+                                Formule · prix par séance
+                            </p>
+                            <TierSwitcher value={tier} onChange={setTier} />
+                        </div>
+                    </div>
+                    <div className="grid gap-5 lg:grid-cols-3">
+                        {practiceWorkshops.map((workshop, index) => {
+                            const detail = workshop.levels[level];
+                            const Icon =
+                                practiceIcons[
+                                    workshop.id as keyof typeof practiceIcons
+                                ];
+                            return (
+                                <OfferCard
+                                    key={workshop.id}
+                                    index={index}
+                                    image={workshop.image}
+                                    alt={`Atelier ${workshop.title}`}
+                                    badge={{
+                                        label: `${workshop.title} · ${level.toUpperCase()}`,
+                                    }}
+                                    chip={{
+                                        value: String(workshop.durationMinutes),
+                                        label: 'min',
+                                    }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Icon className="size-5 text-primary" />
+                                        <h3 className="text-xl font-semibold">
+                                            {workshop.title}
+                                        </h3>
+                                    </div>
+                                    <p className="mt-1 text-sm font-medium text-primary">
+                                        {workshop.subtitle}
+                                    </p>
+                                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                                        {workshop.description}
+                                    </p>
+                                    <div className="my-4 rounded-xl bg-muted/40 p-4">
+                                        <Badge variant="secondary">
+                                            Exemple de séance ·{' '}
+                                            {level.toUpperCase()}
+                                        </Badge>
+                                        <p className="mt-3 text-sm font-medium">
+                                            {detail.task}
+                                        </p>
+                                    </div>
+                                    <ul className="mb-4 flex flex-col gap-2">
+                                        {detail.activities.map((item) => (
+                                            <li
+                                                key={item}
+                                                className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground"
+                                            >
+                                                <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <p className="mb-5 flex-1 text-sm">
+                                        {detail.outcome}
+                                    </p>
+                                    <div className="flex flex-wrap items-end justify-between gap-3 border-t border-border/40 pt-4">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">
+                                                La séance · {tierLabels[tier]}
+                                            </p>
+                                            <p className="mt-1 font-mono text-xl font-semibold">
+                                                {formatPrice(
+                                                    workshop.price[tier],
+                                                )}
+                                            </p>
+                                        </div>
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() =>
+                                                setSelectedId(workshop.id)
+                                            }
+                                        >
+                                            Choisir cet atelier
+                                            <ArrowRight />
+                                        </Button>
+                                    </div>
+                                </OfferCard>
+                            );
+                        })}
+                    </div>
+                    <p className="mt-5 text-xs text-muted-foreground">
+                        En groupe, les participants travaillent le même niveau.
+                        Les exemples ci-dessus illustrent les séances, pas un
+                        calendrier déjà ouvert à la réservation.
+                    </p>
+                </div>
+            </section>
+
+            <section className="py-16 md:py-20">
+                <div className="mx-auto grid max-w-7xl gap-8 px-6 md:grid-cols-3 md:px-8 lg:px-12">
+                    {[
+                        {
+                            title: 'Une explication qui sert',
+                            description:
+                                'Dans le pack, on part d’exemples concrets et on rend la règle lisible avant de l’utiliser.',
+                            icon: BookOpen,
+                        },
+                        {
+                            title: 'Tu produis pendant la séance',
+                            description:
+                                'Dialogue, texte, défi de vocabulaire : tu fais quelque chose en allemand, avec un retour du professeur.',
+                            icon: PenLine,
+                        },
+                        {
+                            title: 'Tu gardes de quoi réutiliser',
+                            description:
+                                'Supports, phrases utiles et corrections : une trace courte pour continuer entre les séances.',
+                            icon: Gamepad2,
+                        },
+                    ].map((item) => (
+                        <div key={item.title} className="flex flex-col gap-3">
+                            <item.icon className="size-6 text-primary" />
+                            <h2 className="text-xl font-semibold">
+                                {item.title}
+                            </h2>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                                {item.description}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             <FaqSection
-                items={atelierFaqs}
-                title="Ateliers & stage, en pratique"
-                description="Prérequis, formats, ouverture des groupes et annulation."
+                items={workshopFaqs}
+                title="À la carte, mais pas au hasard."
+                description="Le niveau, le format et ce que tu peux attendre de chaque offre."
+            />
+            <CtaBand
+                title="Tu cherches plutôt une progression complète ?"
+                description="Les parcours A1 à B2 travaillent toutes les compétences sur 60 heures. Les packs et ateliers restent disponibles séparément, pour compléter ou renforcer un besoin précis."
+                primary={{ label: 'Voir les parcours', href: courses.url() }}
+                secondary={{
+                    label: 'Tester mon niveau',
+                    href: levelTest.url(),
+                }}
             />
 
-            <CtaBand
-                eyebrow="Un blocage précis ?"
-                title="Dis-nous ce qui coince."
-                description="Articles, temps, oral, subordonnées : on identifie le point qui te bloque et on te propose l’atelier ou le stage le plus court pour le régler."
-                primary={{ label: 'Décrire mon blocage', href: '/contact' }}
-                secondary={{ label: 'Voir les parcours', href: '/courses' }}
-            />
+            <Dialog
+                open={Boolean(selected)}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setSelectedId(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {selected?.title} · {selected?.level.toUpperCase()}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Voici ta sélection pour en discuter. Aucun créneau
+                            ni paiement n’est réservé.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selected && (
+                        <>
+                            <dl className="grid grid-cols-[90px_1fr] gap-3 text-sm">
+                                <dt className="text-muted-foreground">Offre</dt>
+                                <dd>
+                                    {selected.category === 'grammar'
+                                        ? 'Pack de grammaire'
+                                        : 'Atelier pratique à l’unité'}
+                                </dd>
+                                <dt className="text-muted-foreground">
+                                    Niveau
+                                </dt>
+                                <dd>{selected.level.toUpperCase()}</dd>
+                                <dt className="text-muted-foreground">
+                                    Formule
+                                </dt>
+                                <dd>{tierLabels[tier]}</dd>
+                                <dt className="text-muted-foreground">
+                                    Volume
+                                </dt>
+                                <dd>{selected.volume}</dd>
+                                <dt className="text-muted-foreground">
+                                    Tarif démo
+                                </dt>
+                                <dd className="font-semibold">
+                                    {formatPrice(selected.price)}
+                                    {tier === 'group' && ' par personne'}
+                                </dd>
+                            </dl>
+                            <p className="text-sm text-muted-foreground">
+                                {selected.outcome}
+                            </p>
+                            <Alert>
+                                <AlertDescription>
+                                    Catalogue de démonstration. Les dates, le
+                                    programme final et les tarifs restent à
+                                    confirmer. Aucun email ne sera envoyé
+                                    automatiquement.
+                                </AlertDescription>
+                            </Alert>
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setSelectedId(null)}
+                                >
+                                    Continuer à explorer
+                                </Button>
+                                <Button asChild>
+                                    <Link
+                                        href={contact({
+                                            query: {
+                                                subject: 'workshops',
+                                                offer: selected.id,
+                                                level: selected.level,
+                                                tier,
+                                            },
+                                        })}
+                                    >
+                                        Discuter de ma sélection
+                                    </Link>
+                                </Button>
+                            </DialogFooter>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

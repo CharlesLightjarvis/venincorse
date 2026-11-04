@@ -1,35 +1,35 @@
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants } from 'framer-motion';
 
 const stats = [
     {
-        value: "95 %",
-        label: "Taux de réussite aux examens",
-        detail: "ÖSD et TELC",
+        value: '95 %',
+        label: 'Taux de réussite aux examens',
+        detail: 'ÖSD et TELC',
     },
     {
-        value: "1 500+",
-        label: "Heures de cours données",
-        detail: "Parcours et ateliers en visio",
+        value: '1 500+',
+        label: 'Heures de cours données',
+        detail: 'Parcours et ateliers en visio',
     },
     {
-        value: "7 ans",
+        value: '7 ans',
         label: "Expérience d'enseignement",
-        detail: "Allemand, de A1 à B2",
+        detail: 'Allemand, de A1 à B2',
     },
     {
-        value: "5,0",
-        label: "Note moyenne des élèves",
-        detail: "Évaluée après chaque session",
+        value: '5,0',
+        label: 'Note moyenne des élèves',
+        detail: 'Évaluée après chaque session',
     },
     {
-        value: "39 €",
-        label: "Bilan de niveau",
-        detail: "Crédité sur ton premier parcours",
+        value: '12',
+        label: 'Questions au test gratuit',
+        detail: 'Résultat immédiat de A1 à B2',
     },
     {
-        value: "240 h",
-        label: "De A1 à B2",
-        detail: "4 niveaux · 1:1, duo ou groupe",
+        value: '240 h',
+        label: 'De A1 à B2',
+        detail: '4 niveaux · 1:1 ou groupe',
     },
 ] as const;
 
@@ -43,7 +43,7 @@ const itemVariants: Variants = {
     visible: {
         opacity: 1,
         scale: 1,
-        transition: { duration: 0.55, ease: "easeOut" },
+        transition: { duration: 0.55, ease: 'easeOut' },
     },
 };
 
@@ -73,7 +73,7 @@ export function Stats() {
                     </h2>
 
                     <p className="mx-auto max-w-xl text-lg text-foreground/60">
-                        Un suivi serré, un objectif clair et des bilans
+                        Un suivi serré, un objectif clair et des checkpoints
                         réguliers : voici ce que nos élèves obtiennent niveau
                         après niveau.
                     </p>
@@ -84,7 +84,7 @@ export function Stats() {
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, margin: "-80px" }}
+                    viewport={{ once: true, margin: '-80px' }}
                     className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
                 >
                     {stats.map((stat) => (

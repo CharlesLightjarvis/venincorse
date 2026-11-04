@@ -35,14 +35,16 @@ export default function Courses() {
                 title={
                     <>
                         De zéro à B2,{' '}
-                        <span className="text-primary">sans sauter d’étape.</span>
+                        <span className="text-primary">
+                            sans sauter d’étape.
+                        </span>
                     </>
                 }
                 description="Quatre niveaux de 60 heures, deux sous-niveaux par niveau et un checkpoint toutes les 30 heures. Tu sais toujours où tu en es — et ce qu’on attaque ensuite."
             >
                 <Button size="lg" className="group gap-2 rounded-full" asChild>
-                    <Link href="/bilan">
-                        Faire le bilan de niveau
+                    <Link href="/trial">
+                        Réserver un cours d’essai
                         <ArrowRight
                             className="h-4 w-4 transition-transform group-hover:translate-x-1"
                             aria-hidden="true"
@@ -56,7 +58,7 @@ export default function Courses() {
                     className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
                     asChild
                 >
-                    <Link href="/tarifs">Voir les tarifs</Link>
+                    <Link href="/level-test">Tester mon niveau — gratuit</Link>
                 </Button>
             </PageHero>
 
@@ -82,7 +84,10 @@ export default function Courses() {
                                 image={level.image}
                                 alt={`Parcours ${level.code} — ${level.name}`}
                                 badge={{ label: level.code }}
-                                chip={{ value: String(level.hours), label: 'h' }}
+                                chip={{
+                                    value: String(level.hours),
+                                    label: 'h',
+                                }}
                                 flag={
                                     level.featured
                                         ? 'Le plus demandé'
@@ -114,8 +119,10 @@ export default function Courses() {
                                         <span
                                             className={`font-medium ${seatsColorClass(level.seats.left, level.seats.total)}`}
                                         >
-                                            {level.seats.left}{' '}
-                                            place{level.seats.left > 1 ? 's' : ''}{' '}
+                                            {level.seats.left} place
+                                            {level.seats.left > 1
+                                                ? 's'
+                                                : ''}{' '}
                                             restante
                                             {level.seats.left > 1 ? 's' : ''}
                                         </span>
@@ -124,7 +131,7 @@ export default function Courses() {
 
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-foreground/40">
+                                        <p className="text-[10px] tracking-wider text-foreground/40 uppercase">
                                             Dès (groupe 3–6)
                                         </p>
                                         <p className="text-sm font-semibold text-foreground">
@@ -137,9 +144,7 @@ export default function Courses() {
                                         size="sm"
                                         asChild
                                     >
-                                        <Link
-                                            href={`/courses/${level.slug}`}
-                                        >
+                                        <Link href={`/courses/${level.slug}`}>
                                             Voir le parcours
                                             <ArrowRight
                                                 className="h-3.5 w-3.5"
@@ -275,10 +280,16 @@ export default function Courses() {
 
             <CtaBand
                 eyebrow="Tu ne sais pas où commencer ?"
-                title="On trouve ton niveau ensemble."
-                description="Le bilan dure 45 minutes et produit un plan écrit : niveau réel, objectif, nombre d’heures et budget. Les 39 € sont crédités sur ton premier parcours."
-                primary={{ label: 'Faire le bilan', href: '/bilan' }}
-                secondary={{ label: 'Comparer les tarifs', href: '/tarifs' }}
+                title="Le test gratuit te situe en dix minutes."
+                description="Soixante questions, un résultat immédiat de A1 à B2 et le parcours recommandé. Ensuite, tu peux réserver une heure d’essai pour confirmer ton niveau à l’oral."
+                primary={{
+                    label: 'Passer le test gratuit',
+                    href: '/level-test',
+                }}
+                secondary={{
+                    label: 'Réserver un cours d’essai',
+                    href: '/trial',
+                }}
             />
         </>
     );

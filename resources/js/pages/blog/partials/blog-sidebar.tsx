@@ -21,7 +21,13 @@ export function BlogSidebar({
     const toggleGroup = (i: number) => {
         setOpenGroups((prev) => {
             const next = new Set(prev);
-            next.has(i) ? next.delete(i) : next.add(i);
+
+            if (next.has(i)) {
+                next.delete(i);
+            } else {
+                next.add(i);
+            }
+
             return next;
         });
     };
@@ -137,10 +143,10 @@ export function BlogSidebar({
                         </span>
                         <div>
                             <p className="mb-1 text-[10px] font-semibold tracking-wider text-foreground/30 uppercase">
-                                {article.categorie}
+                                {article.category}
                             </p>
                             <p className="cursor-pointer text-xs leading-relaxed text-foreground/55 transition-colors hover:text-foreground/80">
-                                {article.titre}
+                                {article.title}
                             </p>
                         </div>
                     </div>

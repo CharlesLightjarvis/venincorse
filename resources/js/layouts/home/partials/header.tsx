@@ -1,38 +1,39 @@
-import React from "react";
-import { cn } from "@/lib/utils";
-import { createPortal } from "react-dom";
-import { useScroll } from "./use-scroll";
-import { Link, usePage } from "@inertiajs/react";
-import type { Auth } from "@/types";
-import { Button, buttonVariants } from "@/components/ui/button";
-import ThemeToggle from "./ThemeToggle";
-import { MenuToggleIcon } from "./menu-toggle-icon";
-import Logo from "./logo";
-import { dashboard, login, register } from "@/routes";
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { createPortal } from 'react-dom';
+import { useScroll } from './use-scroll';
+import { Link, usePage } from '@inertiajs/react';
+import type { Auth } from '@/types';
+import { Button, buttonVariants } from '@/components/ui/button';
+import ThemeToggle from './ThemeToggle';
+import { MenuToggleIcon } from './menu-toggle-icon';
+import Logo from './logo';
+import { dashboard, login, register } from '@/routes';
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-} from "@/components/ui/navigation-menu";
+} from '@/components/ui/navigation-menu';
 
 const simpleLinks = [
-    { label: "Parcours", href: "/courses" },
-    { label: "Examens", href: "/examens" },
-    { label: "Ateliers", href: "/ateliers" },
-    { label: "Tarifs", href: "/tarifs" },
-    { label: "Blog", href: "/blog" },
+    { label: 'Parcours', href: '/courses' },
+    { label: 'Examens', href: '/exams' },
+    { label: 'Ateliers', href: '/workshops' },
+    { label: 'Tarifs', href: '/pricing' },
+    { label: 'Blog', href: '/blog' },
 ];
 
 const mobileLinks = [
     ...simpleLinks,
-    { label: "Bilan de niveau", href: "/bilan" },
-    { label: "À propos", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { label: "Cours d'essai", href: '/trial' },
+    { label: 'Test de niveau', href: '/level-test' },
+    { label: 'À propos', href: '/about' },
+    { label: 'Contact', href: '/contact' },
 ];
 
 function isActivePath(currentUrl: string, href: string): boolean {
-    return href === "/" ? currentUrl === "/" : currentUrl.startsWith(href);
+    return href === '/' ? currentUrl === '/' : currentUrl.startsWith(href);
 }
 
 /* ------------------------------------------------------------------ */
@@ -47,21 +48,21 @@ export function Header() {
         canRegister?: boolean;
     }>();
     const { auth, canRegister } = page.props;
-    const currentUrl = page.url.split("?")[0];
+    const currentUrl = page.url.split('?')[0];
 
     React.useEffect(() => {
-        document.body.style.overflow = open ? "hidden" : "";
+        document.body.style.overflow = open ? 'hidden' : '';
         return () => {
-            document.body.style.overflow = "";
+            document.body.style.overflow = '';
         };
     }, [open]);
 
     return (
         <header
             className={cn(
-                "sticky top-0 z-50 w-full border-b border-transparent",
+                'sticky top-0 z-50 w-full border-b border-transparent',
                 {
-                    "border-border bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/50":
+                    'border-border bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/50':
                         scrolled,
                 },
             )}
@@ -85,28 +86,19 @@ export function Header() {
                                     <NavigationMenuLink
                                         href={link.href}
                                         aria-current={
-                                            isActivePath(
-                                                currentUrl,
-                                                link.href,
-                                            )
-                                                ? "page"
+                                            isActivePath(currentUrl, link.href)
+                                                ? 'page'
                                                 : undefined
                                         }
                                         className={cn(
-                                            "inline-flex h-10 items-center justify-center gap-1.5 px-4 text-sm font-medium transition-colors focus:outline-none",
-                                            isActivePath(
-                                                currentUrl,
-                                                link.href,
-                                            )
-                                                ? "text-foreground"
-                                                : "text-foreground/60 hover:text-foreground",
+                                            'inline-flex h-10 items-center justify-center gap-1.5 px-4 text-sm font-medium transition-colors focus:outline-none',
+                                            isActivePath(currentUrl, link.href)
+                                                ? 'text-foreground'
+                                                : 'text-foreground/60 hover:text-foreground',
                                         )}
                                     >
                                         {link.label}
-                                        {isActivePath(
-                                            currentUrl,
-                                            link.href,
-                                        ) ? (
+                                        {isActivePath(currentUrl, link.href) ? (
                                             <span
                                                 className="h-1 w-1 rounded-full bg-primary"
                                                 aria-hidden="true"
@@ -197,7 +189,7 @@ function MobileMenu({
     currentUrl: string;
     onClose: () => void;
 }) {
-    if (!open || typeof window === "undefined") return null;
+    if (!open || typeof window === 'undefined') return null;
 
     return createPortal(
         <div
@@ -205,7 +197,7 @@ function MobileMenu({
             className="fixed top-14 right-0 bottom-0 left-0 z-40 flex flex-col overflow-hidden border-y border-border/30 bg-background lg:hidden"
         >
             <div
-                data-slot={open ? "open" : "closed"}
+                data-slot={open ? 'open' : 'closed'}
                 className="flex size-full flex-col justify-between overflow-y-auto p-4 ease-out data-[slot=open]:animate-in data-[slot=open]:zoom-in-97"
             >
                 <div className="flex flex-col gap-1">
@@ -217,12 +209,12 @@ function MobileMenu({
                                 key={link.label}
                                 href={link.href}
                                 onClick={onClose}
-                                aria-current={active ? "page" : undefined}
+                                aria-current={active ? 'page' : undefined}
                                 className={buttonVariants({
-                                    variant: "ghost",
+                                    variant: 'ghost',
                                     className: cn(
-                                        "justify-start",
-                                        active && "bg-primary/10 text-primary",
+                                        'justify-start',
+                                        active && 'bg-primary/10 text-primary',
                                     ),
                                 })}
                             >

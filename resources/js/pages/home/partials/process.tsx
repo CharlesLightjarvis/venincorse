@@ -5,23 +5,23 @@ const steps = [
     {
         number: '01',
         icon: BookOpen,
-        title: 'Fais ton bilan',
+        title: 'Teste ton niveau',
         description:
-            '45 minutes avec ton professeur : niveau réel, objectif, heures et budget. Les 39 € sont crédités sur ton premier parcours.',
+            'Soixante questions, dix minutes, résultat immédiat de A1 à B2. Gratuit, sans inscription — tu sais par où commencer.',
     },
     {
         number: '02',
         icon: CalendarCheck,
-        title: 'Choisis ton parcours',
+        title: 'Essaie une heure',
         description:
-            'A1 à B2 : le niveau de départ est validé au bilan. Tu choisis le format — 1:1, duo ou groupe de 3 à 6.',
+            'Une séance de 60 minutes en 1:1 pour tester la méthode, confirmer ton niveau et repartir avec un plan clair. 39 €, crédités si tu t’inscris sous 7 jours.',
     },
     {
         number: '03',
         icon: Video,
-        title: 'Rejoins la cohorte en visio',
+        title: 'Choisis ton parcours',
         description:
-            'Deux à trois séances par semaine en direct : cours, corrections et supports, sans déplacer ta vie.',
+            'A1 à B2 : tu choisis le format — 1:1 ou groupe de 3 à 6 — et le rythme qui correspond à ton objectif.',
     },
     {
         number: '04',
@@ -58,8 +58,8 @@ export function Process() {
 
                     <p className="mx-auto max-w-2xl text-lg text-foreground/60">
                         Pas de dossier compliqué ni de calendrier imposé : tu
-                        fais ton bilan, tu choisis ton parcours et tu mesures
-                        tes progrès au même endroit.
+                        testes ton niveau, tu essaies une heure et tu choisis
+                        ton parcours. Tes progrès se mesurent au même endroit.
                     </p>
                 </motion.div>
 

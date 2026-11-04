@@ -15,7 +15,7 @@ export function FeaturedArticle({ article }: { article: Article }) {
             {/* image de fond */}
             <img
                 src={article.image}
-                alt={article.titre}
+                alt={article.title}
                 className="absolute inset-0 h-full w-full object-cover"
             />
 
@@ -34,7 +34,7 @@ export function FeaturedArticle({ article }: { article: Article }) {
             <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
                 <div className="max-w-2xl">
                     <h1 className="mb-4 text-2xl leading-snug font-semibold tracking-tight text-white md:text-4xl lg:text-5xl">
-                        {article.titre}
+                        {article.title}
                     </h1>
                     <p className="mb-8 max-w-xl leading-relaxed text-white/65 md:text-lg">
                         {article.description}
@@ -52,7 +52,7 @@ export function FeaturedArticle({ article }: { article: Article }) {
                         </Button>
                         <span className="flex items-center gap-1.5 text-sm text-white/45">
                             <Clock className="h-3.5 w-3.5" />
-                            {article.duree} de lecture
+                            {article.duration} de lecture
                         </span>
                     </div>
                 </div>

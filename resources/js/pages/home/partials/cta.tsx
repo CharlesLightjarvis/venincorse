@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
-import { ArrowRight, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "@inertiajs/react";
+import { motion } from 'framer-motion';
+import { ArrowRight, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 
 export function Cta() {
     return (
@@ -21,17 +21,17 @@ export function Cta() {
                     className="mx-auto max-w-3xl rounded-3xl border border-border/40 bg-background/60 px-8 py-16 text-center backdrop-blur-sm md:px-16 dark:border-border/50 dark:bg-background/50"
                 >
                     <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/40 bg-secondary px-4 py-2 text-xs font-semibold tracking-[0.25em] text-secondary-foreground uppercase backdrop-blur dark:border-border/60 dark:bg-secondary">
-                        Prêt à apprendre ?
+                        Prêt à essayer ?
                     </div>
 
                     <h2 className="mb-5 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                        Fais ton premier pas en allemand
+                        Une heure pour te faire ton avis
                     </h2>
 
                     <p className="mx-auto mb-10 max-w-xl text-lg text-foreground/60">
-                        Choisis ton parcours, réserve ta place et rejoins ta
-                        cohorte en visio. Ton plan est écrit, ton budget clair —
-                        tu avances à ton rythme, une séance après l'autre.
+                        Réserve ton cours d'essai en 1:1 et teste la méthode
+                        sans t'engager — ou passe le test de niveau gratuit pour
+                        savoir par où commencer.
                     </p>
 
                     <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -40,8 +40,8 @@ export function Cta() {
                             className="group gap-2 rounded-full px-8 text-base tracking-[0.2em] uppercase"
                             asChild
                         >
-                            <Link href="/bilan">
-                                Commencer par le bilan
+                            <Link href="/trial">
+                                J'essaie 1 heure — 39 €
                                 <ArrowRight
                                     className="h-4 w-4 transition-transform group-hover:translate-x-1"
                                     aria-hidden="true"
@@ -55,12 +55,12 @@ export function Cta() {
                             className="gap-2 rounded-full"
                             asChild
                         >
-                            <Link href="/contact">
+                            <Link href="/level-test">
                                 <MessageCircle
                                     className="h-4 w-4"
                                     aria-hidden="true"
                                 />
-                                Poser une question
+                                Tester mon niveau
                             </Link>
                         </Button>
                     </div>

@@ -1,4 +1,4 @@
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants } from 'framer-motion';
 import {
     CalendarDays,
     FileCheck2,
@@ -6,45 +6,45 @@ import {
     MessagesSquare,
     TrendingUp,
     UserCheck,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 const services = [
     {
         icon: UserCheck,
-        title: "Sur mesure, 1:1 ou mini-groupe",
+        title: 'Sur mesure, 1:1 ou mini-groupe',
         description:
-            "Un enseignement adapté à ton niveau, tes objectifs et ton agenda — en 1:1, en duo ou en groupe de 3 à 6.",
+            'Un enseignement adapté à ton niveau, tes objectifs et ton agenda — en 1:1 ou en groupe de 3 à 6.',
     },
     {
         icon: CalendarDays,
-        title: "Horaires flexibles",
+        title: 'Horaires flexibles',
         description:
             "Des séances en semaine, le soir ou le samedi : le planning suit ta vie, pas l'inverse.",
     },
     {
         icon: GraduationCap,
-        title: "Prépa ÖSD & TELC",
+        title: 'Prépa ÖSD & TELC',
         description:
             "Stratégie par épreuve, examens blancs corrigés et rétroplanning calé sur ta date d'examen.",
     },
     {
         icon: MessagesSquare,
-        title: "Conversation active",
+        title: 'Conversation active',
         description:
-            "Tu parles dès la première séance : prononciation, vocabulaire utile et mises en situation réelles.",
+            'Tu parles dès la première séance : prononciation, vocabulaire utile et mises en situation réelles.',
     },
     {
         icon: TrendingUp,
-        title: "Checkpoints & bilans",
+        title: 'Checkpoints réguliers',
         description:
-            "Un checkpoint tous les 30 heures et un plan écrit : tu sais toujours où tu en es et ce qui vient.",
+            'Un checkpoint tous les 30 heures et un retour écrit : tu sais toujours où tu en es et ce qui vient.',
     },
     {
         icon: FileCheck2,
-        title: "Ateliers ciblés",
+        title: 'Ateliers ciblés',
         description:
-            "Articles, temps, subordonnées : un atelier ponctuel pour régler le point qui bloque, en quatre séances.",
+            'Articles, temps, subordonnées : un atelier ponctuel pour régler le point qui bloque, en quatre séances.',
     },
 ] as const;
 
@@ -58,7 +58,7 @@ const itemVariants: Variants = {
     visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.6, ease: "easeOut" },
+        transition: { duration: 0.6, ease: 'easeOut' },
     },
 };
 
@@ -100,7 +100,7 @@ export function WhyUs() {
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, margin: "-80px" }}
+                    viewport={{ once: true, margin: '-80px' }}
                     className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
                 >
                     {services.map((service) => {

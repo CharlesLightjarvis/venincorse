@@ -4,6 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
+import BlankLayout from '@/layouts/blank-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import HomeLayout from './layouts/home/home-layout';
 
@@ -13,6 +14,9 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            case name.startsWith('level-test/'):
+            case name.startsWith('booking/'):
+                return BlankLayout;
             case name.startsWith('home/'):
             case name.startsWith('courses/'):
             case name.startsWith('blog/'):

@@ -12,10 +12,16 @@ import {
     Users,
 } from 'lucide-react';
 import { useState } from 'react';
+import { course as bookCourse } from '@/routes/booking';
 import { Button } from '@/components/ui/button';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import { CtaBand } from '@/components/marketing/cta-band';
 import { FaqSection } from '@/components/marketing/faq-section';
-import { OfferCard } from '@/components/marketing/offer-card';
 import { LevelCard } from '@/components/marketing/level-card';
 import { SectionHeading } from '@/components/marketing/section-heading';
 import { TierSwitcher } from '@/components/marketing/tier-switcher';
@@ -32,11 +38,7 @@ import {
 } from '@/data/offer';
 
 export default function CourseDetail() {
-    const slug = usePage()
-        .url.split('?')[0]
-        .split('/')
-        .filter(Boolean)
-        .pop();
+    const slug = usePage().url.split('?')[0].split('/').filter(Boolean).pop();
     const level = getLevel(slug);
     const [tier, setTier] = useState<TierKey>('group');
 
@@ -206,7 +208,7 @@ export default function CourseDetail() {
                                             Format
                                         </p>
                                         <p className="text-sm font-semibold text-foreground">
-                                            1:1, duo ou groupe 2–6
+                                            1:1 ou groupe de 3 à 6
                                         </p>
                                     </div>
                                 </div>
@@ -227,33 +229,6 @@ export default function CourseDetail() {
                                         </p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                                <Button
-                                    size="lg"
-                                    className="group gap-2 rounded-full"
-                                    asChild
-                                >
-                                    <Link href="/bilan">
-                                        Vérifier mon niveau
-                                        <ArrowRight
-                                            className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                            aria-hidden="true"
-                                        />
-                                    </Link>
-                                </Button>
-
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
-                                    asChild
-                                >
-                                    <Link href="/tarifs">
-                                        Voir tous les tarifs
-                                    </Link>
-                                </Button>
                             </div>
                         </motion.div>
 
@@ -285,7 +260,10 @@ export default function CourseDetail() {
 
                                     <p className="mt-1 text-xs text-foreground/55">
                                         {tierLabels[tier]} ·{' '}
-                                        {pricePerHour(selectedPrice, level.hours)}{' '}
+                                        {pricePerHour(
+                                            selectedPrice,
+                                            level.hours,
+                                        )}{' '}
                                         / h
                                     </p>
                                 </div>
@@ -322,18 +300,15 @@ export default function CourseDetail() {
                                         size="lg"
                                         asChild
                                     >
-                                        <Link href="/contact">
+                                        <Link
+                                            href={bookCourse({
+                                                query: {
+                                                    level: level.slug,
+                                                    tier,
+                                                },
+                                            })}
+                                        >
                                             Réserver une place
-                                        </Link>
-                                    </Button>
-
-                                    <Button
-                                        variant="outline"
-                                        className="mt-2 w-full rounded-full border-border/50"
-                                        asChild
-                                    >
-                                        <Link href="/bilan">
-                                            Faire le bilan d’abord
                                         </Link>
                                     </Button>
 
@@ -344,8 +319,7 @@ export default function CourseDetail() {
                                     <div className="mt-5 rounded-xl border border-border/40 bg-muted/30 p-3 dark:border-border/50 dark:bg-foreground/[0.02]">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-foreground/60">
-                                                Cohorte du{' '}
-                                                {level.nextCohort}
+                                                Cohorte du {level.nextCohort}
                                             </span>
                                             <span className="font-semibold text-primary">
                                                 {level.seats.left} places
@@ -373,63 +347,149 @@ export default function CourseDetail() {
                     <SectionHeading
                         eyebrow="Le programme"
                         title="Deux sous-niveaux, deux caps."
-                        description="Chaque bloc de 30 heures se termine par un checkpoint. On ne passe pas au suivant parce que le calendrier l’a décidé, mais parce que les acquis sont là."
+                        description="Chaque bloc de 30 heures se termine par un checkpoint. Ouvre un sous-niveau pour parcourir les modules, les notions et les ateliers que tu verras."
                         className="mb-12"
                     />
 
-                    <div className="grid gap-5 md:grid-cols-2">
-                        {level.subLevels.map((subLevel, index) => (
-                            <OfferCard
+                    <Accordion
+                        type="single"
+                        collapsible
+                        defaultValue={level.subLevels[0]?.code}
+                        className="space-y-4"
+                    >
+                        {level.subLevels.map((subLevel) => (
+                            <AccordionItem
                                 key={subLevel.code}
-                                index={index}
-                                image={subLevel.image}
-                                alt={`${subLevel.code} — ${subLevel.title}`}
-                                badge={{ label: subLevel.code }}
-                                chip={{ value: String(subLevel.hours), label: 'h' }}
+                                value={subLevel.code}
+                                className="overflow-hidden rounded-3xl border border-border/40 bg-background/70 backdrop-blur-sm dark:border-border/50 dark:bg-background/40"
                             >
-                                <h3 className="mb-2 text-base leading-snug font-semibold text-foreground">
-                                    {subLevel.title}
-                                </h3>
-
-                                <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-foreground/60">
-                                    {subLevel.outcome}
-                                </p>
-
-                                <div className="mb-4 flex flex-wrap gap-1.5">
-                                    {subLevel.focus.map((focus) => (
+                                <AccordionTrigger className="px-5 py-5 hover:no-underline sm:px-7 sm:py-6">
+                                    <div className="flex flex-1 items-start gap-4 pr-2 text-left">
                                         <span
-                                            key={focus}
-                                            className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-medium text-foreground/60 dark:border-border/60 dark:bg-background/30"
+                                            className={cn(
+                                                'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl font-mono text-xs font-bold',
+                                                level.accent.bg,
+                                                level.accent.text,
+                                            )}
                                         >
-                                            {focus}
+                                            {subLevel.code}
                                         </span>
-                                    ))}
-                                </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-foreground/40">
-                                            Inclus dans le parcours{' '}
-                                            {level.code}
-                                        </p>
-                                        <p className="text-sm font-semibold text-foreground">
-                                            {subLevel.hours} h en visio
-                                        </p>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                <h3 className="text-lg font-semibold text-foreground">
+                                                    {subLevel.title}
+                                                </h3>
+
+                                                <span className="rounded-full border border-border/50 bg-background/60 px-2.5 py-0.5 font-mono text-[11px] font-medium text-foreground/50 dark:border-border/60 dark:bg-background/30">
+                                                    {subLevel.hours} h
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-1.5 text-sm leading-relaxed text-foreground/55">
+                                                {subLevel.outcome}
+                                            </p>
+
+                                            <div className="mt-3 flex flex-wrap gap-1.5">
+                                                {subLevel.focus.map((focus) => (
+                                                    <span
+                                                        key={focus}
+                                                        className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-medium text-foreground/55 dark:border-border/60 dark:bg-background/30"
+                                                    >
+                                                        {focus}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
+                                </AccordionTrigger>
 
-                                    <Button variant="secondary" size="sm" asChild>
-                                        <Link href="/contact">
-                                            Réserver
-                                            <ArrowRight
-                                                className="h-3.5 w-3.5"
-                                                aria-hidden="true"
-                                            />
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </OfferCard>
+                                <AccordionContent className="px-5 pb-6 sm:px-7">
+                                    <div className="border-t border-border/30 pt-6">
+                                        <div className="grid gap-3 lg:grid-cols-2">
+                                            {subLevel.program.map(
+                                                (module, moduleIndex) => (
+                                                    <div
+                                                        key={module.title}
+                                                        className="flex flex-col rounded-2xl border border-border/40 bg-background/70 p-5 dark:border-border/50 dark:bg-background/40"
+                                                    >
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <span className="inline-flex items-center rounded-full bg-primary/[0.07] px-2.5 py-1 text-[10px] font-semibold tracking-[0.16em] text-primary uppercase">
+                                                                Module{' '}
+                                                                {moduleIndex +
+                                                                    1}
+                                                            </span>
+
+                                                            <span className="font-mono text-[11px] text-foreground/40">
+                                                                {module.hours} h
+                                                            </span>
+                                                        </div>
+
+                                                        <h4 className="mt-3 text-base font-semibold text-foreground">
+                                                            {module.title}
+                                                        </h4>
+
+                                                        <p className="mt-1 text-xs leading-relaxed text-foreground/50">
+                                                            {module.description}
+                                                        </p>
+
+                                                        <ul className="mt-4 space-y-3 border-t border-border/30 pt-4">
+                                                            {module.lessons.map(
+                                                                (lesson) => (
+                                                                    <li
+                                                                        key={
+                                                                            lesson.title
+                                                                        }
+                                                                        className="flex items-start gap-2.5"
+                                                                    >
+                                                                        <span
+                                                                            className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60"
+                                                                            aria-hidden="true"
+                                                                        />
+
+                                                                        <div>
+                                                                            <p className="text-[13px] leading-snug font-medium text-foreground">
+                                                                                {
+                                                                                    lesson.title
+                                                                                }
+                                                                            </p>
+
+                                                                            <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/50">
+                                                                                {
+                                                                                    lesson.description
+                                                                                }
+                                                                            </p>
+                                                                        </div>
+                                                                    </li>
+                                                                ),
+                                                            )}
+                                                        </ul>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+
+                                        <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-border/40 bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-border/50 dark:bg-foreground/[0.02]">
+                                            <p className="flex items-center gap-2 text-xs text-foreground/55">
+                                                <GraduationCap
+                                                    className="h-4 w-4 shrink-0 text-primary"
+                                                    aria-hidden="true"
+                                                />
+                                                Checkpoint oral et écrit à la
+                                                fin du {subLevel.code}
+                                            </p>
+
+                                            <p className="text-xs font-semibold text-foreground/70">
+                                                {subLevel.hours} h en visio ·
+                                                inclus dans le parcours{' '}
+                                                {level.code}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
                         ))}
-                    </div>
+                    </Accordion>
                 </div>
             </section>
 
@@ -495,7 +555,7 @@ export default function CourseDetail() {
                         </div>
 
                         <Link
-                            href="/tarifs"
+                            href="/pricing"
                             className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground/60 transition-colors hover:text-foreground"
                         >
                             Voir les tarifs
@@ -575,9 +635,13 @@ export default function CourseDetail() {
             <CtaBand
                 eyebrow={`Niveau ${level.code}`}
                 title="On commence quand tu veux."
-                description="Réserve ta place dans la prochaine cohorte, ou passe d’abord par un bilan de niveau pour valider le point de départ."
-                primary={{ label: 'Réserver une place', href: '/contact' }}
-                secondary={{ label: 'Faire le bilan', href: '/bilan' }}
+                description="Choisis ta formule, ton rythme et ton planning pour rejoindre le parcours."
+                primary={{
+                    label: 'Réserver une place',
+                    href: bookCourse.url({
+                        query: { level: level.slug, tier },
+                    }),
+                }}
             />
 
             <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/40 bg-background/95 px-4 py-3 backdrop-blur-lg lg:hidden dark:border-border/50">
@@ -592,7 +656,13 @@ export default function CourseDetail() {
                     </div>
 
                     <Button className="rounded-full" asChild>
-                        <Link href="/contact">Réserver</Link>
+                        <Link
+                            href={bookCourse({
+                                query: { level: level.slug, tier },
+                            })}
+                        >
+                            Réserver
+                        </Link>
                     </Button>
                 </div>
             </div>

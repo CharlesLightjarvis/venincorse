@@ -25,7 +25,7 @@ export default function Blog() {
         if (search.trim())
             list = list.filter(
                 (a) =>
-                    a.titre.toLowerCase().includes(search.toLowerCase()) ||
+                    a.title.toLowerCase().includes(search.toLowerCase()) ||
                     a.description.toLowerCase().includes(search.toLowerCase()),
             );
         return list;

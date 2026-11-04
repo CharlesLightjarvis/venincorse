@@ -1,64 +1,80 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import { ArrowRight, Globe, Mail, Clock, Phone } from 'lucide-react';
 import {
-    ArrowRight,
-    Globe,
-    Mail,
-    Clock,
-    Phone,
-} from "lucide-react";
-import { SiFacebook as SiFacebookIcon, SiInstagram as SiInstagramIcon, SiWhatsapp as SiWhatsappIcon, SiX as SiXIcon } from "@icons-pack/react-simple-icons";
-import { Head } from "@inertiajs/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+    SiFacebook as SiFacebookIcon,
+    SiInstagram as SiInstagramIcon,
+    SiWhatsapp as SiWhatsappIcon,
+    SiX as SiXIcon,
+} from '@icons-pack/react-simple-icons';
+import { Head, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
+import { getWorkshopSelection, workshopLevels } from '@/data/workshop-catalog';
+import { tierLabels } from '@/data/offer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 const contactChannels = [
     {
         icon: Mail,
-        title: "Email",
-        value: "contact@venincorse.com",
-        detail: "Réponse la plus complète, idéale pour les entreprises",
+        title: 'Email',
+        value: 'contact@venincorse.com',
+        detail: 'Réponse la plus complète, idéale pour les entreprises',
     },
     {
         icon: Phone,
-        title: "WhatsApp",
-        value: "+225 00 00 00 00 00",
-        detail: "Le plus rapide — en général sous quelques heures",
+        title: 'WhatsApp',
+        value: '+225 00 00 00 00 00',
+        detail: 'Le plus rapide — en général sous quelques heures',
     },
     {
         icon: Globe,
-        title: "Cours en visio",
-        value: "100 % à distance",
-        detail: "Où que tu sois, il faut juste une connexion",
+        title: 'Cours en visio',
+        value: '100 % à distance',
+        detail: 'Où que tu sois, il faut juste une connexion',
     },
 ] as const;
 
 const subjectOptions = [
-    { value: "parcours", label: "Parcours A1 → B2" },
-    { value: "bilan", label: "Bilan de niveau (39 €)" },
-    { value: "examens", label: "Prépa ÖSD & TELC" },
-    { value: "ateliers", label: "Ateliers & stage" },
-    { value: "tarifs", label: "Tarifs & paiement" },
-    { value: "formats", label: "Formule 1:1, duo ou groupe" },
+    { value: 'courses', label: 'Parcours A1 → B2' },
+    { value: 'trial', label: 'Cours d’essai (39 €)' },
+    { value: 'level-test', label: 'Test de niveau gratuit' },
+    { value: 'exams', label: 'Prépa Goethe, ÖSD & TELC' },
+    { value: 'workshops', label: 'Packs de grammaire & ateliers pratiques' },
+    { value: 'pricing', label: 'Tarifs & paiement' },
+    { value: 'formats', label: 'Formule 1:1 ou groupe' },
 ] as const;
 
 const socialLinks = [
-    { icon: SiWhatsappIcon, label: "WhatsApp" },
-    { icon: SiXIcon, label: "Twitter / X" },
-    { icon: SiFacebookIcon, label: "Facebook" },
-    { icon: SiInstagramIcon, label: "Instagram" },
+    { icon: SiWhatsappIcon, label: 'WhatsApp' },
+    { icon: SiXIcon, label: 'Twitter / X' },
+    { icon: SiFacebookIcon, label: 'Facebook' },
+    { icon: SiInstagramIcon, label: 'Instagram' },
 ] as const;
 
 const inputClasses =
-    "w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
+    'w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40';
 
 export default function Contact() {
+    const query = new URLSearchParams(usePage().url.split('?')[1]);
+    const selectedLevel =
+        workshopLevels.find((level) => level === query.get('level')) ?? 'a1';
+    const selectedTier = query.get('tier') === 'solo' ? 'solo' : 'group';
+    const selection = getWorkshopSelection(
+        query.get('offer') ?? '',
+        selectedLevel,
+        selectedTier,
+    );
+    const initialMessage = selection
+        ? `Bonjour, je souhaite discuter de ${selection.title} (${selection.level.toUpperCase()}), en ${tierLabels[selectedTier]}. Format : ${selection.volume}. Quelles seraient les disponibilités ?`
+        : '';
     return (
         <div className="relative py-20 md:py-28">
             <Head title="Contact" />
@@ -172,8 +188,8 @@ export default function Contact() {
                         </h2>
 
                         <p className="mt-1 text-sm text-foreground/60">
-                            Dis-moi qui tu es et ce que tu vises, je te
-                            réponds avec un plan.
+                            Dis-moi qui tu es et ce que tu vises, je te réponds
+                            avec un plan.
                         </p>
 
                         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -217,20 +233,26 @@ export default function Contact() {
                                 Ce qui t'intéresse
                             </label>
 
-                            <Select>
+                            <Select
+                                defaultValue={
+                                    selection ? 'workshops' : undefined
+                                }
+                            >
                                 <SelectTrigger id="subject" className="w-full">
                                     <SelectValue placeholder="Choisis une option" />
                                 </SelectTrigger>
 
                                 <SelectContent>
-                                    {subjectOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
+                                    <SelectGroup>
+                                        {subjectOptions.map((option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -245,6 +267,7 @@ export default function Contact() {
 
                             <textarea
                                 id="message"
+                                defaultValue={initialMessage}
                                 rows={5}
                                 placeholder="Ex : je vise l'ÖSD B2 en mars, je travaille dans la logistique…"
                                 className={`${inputClasses} resize-none`}
@@ -254,8 +277,13 @@ export default function Contact() {
                         <Button
                             size="lg"
                             className="group mt-6 w-full gap-2 rounded-full"
+                            onClick={() =>
+                                toast.info(
+                                    'Démonstration uniquement : aucun message n’a été envoyé.',
+                                )
+                            }
                         >
-                            Envoyer le message
+                            Simuler l’envoi du message
                             <ArrowRight
                                 className="h-4 w-4 transition-transform group-hover:translate-x-1"
                                 aria-hidden="true"
@@ -263,7 +291,7 @@ export default function Contact() {
                         </Button>
 
                         <p className="mt-3 text-center text-xs text-foreground/50">
-                            En général, je réponds en moins de 24 h.
+                            Formulaire de démonstration · aucun email envoyé.
                         </p>
                     </motion.div>
                 </div>

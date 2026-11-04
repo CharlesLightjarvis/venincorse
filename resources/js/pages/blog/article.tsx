@@ -28,14 +28,13 @@ const trending = (current: Article) =>
 
 export default function BlogArticle() {
     const slug = usePage().url.split('/').filter(Boolean).pop();
-    const article =
-        allArticles.find((a) => a.slug === slug) ?? allArticles[0];
+    const article = allArticles.find((a) => a.slug === slug) ?? allArticles[0];
     const course = related(article);
     const others = trending(article);
 
     return (
         <div className="relative min-h-screen">
-            <Head title={article.titre} />
+            <Head title={article.title} />
             {/* blob décoratif */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute top-0 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.03] blur-[160px] dark:bg-primary/[0.06]" />
@@ -54,7 +53,7 @@ export default function BlogArticle() {
                     <span className="uppercase">{article.categories[0]}</span>
                     <span className="text-foreground/25">/</span>
                     <span className="hidden truncate sm:inline">
-                        {article.titre}
+                        {article.title}
                     </span>
                 </nav>
 
@@ -71,14 +70,14 @@ export default function BlogArticle() {
                                 {article.categories.map((cat) => (
                                     <span
                                         key={cat}
-                                        className="rounded-sm border border-border/40 bg-background/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground/50"
+                                        className="rounded-sm border border-border/40 bg-background/80 px-2 py-1 text-[10px] font-bold tracking-wider text-foreground/50 uppercase"
                                     >
                                         {cat}
                                     </span>
                                 ))}
                             </div>
                             <h1 className="mb-6 text-3xl leading-snug font-semibold tracking-tight text-foreground md:text-4xl lg:text-5xl">
-                                {article.titre}
+                                {article.title}
                             </h1>
                             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border/30 pb-10 text-sm text-foreground/45">
                                 <span className="flex items-center gap-1.5">
@@ -87,7 +86,7 @@ export default function BlogArticle() {
                                 </span>
                                 <span className="flex items-center gap-1.5">
                                     <Clock className="h-3.5 w-3.5" />
-                                    {article.duree} de lecture
+                                    {article.duration} de lecture
                                 </span>
                                 <span>Par le prof de VéninCorsé</span>
                             </div>
@@ -102,21 +101,21 @@ export default function BlogArticle() {
                         >
                             <img
                                 src={article.image}
-                                alt={article.titre}
+                                alt={article.title}
                                 className="h-full w-full object-cover"
                             />
                         </motion.div>
 
                         {/* chapô */}
                         <p className="mb-14 text-lg leading-relaxed text-foreground/70">
-                            {article.contenu?.intro ?? article.description}
+                            {article.content?.intro ?? article.description}
                         </p>
 
                         {/* sections */}
                         <div className="space-y-14">
-                            {article.contenu?.sections.map((section, i) => (
+                            {article.content?.sections.map((section, i) => (
                                 <motion.section
-                                    key={section.titre}
+                                    key={section.title}
                                     initial={{ opacity: 0, y: 24 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: '-60px' }}
@@ -127,11 +126,11 @@ export default function BlogArticle() {
                                             {String(i + 1).padStart(2, '0')}
                                         </span>
                                         <h2 className="text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                                            {section.titre}
+                                            {section.title}
                                         </h2>
                                     </div>
                                     <div className="space-y-3 leading-relaxed text-foreground/60">
-                                        {section.texte.map((p, j) => (
+                                        {section.text.map((p, j) => (
                                             <p key={j}>{p}</p>
                                         ))}
                                     </div>
@@ -168,13 +167,11 @@ export default function BlogArticle() {
                                         Va plus loin
                                     </p>
                                     <p className="text-lg font-semibold text-foreground">
-                                        Parcours {course.code} —{' '}
-                                        {course.name}
+                                        Parcours {course.code} — {course.name}
                                     </p>
                                     <p className="mt-0.5 text-sm text-foreground/50">
-                                        Dès{' '}
-                                        {formatPrice(course.price.group)} · 60 h
-                                        par niveau
+                                        Dès {formatPrice(course.price.group)} ·
+                                        60 h par niveau
                                     </p>
                                 </div>
                                 <Button
@@ -245,17 +242,14 @@ export default function BlogArticle() {
                                             className="group flex items-start gap-3.5"
                                         >
                                             <span className="text-xs font-bold tracking-widest text-primary/70">
-                                                {String(i + 1).padStart(
-                                                    2,
-                                                    '0',
-                                                )}
+                                                {String(i + 1).padStart(2, '0')}
                                             </span>
                                             <span className="min-w-0">
                                                 <span className="mb-1 block text-[10px] font-bold tracking-[0.15em] text-foreground/35 uppercase">
                                                     {other.categories[0]}
                                                 </span>
                                                 <span className="block text-sm leading-snug font-semibold text-foreground/80 transition-colors group-hover:text-primary">
-                                                    {other.titre}
+                                                    {other.title}
                                                 </span>
                                             </span>
                                         </Link>
