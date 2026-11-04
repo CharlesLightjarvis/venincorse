@@ -139,128 +139,70 @@ export default function LevelTest() {
                 </div>
 
                 <div className="relative mx-auto max-w-7xl px-6 md:px-8 lg:px-12">
-                    <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-                        <motion.div
-                            initial={{ opacity: 0, y: 24 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.7 }}
-                        >
-                            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/40 bg-secondary px-4 py-2 text-xs font-semibold tracking-[0.25em] text-secondary-foreground uppercase backdrop-blur dark:border-border/60 dark:bg-secondary">
-                                Bilan de niveau
-                            </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7 }}
+                    >
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/40 bg-secondary px-4 py-2 text-xs font-semibold tracking-[0.25em] text-secondary-foreground uppercase backdrop-blur dark:border-border/60 dark:bg-secondary">
+                            Bilan de niveau
+                        </div>
 
-                            <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl lg:text-6xl">
-                                45 minutes pour arrêter de deviner.
-                            </h1>
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+                            45 minutes pour arrêter de deviner.
+                        </h1>
 
-                            <p className="mt-5 max-w-xl text-base leading-relaxed text-foreground/60 md:text-lg">
-                                Tu sais que tu veux progresser en allemand, mais
-                                pas exactement par où commencer ? Le bilan
-                                mesure ton niveau réel, puis construit un plan
-                                écrit — niveau, heures, rythme et budget.
-                            </p>
+                        <p className="mt-5 text-base leading-relaxed text-foreground/60 md:text-lg">
+                            Tu sais que tu veux progresser en allemand, mais pas
+                            exactement par où commencer ? Le bilan mesure ton
+                            niveau réel, puis construit un plan écrit — niveau,
+                            heures, rythme et budget.
+                        </p>
 
-                            <div className="mt-7 space-y-2.5">
-                                {[
-                                    'Un niveau CECRL fiable, pas une impression',
-                                    'Un plan écrit envoyé sous 48 h',
-                                    'Les 39 € crédités sur ton premier parcours',
-                                ].map((point) => (
-                                    <p
-                                        key={point}
-                                        className="flex items-center gap-2.5 text-sm text-foreground/65"
-                                    >
-                                        <Check
-                                            className="h-4 w-4 shrink-0 text-primary"
-                                            aria-hidden="true"
-                                        />
-                                        {point}
-                                    </p>
-                                ))}
-                            </div>
-
-                            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                                <Button
-                                    size="lg"
-                                    className="group gap-2 rounded-full"
-                                    asChild
+                        <div className="mt-7 space-y-2.5">
+                            {[
+                                'Un niveau CECRL fiable, pas une impression',
+                                'Un plan écrit envoyé sous 48 h',
+                                'Les 39 € crédités sur ton premier parcours',
+                            ].map((point) => (
+                                <p
+                                    key={point}
+                                    className="flex items-center gap-2.5 text-sm text-foreground/65"
                                 >
-                                    <a href="#reserver">
-                                        Réserver mon bilan
-                                        <ArrowRight
-                                            className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                            aria-hidden="true"
-                                        />
-                                    </a>
-                                </Button>
+                                    <Check
+                                        className="h-4 w-4 shrink-0 text-primary"
+                                        aria-hidden="true"
+                                    />
+                                    {point}
+                                </p>
+                            ))}
+                        </div>
 
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
-                                    asChild
-                                >
-                                    <Link href="/contact">
-                                        Poser une question
-                                    </Link>
-                                </Button>
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: 24 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.75, delay: 0.15 }}
-                            className="relative mx-auto w-full max-w-md lg:mx-0"
-                        >
-                            <OfferCard
-                                image="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80"
-                                alt="Bilan de niveau d'allemand en visio"
-                                badge={{ label: 'Bilan complet' }}
-                                chip={{ value: '39', label: '€ / 45 min' }}
-                                index={0}
+                        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                            <Button
+                                size="lg"
+                                className="group gap-2 rounded-full"
+                                asChild
                             >
-                                <p className="mb-4 text-xs text-foreground/55">
-                                    Crédité sur ton premier parcours si tu
-                                    t’inscris sous 7 jours.
-                                </p>
+                                <a href="#reserver">
+                                    Réserver mon bilan
+                                    <ArrowRight
+                                        className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                                        aria-hidden="true"
+                                    />
+                                </a>
+                            </Button>
 
-                                <ul className="space-y-2.5">
-                                    {[
-                                        '45 minutes en visio, en 1:1',
-                                        'Test oral et écrit adapté',
-                                        'Plan de progression écrit',
-                                        'Recommandation de format et budget',
-                                    ].map((item) => (
-                                        <li
-                                            key={item}
-                                            className="flex items-start gap-2.5 text-sm text-foreground/60"
-                                        >
-                                            <Check
-                                                className="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                                                aria-hidden="true"
-                                            />
-                                            {item}
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                <Button
-                                    className="mt-6 w-full rounded-full"
-                                    size="lg"
-                                    asChild
-                                >
-                                    <a href="#reserver">
-                                        Choisir un créneau
-                                    </a>
-                                </Button>
-
-                                <p className="mt-3 text-center text-[11px] text-foreground/50">
-                                    Réponse sous 24 h ouvrées
-                                </p>
-                            </OfferCard>
-                        </motion.div>
-                    </div>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
+                                asChild
+                            >
+                                <Link href="/contact">Poser une question</Link>
+                            </Button>
+                        </div>
+                    </motion.div>
                 </div>
             </section>
 
