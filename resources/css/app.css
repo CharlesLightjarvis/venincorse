@@ -2,6 +2,8 @@
 
 @import 'tw-animate-css';
 
+@import './book-3d.css';
+
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
@@ -9,16 +11,13 @@
 
 @theme {
     --font-sans:
-        'Geist', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --font-display:
-        'Fredoka', 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Fredoka', 'Geist', ui-sans-serif, system-ui, sans-serif;
 
     --font-mono:
-        'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
-        monospace;
+        'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -190,3 +189,5 @@
         font-variant-numeric: tabular-nums;
     }
 }
+
+

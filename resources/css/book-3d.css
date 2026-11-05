@@ -1,0 +1,241 @@
+/* ------------------------------------------------------------------ */
+/* 2.5D book — pure CSS, no external dependency                        */
+/* ------------------------------------------------------------------ */
+
+.book-3d-stage {
+    position: relative;
+    width: 100%;
+    container-type: inline-size;
+    perspective: 1200px;
+    perspective-origin: 42% 38%;
+    isolation: isolate;
+}
+
+.book-3d {
+    --book-depth: clamp(6px, 7cqw, 18px);
+
+    position: absolute;
+    inset: 0;
+    transform: rotateX(2deg) rotateY(-9deg) rotateZ(var(--book-lean, 0deg));
+    transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+.book-3d__cover,
+.book-3d__spine,
+.book-3d__pages,
+.book-3d__bottom {
+    position: absolute;
+}
+
+/* Front cover ------------------------------------------------------- */
+
+.book-3d__cover {
+    inset: 0;
+    z-index: 3;
+    overflow: hidden;
+    border-radius: 2px 4px 4px 2px;
+    background: #fff;
+    box-shadow:
+        inset 1px 0 0 rgb(255 255 255 / 0.25),
+        inset -1px 0 2px rgb(0 0 0 / 0.12),
+        0 16px 26px -16px rgb(15 23 42 / 0.45);
+}
+
+.book-3d__cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+}
+
+.book-3d__gloss {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            90deg,
+            rgb(0 0 0 / 0.16) 0%,
+            rgb(0 0 0 / 0.04) 2.5%,
+            transparent 6%,
+            transparent 94%,
+            rgb(255 255 255 / 0.1) 100%
+        ),
+        linear-gradient(
+            108deg,
+            rgb(255 255 255 / 0.3) 0%,
+            rgb(255 255 255 / 0.08) 18%,
+            transparent 40%,
+            transparent 74%,
+            rgb(0 0 0 / 0.09) 100%
+        );
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+}
+
+/* Spine ------------------------------------------------------------- */
+
+.book-3d__spine {
+    top: 0.4%;
+    bottom: 0.4%;
+    left: calc(var(--book-depth) * -0.78);
+    z-index: 2;
+    width: calc(var(--book-depth) * 0.9);
+    border-radius: 3px 0 0 3px;
+    background:
+        linear-gradient(
+            90deg,
+            rgb(0 0 0 / 0.24) 0%,
+            rgb(255 255 255 / 0.16) 38%,
+            transparent 72%,
+            rgb(0 0 0 / 0.14) 100%
+        ),
+        linear-gradient(
+            180deg,
+            color-mix(in oklab, var(--book-accent) 76%, white) 0%,
+            var(--book-accent) 45%,
+            color-mix(in oklab, var(--book-accent) 74%, black) 100%
+        );
+    box-shadow: inset -2px 0 3px rgb(0 0 0 / 0.28);
+}
+
+/* Page block — right edge and bottom edge --------------------------- */
+
+.book-3d__pages {
+    top: 1.8%;
+    right: calc(var(--book-depth) * -0.5);
+    bottom: 1.8%;
+    z-index: 1;
+    width: calc(var(--book-depth) * 0.85);
+    border-radius: 0 2px 2px 0;
+    background-color: #f3efe4;
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgb(255 255 255 / 0.55) 0,
+        rgb(255 255 255 / 0.55) 1px,
+        rgb(120 113 98 / 0.3) 1px,
+        rgb(120 113 98 / 0.3) 2px
+    );
+    box-shadow:
+        inset 0 0 5px rgb(0 0 0 / 0.22),
+        2px 0 4px rgb(15 23 42 / 0.14);
+}
+
+.book-3d__bottom {
+    right: calc(var(--book-depth) * 0.15);
+    bottom: calc(var(--book-depth) * -0.45);
+    left: 2%;
+    z-index: 1;
+    height: calc(var(--book-depth) * 0.8);
+    border-radius: 0 0 3px 3px;
+    background-color: #efe9dc;
+    background-image: repeating-linear-gradient(
+        180deg,
+        rgb(255 255 255 / 0.5) 0,
+        rgb(255 255 255 / 0.5) 1px,
+        rgb(120 113 98 / 0.28) 1px,
+        rgb(120 113 98 / 0.28) 2px
+    );
+    box-shadow:
+        inset 0 0 5px rgb(0 0 0 / 0.22),
+        0 2px 4px rgb(15 23 42 / 0.14);
+}
+
+/* Ground shadow ----------------------------------------------------- */
+
+.book-3d__shadow {
+    position: absolute;
+    right: -5%;
+    bottom: -7%;
+    left: 7%;
+    z-index: 0;
+    height: 12%;
+    border-radius: 50%;
+    background: rgb(15 23 42 / 0.24);
+    filter: blur(10px);
+    opacity: 0.85;
+    pointer-events: none;
+    transition:
+        transform 650ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Interaction ------------------------------------------------------- */
+
+@media (hover: hover) {
+    .book-3d-stage:hover .book-3d {
+        transform: rotateX(1deg) rotateY(-4deg) rotateZ(var(--book-lean, 0deg))
+            translateY(-4%);
+    }
+
+    .book-3d-stage:hover .book-3d__shadow {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+}
+
+.book-3d-stage:active .book-3d {
+    transform: rotateX(1deg) rotateY(-4deg) rotateZ(var(--book-lean, 0deg))
+        translateY(-4%);
+}
+
+/* ------------------------------------------------------------------ */
+/* Collection accent — readable in light and dark themes               */
+/* ------------------------------------------------------------------ */
+
+.collection-accent-text {
+    color: var(--collection-accent);
+}
+
+.dark .collection-accent-text {
+    color: var(--collection-accent-dark);
+}
+
+.collection-accent-bg {
+    background-color: var(--collection-accent);
+}
+
+.dark .collection-accent-bg {
+    background-color: var(--collection-accent-dark);
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion                                                      */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+    .book-3d,
+    .book-3d__shadow {
+        transition: none;
+    }
+
+    .book-3d-stage:hover .book-3d,
+    .book-3d-stage:active .book-3d {
+        transform: rotateX(2deg) rotateY(-9deg) rotateZ(var(--book-lean, 0deg));
+    }
+
+    .book-3d-stage:hover .book-3d__shadow {
+        transform: none;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Dark theme                                                          */
+/* ------------------------------------------------------------------ */
+
+.dark .book-3d__cover {
+    box-shadow:
+        inset 1px 0 0 rgb(255 255 255 / 0.08),
+        inset -1px 0 2px rgb(0 0 0 / 0.35),
+        0 18px 30px -14px rgb(0 0 0 / 0.7);
+}
+
+.dark .book-3d__shadow {
+    background: rgb(0 0 0 / 0.55);
+}
+
+.dark .book-3d__pages,
+.dark .book-3d__bottom {
+    background-color: #ccc6b7;
+}

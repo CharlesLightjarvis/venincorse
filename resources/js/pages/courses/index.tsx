@@ -156,6 +156,53 @@ export default function Courses() {
                             </OfferCard>
                         ))}
                     </div>
+
+                    <Link
+                        href="/manuels"
+                        className="group mt-8 flex flex-col gap-4 rounded-2xl border border-border/40 bg-background/60 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-border/70 hover:shadow-md sm:flex-row sm:items-center sm:justify-between dark:border-border/50 dark:bg-background/40"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="flex shrink-0 -space-x-4">
+                                {[
+                                    '/images/books/menschen-a1.jpg',
+                                    '/images/books/menschen-a2.jpg',
+                                    '/images/books/menschen-b1.jpg',
+                                    '/images/books/sicher-b2.jpg',
+                                ].map((cover) => (
+                                    <img
+                                        key={cover}
+                                        src={cover}
+                                        alt=""
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="h-14 w-10 rounded-sm border border-white/60 object-cover shadow-sm first:rotate-[-4deg] last:rotate-[4deg] dark:border-border/60"
+                                    />
+                                ))}
+                            </div>
+
+                            <div>
+                                <p className="font-mono text-[10px] tracking-[0.18em] text-foreground/40 uppercase">
+                                    Les manuels
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-foreground">
+                                    Menschen A1–B1, puis Sicher! B2 : le
+                                    parcours tient sur quatre volumes.
+                                </p>
+                                <p className="mt-1 text-xs text-foreground/50">
+                                    Couvertures, comparatif des quatre
+                                    collections et passerelle B1+.
+                                </p>
+                            </div>
+                        </div>
+
+                        <span className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-primary">
+                            Voir les manuels
+                            <ArrowRight
+                                className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                                aria-hidden="true"
+                            />
+                        </span>
+                    </Link>
                 </div>
             </section>
 

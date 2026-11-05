@@ -10,6 +10,7 @@ import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { partners } from '@/routes';
 
 const footerLinks = [
     {
@@ -35,8 +36,10 @@ const footerLinks = [
         title: 'Ressources',
         links: [
             { label: 'Test de niveau gratuit', href: '/level-test' },
+            { label: 'Les manuels', href: '/manuels' },
             { label: 'Blog', href: '/blog' },
             { label: 'À propos', href: '/about' },
+            { label: 'Devenir partenaire pédagogique', href: partners.url() },
             { label: 'Contact', href: '/contact' },
         ],
     },

@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { BookingShell } from '@/components/booking-shell';
 import { CourseBookingsPanel } from '@/components/course-bookings-panel';
 import { ExamBookingsPanel } from '@/components/exam-bookings-panel';
+import { WorkshopBookingsPanel } from '@/components/workshop-bookings-panel';
+import { PartnerRequestsPanel } from '@/components/partner-requests-panel';
 import { selectClassName } from '@/components/trial-slot-picker';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +41,9 @@ const tabs = [
     { id: 'bookings', label: 'Réservations', icon: ClipboardList },
     { id: 'availability', label: 'Disponibilités', icon: SlidersHorizontal },
     { id: 'courses', label: 'Parcours', icon: ClipboardList },
+    { id: 'workshops', label: 'Ateliers', icon: ClipboardList },
     { id: 'exams', label: 'Prépas examens', icon: ClipboardList },
+    { id: 'partners', label: 'Partenariats', icon: ClipboardList },
 ] as const;
 const statusLabels = {
     confirmed: 'À venir',
@@ -50,7 +54,13 @@ const statusLabels = {
 export default function TeacherTrials() {
     const state = useTrialBooking();
     const [tab, setTab] = useState<
-        'calendar' | 'bookings' | 'availability' | 'courses' | 'exams'
+        | 'calendar'
+        | 'bookings'
+        | 'availability'
+        | 'courses'
+        | 'workshops'
+        | 'exams'
+        | 'partners'
     >('calendar');
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('all');
@@ -167,8 +177,12 @@ export default function TeacherTrials() {
                 aria-labelledby={`tab-${tab}`}
                 className="flex flex-col gap-6"
             >
-                {tab === 'exams' ? (
+                {tab === 'partners' ? (
+                    <PartnerRequestsPanel />
+                ) : tab === 'exams' ? (
                     <ExamBookingsPanel />
+                ) : tab === 'workshops' ? (
+                    <WorkshopBookingsPanel />
                 ) : tab === 'courses' ? (
                     <CourseBookingsPanel />
                 ) : tab !== 'availability' ? (

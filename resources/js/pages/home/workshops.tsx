@@ -22,17 +22,8 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
     formatPrice,
@@ -42,13 +33,13 @@ import {
     type TierKey,
 } from '@/data/offer';
 import {
-    getWorkshopSelection,
     grammarPacks,
     practiceWorkshops,
     workshopLevels,
     workshopVolume,
 } from '@/data/workshop-catalog';
-import { contact, courses, levelTest } from '@/routes';
+import { courses, levelTest } from '@/routes';
+import { show as workshopDetail } from '@/routes/workshops';
 
 const practiceIcons = {
     sprechen: MessagesSquare,
@@ -79,17 +70,13 @@ const workshopFaqs: FaqItem[] = [
     },
     {
         question: 'Puis-je déjà réserver et payer ?',
-        answer: 'Cette page présente une proposition de catalogue et des prix de démonstration. Le bouton de sélection prépare une demande à discuter ; il ne réserve pas de créneau, ne déclenche aucun paiement et n’envoie aucun email.',
+        answer: 'Oui, dans cette démonstration : les fiches permettent de choisir un créneau et de simuler un paiement. Aucun débit réel, aucun email et aucune réunion Meet ne sont créés. La réservation reste enregistrée dans ce navigateur.',
     },
 ];
 
 export default function Workshops() {
     const [tier, setTier] = useState<TierKey>('group');
     const [level, setLevel] = useState<LevelSlug>('a1');
-    const [selectedId, setSelectedId] = useState<string | null>(null);
-    const selected = selectedId
-        ? getWorkshopSelection(selectedId, level, tier)
-        : undefined;
 
     return (
         <>
@@ -263,12 +250,15 @@ export default function Workshops() {
                                             {formatPrice(pack.price[tier])}
                                         </p>
                                     </div>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => setSelectedId(pack.id)}
-                                    >
-                                        Choisir ce pack
-                                        <ArrowRight />
+                                    <Button variant="secondary" asChild>
+                                        <Link
+                                            href={workshopDetail.url(pack.id, {
+                                                query: { tier },
+                                            })}
+                                        >
+                                            Voir le programme
+                                            <ArrowRight />
+                                        </Link>
                                     </Button>
                                 </div>
                             </OfferCard>
@@ -387,14 +377,18 @@ export default function Workshops() {
                                                 )}
                                             </p>
                                         </div>
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() =>
-                                                setSelectedId(workshop.id)
-                                            }
-                                        >
-                                            Choisir cet atelier
-                                            <ArrowRight />
+                                        <Button variant="secondary" asChild>
+                                            <Link
+                                                href={workshopDetail.url(
+                                                    workshop.id,
+                                                    {
+                                                        query: { tier, level },
+                                                    },
+                                                )}
+                                            >
+                                                Voir la fiche
+                                                <ArrowRight />
+                                            </Link>
                                         </Button>
                                     </div>
                                 </OfferCard>
@@ -403,8 +397,8 @@ export default function Workshops() {
                     </div>
                     <p className="mt-5 text-xs text-muted-foreground">
                         En groupe, les participants travaillent le même niveau.
-                        Les exemples ci-dessus illustrent les séances, pas un
-                        calendrier déjà ouvert à la réservation.
+                        Chaque fiche permet de choisir un créneau de
+                        démonstration et de simuler le paiement.
                     </p>
                 </div>
             </section>
@@ -458,91 +452,6 @@ export default function Workshops() {
                     href: levelTest.url(),
                 }}
             />
-
-            <Dialog
-                open={Boolean(selected)}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setSelectedId(null);
-                    }
-                }}
-            >
-                <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {selected?.title} · {selected?.level.toUpperCase()}
-                        </DialogTitle>
-                        <DialogDescription>
-                            Voici ta sélection pour en discuter. Aucun créneau
-                            ni paiement n’est réservé.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selected && (
-                        <>
-                            <dl className="grid grid-cols-[90px_1fr] gap-3 text-sm">
-                                <dt className="text-muted-foreground">Offre</dt>
-                                <dd>
-                                    {selected.category === 'grammar'
-                                        ? 'Pack de grammaire'
-                                        : 'Atelier pratique à l’unité'}
-                                </dd>
-                                <dt className="text-muted-foreground">
-                                    Niveau
-                                </dt>
-                                <dd>{selected.level.toUpperCase()}</dd>
-                                <dt className="text-muted-foreground">
-                                    Formule
-                                </dt>
-                                <dd>{tierLabels[tier]}</dd>
-                                <dt className="text-muted-foreground">
-                                    Volume
-                                </dt>
-                                <dd>{selected.volume}</dd>
-                                <dt className="text-muted-foreground">
-                                    Tarif démo
-                                </dt>
-                                <dd className="font-semibold">
-                                    {formatPrice(selected.price)}
-                                    {tier === 'group' && ' par personne'}
-                                </dd>
-                            </dl>
-                            <p className="text-sm text-muted-foreground">
-                                {selected.outcome}
-                            </p>
-                            <Alert>
-                                <AlertDescription>
-                                    Catalogue de démonstration. Les dates, le
-                                    programme final et les tarifs restent à
-                                    confirmer. Aucun email ne sera envoyé
-                                    automatiquement.
-                                </AlertDescription>
-                            </Alert>
-                            <DialogFooter>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setSelectedId(null)}
-                                >
-                                    Continuer à explorer
-                                </Button>
-                                <Button asChild>
-                                    <Link
-                                        href={contact({
-                                            query: {
-                                                subject: 'workshops',
-                                                offer: selected.id,
-                                                level: selected.level,
-                                                tier,
-                                            },
-                                        })}
-                                    >
-                                        Discuter de ma sélection
-                                    </Link>
-                                </Button>
-                            </DialogFooter>
-                        </>
-                    )}
-                </DialogContent>
-            </Dialog>
         </>
     );
 }

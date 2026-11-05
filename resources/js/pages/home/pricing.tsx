@@ -19,7 +19,7 @@ import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeading } from '@/components/marketing/section-heading';
 import { TierSwitcher } from '@/components/marketing/tier-switcher';
 import { exam as bookExam } from '@/routes/booking';
-import { workshops as workshopsRoute } from '@/routes';
+import { show as workshopDetail } from '@/routes/workshops';
 import {
     grammarPacks,
     practiceWorkshops,
@@ -363,7 +363,9 @@ export default function Pricing() {
                                     pack.sessions,
                                     pack.durationMinutes,
                                 ),
-                                href: `${workshopsRoute.url()}#grammar`,
+                                href: workshopDetail.url(pack.id, {
+                                    query: { tier },
+                                }),
                             })),
                             ...practiceWorkshops.map((workshop) => ({
                                 ...workshop,
@@ -371,7 +373,9 @@ export default function Pricing() {
                                     1,
                                     workshop.durationMinutes,
                                 ),
-                                href: `${workshopsRoute.url()}#practice`,
+                                href: workshopDetail.url(workshop.id, {
+                                    query: { tier },
+                                }),
                             })),
                         ].map((item, index) => (
                             <div

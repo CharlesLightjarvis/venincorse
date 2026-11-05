@@ -12,6 +12,10 @@ Route::inertia('exams', 'home/exams')->name('exams');
 
 Route::inertia('workshops', 'home/workshops')->name('workshops');
 
+Route::inertia('workshops/{slug}', 'workshops/workshop-detail')->name('workshops.show');
+
+Route::inertia('manuels', 'textbooks/index')->name('textbooks');
+
 Route::inertia('pricing', 'home/pricing')->name('pricing');
 
 Route::inertia('level-test', 'level-test/index')->name('level-test');
@@ -26,11 +30,19 @@ Route::inertia('booking/course', 'booking/course')->name('booking.course');
 
 Route::inertia('booking/course/manage', 'booking/course-manage')->name('booking.course-manage');
 
+Route::inertia('booking/workshop', 'booking/workshop')->name('booking.workshop');
+
+Route::inertia('booking/workshop/manage', 'booking/workshop-manage')->name('booking.workshop-manage');
+
 Route::inertia('booking/exam', 'booking/exam')->name('booking.exam');
 
 Route::inertia('booking/exam/manage', 'booking/exam-manage')->name('booking.exam-manage');
 
 Route::inertia('about', 'home/about')->name('about');
+
+Route::inertia('partenaires', 'home/partners')->name('partners');
+
+Route::inertia('partenaires/demande', 'home/partner-request')->name('partners.request');
 
 Route::inertia('contact', 'home/contact')->name('contact');
 

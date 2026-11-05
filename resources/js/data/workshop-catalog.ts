@@ -10,6 +10,8 @@ export interface GrammarPack {
     durationMinutes: number;
     price: PriceSet;
     outcome: string;
+    focus: string[];
+    canDo: string[];
     program: { title: string; description: string }[];
 }
 
@@ -18,6 +20,7 @@ export interface PracticeWorkshop {
     title: string;
     subtitle: string;
     description: string;
+    focus: string[];
     image: string;
     durationMinutes: number;
     price: PriceSet;
@@ -42,6 +45,13 @@ export const grammarPacks: GrammarPack[] = [
         price: { solo: 240, group: 120 },
         outcome:
             'Construire tes premières phrases et repérer les erreurs de base.',
+        focus: ['Articles', 'Présent', 'Négation', 'Accusatif'],
+        canDo: [
+            'Choisir entre der, die et das avec des repères fiables.',
+            'Construire une phrase simple et poser une question.',
+            'Utiliser nicht et kein sans confondre les deux.',
+            'Employer les modaux et l’accusatif dans un dialogue court.',
+        ],
         program: [
             {
                 title: 'Articles, genres et pronoms',
@@ -77,6 +87,13 @@ export const grammarPacks: GrammarPack[] = [
         price: { solo: 300, group: 150 },
         outcome:
             'Raconter une expérience et relier tes idées avec des structures plus sûres.',
+        focus: ['Perfekt', 'Datif', 'Prépositions', 'Subordonnées'],
+        canDo: [
+            'Raconter une expérience au passé avec le bon auxiliaire.',
+            'Repérer à qui s’adresse l’action et utiliser le datif.',
+            'Choisir la bonne préposition selon le lieu ou le déplacement.',
+            'Relier deux idées avec weil, dass ou wenn.',
+        ],
         program: [
             {
                 title: 'Le Perfekt, sans deviner',
@@ -117,6 +134,13 @@ export const grammarPacks: GrammarPack[] = [
         price: { solo: 360, group: 180 },
         outcome:
             'Organiser un récit et expliquer un avis en variant les constructions.',
+        focus: ['Temps du récit', 'Relatives', 'Konjunktiv II', 'Passif'],
+        canDo: [
+            'Situer les événements d’un récit dans le bon ordre.',
+            'Préciser une personne ou un objet avec une relative.',
+            'Formuler un conseil ou une hypothèse au Konjunktiv II.',
+            'Décrire une procédure au passif sans alourdir la phrase.',
+        ],
         program: [
             {
                 title: 'Les temps du récit',
@@ -162,6 +186,18 @@ export const grammarPacks: GrammarPack[] = [
         price: { solo: 390, group: 195 },
         outcome:
             'Nuancer un argument et reformuler des phrases complexes avec plus de précision.',
+        focus: [
+            'Connecteurs',
+            'Nominalisation',
+            'Discours indirect',
+            'Reformulation',
+        ],
+        canDo: [
+            'Enchaîner des arguments avec des connecteurs variés.',
+            'Passer d’une formulation verbale à une formulation nominale.',
+            'Rapporter un propos en respectant le registre.',
+            'Reformuler une phrase complexe sans en perdre le sens.',
+        ],
         program: [
             {
                 title: 'Connecteurs avancés',
@@ -202,6 +238,7 @@ export const practiceWorkshops: PracticeWorkshop[] = [
         id: 'sprechen',
         title: 'Sprechen',
         subtitle: 'Le rendez-vous pour parler',
+        focus: ['Jeux de rôle', 'Fluidité', 'Prononciation'],
         description:
             'Mises en situation, échanges guidés puis spontanés : tu passes la séance à prendre la parole, pas à écouter un cours.',
         image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
@@ -253,6 +290,7 @@ export const practiceWorkshops: PracticeWorkshop[] = [
         id: 'schreiben',
         title: 'Schreiben',
         subtitle: 'Écrire, corriger, réécrire',
+        focus: ['Structure', 'Registre', 'Relecture'],
         description:
             'Une consigne concrète, un premier texte, des corrections expliquées : tu repars avec une version améliorée et des repères.',
         image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
@@ -303,6 +341,7 @@ export const practiceWorkshops: PracticeWorkshop[] = [
         id: 'wortschatz',
         title: 'Wortschatz',
         subtitle: 'Du vocabulaire qui revient en jouant',
+        focus: ['Jeux', 'Mémorisation', 'Réemploi'],
         description:
             'Bingo, devinettes, associations et défis : tu retrouves les mots, tu les expliques et tu les réutilises dans une vraie phrase.',
         image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
@@ -359,6 +398,19 @@ export function workshopVolume(
     return sessions === 1
         ? `${durationMinutes} min · une séance`
         : `${sessions} × ${durationMinutes} min · ${((sessions * durationMinutes) / 60).toLocaleString('fr-FR')} h`;
+}
+
+export type WorkshopOffer =
+    | { category: 'grammar'; pack: GrammarPack }
+    | { category: 'practice'; workshop: PracticeWorkshop };
+
+export function getWorkshopOffer(slug: string): WorkshopOffer | undefined {
+    const pack = grammarPacks.find((item) => item.id === slug);
+    if (pack) {
+        return { category: 'grammar', pack };
+    }
+    const workshop = practiceWorkshops.find((item) => item.id === slug);
+    return workshop ? { category: 'practice', workshop } : undefined;
 }
 
 export function getWorkshopSelection(

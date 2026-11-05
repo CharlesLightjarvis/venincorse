@@ -14,7 +14,8 @@ export function CourseSchedule({
     return (
         <div className="flex flex-col gap-3">
             <h3 className="font-semibold">
-                Ton planning · {sessions.length} séances ·{' '}
+                Ton planning · {sessions.length}{' '}
+                {sessions.length > 1 ? 'séances' : 'séance'} ·{' '}
                 {sessions
                     .reduce((total, session) => total + session.hours, 0)
                     .toLocaleString('fr-FR')}{' '}
@@ -41,17 +42,19 @@ export function CourseSchedule({
                     ),
                 )}
             </ol>
-            <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="self-start"
-                onClick={() => setExpanded(!expanded)}
-            >
-                {expanded
-                    ? 'Réduire le planning'
-                    : `Voir les ${sessions.length} séances`}
-            </Button>
+            {sessions.length > 4 && (
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="self-start"
+                    onClick={() => setExpanded(!expanded)}
+                >
+                    {expanded
+                        ? 'Réduire le planning'
+                        : `Voir les ${sessions.length} séances`}
+                </Button>
+            )}
         </div>
     );
 }

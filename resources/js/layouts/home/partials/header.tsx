@@ -8,7 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
 import { MenuToggleIcon } from './menu-toggle-icon';
 import Logo from './logo';
-import { dashboard, login, register } from '@/routes';
+import { about, partners, dashboard, login, register } from '@/routes';
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -20,15 +20,17 @@ const simpleLinks = [
     { label: 'Parcours', href: '/courses' },
     { label: 'Examens', href: '/exams' },
     { label: 'Ateliers', href: '/workshops' },
+    { label: 'Manuels', href: '/manuels' },
     { label: 'Tarifs', href: '/pricing' },
     { label: 'Blog', href: '/blog' },
+    { label: 'À propos', href: about.url() },
+    { label: 'Enseignants', href: partners.url() },
 ];
 
 const mobileLinks = [
     ...simpleLinks,
     { label: "Cours d'essai", href: '/trial' },
     { label: 'Test de niveau', href: '/level-test' },
-    { label: 'À propos', href: '/about' },
     { label: 'Contact', href: '/contact' },
 ];
 
@@ -67,18 +69,18 @@ export function Header() {
                 },
             )}
         >
-            <nav className="relative flex h-14 w-full items-center px-4 lg:px-6">
+            <nav className="relative flex h-14 w-full items-center gap-3 px-4 lg:px-6">
                 {/* logo — gauche écran */}
                 <div className="flex items-center justify-start">
                     <div className="rounded-md p-2 hover:bg-transparent">
                         <Link href="/">
-                            <Logo className="h-7 w-auto sm:h-8 lg:h-12" />
+                            <Logo className="h-7 w-auto sm:h-8 2xl:h-12" />
                         </Link>
                     </div>
                 </div>
 
                 {/* liens — centre exact */}
-                <div className="absolute left-1/2 hidden -translate-x-1/2 lg:block">
+                <div className="mx-auto hidden xl:block">
                     <NavigationMenu>
                         <NavigationMenuList>
                             {simpleLinks.map((link) => (
@@ -91,7 +93,7 @@ export function Header() {
                                                 : undefined
                                         }
                                         className={cn(
-                                            'inline-flex h-10 items-center justify-center gap-1.5 px-4 text-sm font-medium transition-colors focus:outline-none',
+                                            'inline-flex h-10 items-center justify-center gap-1.5 px-2 text-sm font-medium transition-colors focus:outline-none 2xl:px-3',
                                             isActivePath(currentUrl, link.href)
                                                 ? 'text-foreground'
                                                 : 'text-foreground/60 hover:text-foreground',
@@ -112,7 +114,7 @@ export function Header() {
                 </div>
 
                 {/* CTA — droite écran */}
-                <div className="ml-auto hidden items-center justify-end gap-2 lg:flex">
+                <div className="ml-auto hidden shrink-0 items-center justify-end gap-2 xl:flex">
                     {auth.user ? (
                         <Button
                             variant="secondary"
@@ -148,7 +150,7 @@ export function Header() {
                     size="icon"
                     variant="outline"
                     onClick={() => setOpen(!open)}
-                    className="ml-auto lg:hidden"
+                    className="ml-auto xl:hidden"
                     aria-expanded={open}
                     aria-controls="mobile-menu"
                     aria-label="Toggle menu"
@@ -194,7 +196,7 @@ function MobileMenu({
     return createPortal(
         <div
             id="mobile-menu"
-            className="fixed top-14 right-0 bottom-0 left-0 z-40 flex flex-col overflow-hidden border-y border-border/30 bg-background lg:hidden"
+            className="fixed top-14 right-0 bottom-0 left-0 z-40 flex flex-col overflow-hidden border-y border-border/30 bg-background xl:hidden"
         >
             <div
                 data-slot={open ? 'open' : 'closed'}
