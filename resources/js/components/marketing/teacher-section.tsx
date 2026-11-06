@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { teacher } from '@/data/offer';
 
@@ -57,15 +57,14 @@ export function TeacherSection() {
                         </div>
 
                         <h2 className="mb-5 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                            Une méthode, une voix, pas un programme
-                            anonyme.
+                            Une méthode, une voix, pas un programme anonyme.
                         </h2>
 
                         <p className="mb-4 text-foreground/60">{teacher.bio}</p>
 
                         <p className="mb-8 text-foreground/60">
-                            Chaque parcours démarre par un diagnostic honnête
-                            et se termine par un objectif mesurable : tenir une
+                            Chaque parcours démarre par un diagnostic honnête et
+                            se termine par un objectif mesurable : tenir une
                             conversation, réussir l’ÖSD B2, écrire un email
                             professionnel. Entre les deux, on ajuste — sans
                             jamais te laisser seul face à la grammaire.
@@ -90,9 +89,7 @@ export function TeacherSection() {
                                 className="rounded-full border-border/50 bg-background/60 backdrop-blur-sm"
                                 asChild
                             >
-                                <Link href="/courses">
-                                    Voir les parcours
-                                </Link>
+                                <Link href="/courses">Voir les parcours</Link>
                             </Button>
                         </div>
                     </motion.div>

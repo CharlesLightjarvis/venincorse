@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Globe, Mail, Clock, Phone } from 'lucide-react';
+import { ArrowRight, Globe, Envelope, Clock, Phone } from 'reicon-react';
 import {
     SiFacebook as SiFacebookIcon,
     SiInstagram as SiInstagramIcon,
@@ -23,7 +23,7 @@ import {
 
 const contactChannels = [
     {
-        icon: Mail,
+        icon: Envelope,
         title: 'Email',
         value: 'contact@venincorse.com',
         detail: 'Réponse la plus complète, idéale pour les entreprises',

@@ -1,5 +1,5 @@
 import { motion, type Variants } from 'framer-motion';
-import { ArrowRight, Clock } from 'lucide-react';
+import { ArrowRight, Clock } from 'reicon-react';
 import { Link } from '@inertiajs/react';
 import type { Article } from '../blog-data';
 

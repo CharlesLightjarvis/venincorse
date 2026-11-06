@@ -8,12 +8,12 @@ import {
     Check,
     ChevronRight,
     Clock,
-    Gamepad2,
+    Gamepad,
     GraduationCap,
-    MessagesSquare,
-    PenLine,
+    Messages,
+    Pen,
     Users,
-} from 'lucide-react';
+} from 'reicon-react';
 import { useState } from 'react';
 import { CtaBand } from '@/components/marketing/cta-band';
 import { SectionHeading } from '@/components/marketing/section-heading';
@@ -40,9 +40,9 @@ import { show as workshopDetail } from '@/routes/workshops';
 import { cn } from '@/lib/utils';
 
 const practiceIcons = {
-    sprechen: MessagesSquare,
-    schreiben: PenLine,
-    wortschatz: Gamepad2,
+    sprechen: Messages,
+    schreiben: Pen,
+    wortschatz: Gamepad,
 };
 
 export default function WorkshopDetail() {

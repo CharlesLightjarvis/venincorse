@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'trial_slot_id', 'submission_key', 'submission_hash', 'level', 'goal', 'timezone', 'amount_cents', 'currency', 'status', 'expires_at', 'checkout_started_at', 'stripe_session_id', 'checkout_url', 'paid_at', 'notes'])]
+#[Fillable(['user_id', 'trial_slot_id', 'submission_key', 'submission_hash', 'level', 'goal', 'timezone', 'amount_cents', 'currency', 'status', 'expires_at', 'checkout_started_at', 'stripe_session_id', 'checkout_url', 'paid_at', 'notes', 'meeting_url'])]
 final class TrialReservation extends Model
 {
     /** @use HasFactory<TrialReservationFactory> */

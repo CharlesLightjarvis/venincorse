@@ -21,7 +21,11 @@ enum RoleEnum: string
     public function permissions(): array
     {
         return match ($this) {
-            self::Administrator => PermissionEnum::cases(),
+            self::Administrator => [
+                PermissionEnum::ViewAllTrials,
+                PermissionEnum::UpdateTrials,
+                PermissionEnum::ManageAvailability,
+            ],
             self::Student => [PermissionEnum::ReserveTrial, PermissionEnum::ViewOwnTrials],
         };
     }

@@ -4,8 +4,8 @@ import {
     ClipboardList,
     Clock,
     Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+    Sliders,
+} from 'reicon-react';
 import { useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { BookingShell } from '@/components/booking-shell';
@@ -39,7 +39,7 @@ import { cn } from '@/lib/utils';
 const tabs = [
     { id: 'calendar', label: 'Agenda', icon: CalendarDays },
     { id: 'bookings', label: 'Réservations', icon: ClipboardList },
-    { id: 'availability', label: 'Disponibilités', icon: SlidersHorizontal },
+    { id: 'availability', label: 'Disponibilités', icon: Sliders },
     { id: 'courses', label: 'Parcours', icon: ClipboardList },
     { id: 'workshops', label: 'Ateliers', icon: ClipboardList },
     { id: 'exams', label: 'Prépas examens', icon: ClipboardList },

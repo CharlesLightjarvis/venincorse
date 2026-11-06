@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, CalendarCheck, TrendingUp, Video } from 'lucide-react';
+import { BookOpen, CalendarCheck, TrendUp, Video } from 'reicon-react';
 
 const steps = [
     {
@@ -25,7 +25,7 @@ const steps = [
     },
     {
         number: '04',
-        icon: TrendingUp,
+        icon: TrendUp,
         title: 'Mesure ta progression',
         description:
             'Un checkpoint tous les 30 heures, des corrections précises entre les séances et un objectif mesurable à chaque niveau.',

@@ -38,7 +38,7 @@ Trois choses doivent tourner en plus du site servi par Herd :
 
 - Carte : `4242 4242 4242 4242`, date future quelconque, CVC `123`.
 - Comptes de démonstration (`php artisan db:seed --class=DemoUserSeeder`, mot de passe `password`) : `admin@venincorse.test`, `student1@venincorse.test`, `student2@venincorse.test`.
-- Publier les créneaux : `php artisan trials:publish-slots`.
+- Publier les créneaux : `php artisan trials:publish-slots`. Ils sont générés depuis les disponibilités enregistrées par l’équipe (page « Disponibilités », permission `trial-availability.manage`) ; `migrate:fresh --seed` les publie aussi.
 - Donner l’accès à la gestion des essais à un compte existant : `php artisan trials:grant-management email@exemple.fr`.
 
 ## En production

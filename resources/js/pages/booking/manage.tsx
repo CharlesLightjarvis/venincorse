@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CalendarCheck, Mail, Video } from 'lucide-react';
+import { CalendarCheck, Envelope, Video } from 'reicon-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { BookingShell } from '@/components/booking-shell';
@@ -163,7 +163,7 @@ export default function ManageTrialBooking() {
                             className="self-start rounded-full"
                             onClick={() => setShowEmail(!showEmail)}
                         >
-                            <Mail />
+                            <Envelope />
                             {showEmail
                                 ? 'Masquer l’aperçu d’email'
                                 : 'Voir l’aperçu d’email'}

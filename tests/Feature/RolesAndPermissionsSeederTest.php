@@ -14,7 +14,7 @@ test('roles are synchronized from the enums and existing accounts are never prom
     $this->seed(RolesAndPermissionsSeeder::class);
 
     $this->assertDatabaseCount('roles', 2);
-    $this->assertDatabaseCount('permissions', 4);
+    $this->assertDatabaseCount('permissions', count(PermissionEnum::cases()));
     expect($existing->fresh()->hasRole(RoleEnum::Student))->toBeTrue();
     expect($existing->fresh()->can(PermissionEnum::ViewAllTrials->value))->toBeFalse();
     foreach (RoleEnum::activeCases() as $roleEnum) {

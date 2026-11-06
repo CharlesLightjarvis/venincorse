@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import {
     ArrowRight,
     Check,
-    FileCheck2,
+    FileCheck,
     Flag,
     Target,
     Timer,
     Users,
-} from 'lucide-react';
+} from 'reicon-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CtaBand } from '@/components/marketing/cta-band';
@@ -50,7 +50,7 @@ const timeline = [
     },
     {
         number: '03',
-        icon: FileCheck2,
+        icon: FileCheck,
         title: 'Simulations d’épreuves',
         description:
             'Une ou deux séances blanches selon la formule, avec correction détaillée et exercices adaptés aux épreuves choisies.',

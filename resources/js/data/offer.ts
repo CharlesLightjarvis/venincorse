@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import type { IconComponent } from 'reicon-react';
 import { getExamPackage, type ExamLevel } from '@/data/exam-booking';
 import {
     BookOpen,
@@ -7,15 +7,15 @@ import {
     FileText,
     Flame,
     GraduationCap,
-    MessagesSquare,
+    Messages,
     Rocket,
     Target,
-    TrendingUp,
+    TrendUp,
     Trophy,
     Users,
     Video,
-    Zap,
-} from 'lucide-react';
+    Bolt,
+} from 'reicon-react';
 
 export type LevelSlug = 'a1' | 'a2' | 'b1' | 'b2';
 export type TierKey = 'solo' | 'group';
@@ -68,7 +68,7 @@ export interface CourseLevel {
     price: PriceSet;
     nextCohort: string;
     seats: { total: number; left: number };
-    icon: LucideIcon;
+    icon: IconComponent;
     accent: Accent;
     featured?: boolean;
 }
@@ -76,7 +76,7 @@ export interface CourseLevel {
 export interface TrainingFormat {
     id: string;
     name: string;
-    icon: LucideIcon;
+    icon: IconComponent;
     schedule: string;
     subLevel: string;
     level: string;
@@ -478,7 +478,7 @@ export const levels: CourseLevel[] = [
         price: { solo: 2090, group: 720 },
         nextCohort: '18 janvier 2027',
         seats: { total: 6, left: 3 },
-        icon: MessagesSquare,
+        icon: Messages,
         accent: accents.chart4,
     },
     {
@@ -822,7 +822,7 @@ export const formats: TrainingFormat[] = [
     {
         id: 'accelere',
         name: 'Accéléré',
-        icon: Zap,
+        icon: Bolt,
         schedule: '2 × 3 h / semaine',
         subLevel: '5 semaines',
         level: '10 semaines',
@@ -1048,12 +1048,12 @@ export const included = [
         detail: 'Fiches, exercices et corrections envoyés après chaque cours.',
     },
     {
-        icon: MessagesSquare,
+        icon: Messages,
         title: 'Corrections personnalisées',
         detail: 'Un retour précis sur tes erreurs, pas une note globale.',
     },
     {
-        icon: TrendingUp,
+        icon: TrendUp,
         title: 'Deux checkpoints par niveau',
         detail: 'Un checkpoint et un retour écrit à chaque sous-niveau.',
     },

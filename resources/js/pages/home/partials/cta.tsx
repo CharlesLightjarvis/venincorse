@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { ArrowRight, MessageCircle } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 

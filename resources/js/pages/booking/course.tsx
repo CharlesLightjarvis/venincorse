@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Check, Users, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Users, User } from 'reicon-react';
 import { useState, type FormEvent } from 'react';
 import { BookingShell } from '@/components/booking-shell';
 import { CourseSchedule } from '@/components/course-schedule';
@@ -612,7 +612,7 @@ export default function BookCourse() {
                 </section>
                 <aside className="flex flex-col gap-4 rounded-3xl border border-border/60 bg-background p-6 lg:sticky lg:top-8">
                     <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                        {tier === 'solo' ? <UserRound /> : <Users />}
+                        {tier === 'solo' ? <User /> : <Users />}
                     </span>
                     <h2 className="text-xl font-semibold">
                         {level.code} — {level.name}

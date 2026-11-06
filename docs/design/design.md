@@ -16,8 +16,8 @@ ci-dessous sont dérivées des pages existantes (home, `/courses`, fiche cours,
   `dark:bg-foreground/[0.02]` sur les fonds grisés, `dark:border-border/50`).
 - **API copy en français, code en anglais** : identifiants de composants,
   props, routes, noms de fichiers en anglais ; textes visibles en français.
-- Icônes **lucide-react** (`lucide-react`), marque sociale
-  `@icons-pack/react-simple-icons`.
+- Icônes **Reicon** (`reicon-react`, poids `Outline` par défaut) — voir
+  [§ Icônes](#icônes). Marques sociales : `@icons-pack/react-simple-icons`.
 
 ## 2. Palette de marque
 
@@ -30,14 +30,14 @@ ci-dessous sont dérivées des pages existantes (home, `/courses`, fiche cours,
 **Mapping catégories / niveaux** (source de vérité :
 `resources/js/data/courses.ts` — `categoryMeta`, `levelClasses`) :
 
-| Catégorie       | Token    | Icône           |
-| --------------- | -------- | --------------- |
-| Cours standard  | primary  | `BookOpen`      |
-| Grammaire       | chart-4  | `SpellCheck`    |
-| Conversation    | chart-2  | `MessagesSquare`|
-| Examens         | chart-1  | `GraduationCap` |
-| Affaires        | chart-3  | `Briefcase`     |
-| Soutien         | chart-5  | `Blocks`        |
+| Catégorie       | Token    |
+| --------------- | -------- |
+| Cours standard  | primary  |
+| Grammaire       | chart-4  |
+| Conversation    | chart-2  |
+| Examens         | chart-1  |
+| Affaires        | chart-3  |
+| Soutien         | chart-5  |
 
 Niveaux CECRL : `A1 → chart-2`, `A2 → chart-4`, `B1 → chart-1`,
 `B2 → chart-3`. Badge = `bg-chart-X/10 text-chart-X rounded-full`.
@@ -117,10 +117,47 @@ pages « profil » (about, fiche cours).
 - **Bandeau CTA final** : `rounded-3xl border border-border/40 bg-muted/30 p-8 md:p-10|12` + h2 + texte + 2 boutons (primary + outline) — `dark:bg-foreground/[0.02]`.
 - **Carte fiche sticky** (catalogue → détail) : `lg:sticky lg:top-24 rounded-3xl border bg-card` avec tuile dégradée en haut.
 - **Bannière d'annonce** : `rounded-2xl border border-primary/15 bg-primary/[0.05]` + chip icône + bouton à droite (`dark:bg-primary/[0.07]`).
-- **État vide/dashed** : `rounded-3xl border border-dashed border-border/60` + icône muted + bouton reset.
+- **État vide** : composant shadcn **`Empty`** (`@/components/ui/empty`) — contenu centré : icône Reicon dans `EmptyMedia variant="icon"`, `EmptyTitle`, `EmptyDescription` courte, et si utile une action dans `EmptyContent`. Ajouter `className="border"` dans l’espace connecté. Jamais un simple paragraphe en pointillés.
+
+```tsx
+<Empty className="border">
+    <EmptyHeader>
+        <EmptyMedia variant="icon">
+            <CalendarDays />
+        </EmptyMedia>
+        <EmptyTitle>Aucune réservation pour le moment</EmptyTitle>
+        <EmptyDescription>Les réservations apparaîtront ici.</EmptyDescription>
+    </EmptyHeader>
+    <EmptyContent>
+        <Button asChild variant="outline">…</Button>
+    </EmptyContent>
+</Empty>
+```
 - **Fil d'Ariane** : `nav aria-label="Fil d'Ariane"` + `ChevronRight h-4 w-4 text-foreground/50`.
 - **Carrousel défilant** (avis) : conteneur `min-h-[260px] w-[320px] shrink-0`.
 - **Filtres pills** (catalogue) : actif `border-primary bg-primary text-primary-foreground`, inactif `border-border/60 bg-background text-foreground/70 hover:border-primary/40`.
+
+## Icônes
+
+Toutes les icônes de l’app viennent de **[Reicon](https://reicon.dev/icons)**
+(`reicon-react`, MIT, grille 24 × 24, poids `Outline` par défaut).
+
+- Import nommé : `import { CalendarDays, Sliders } from 'reicon-react';`
+  Le nom PascalCase vient du catalogue (`calendar-days` → `CalendarDays`) :
+  <https://reicon.dev/llms-icons.txt>.
+- Taille et couleur via Tailwind : `className="size-4 text-muted-foreground"`
+  (les classes `size-*` priment sur la taille par défaut de 24 px). Dans un
+  `Button`, utiliser `data-icon="inline-start"` sans classe de taille.
+- Type d’un composant icône passé en prop : `IconComponent`
+  (`import { type IconComponent } from 'reicon-react'`).
+- `weight="Filled"` seulement pour un état actif ou une mise en avant.
+- Exception : les icônes internes des composants shadcn
+  (`resources/js/components/ui/*` : croix de fermeture, chevrons, coches)
+  restent en `lucide-react`, la bibliothèque déclarée dans `components.json`.
+  Ne pas les modifier à la main.
+- Vérifier qu’une icône existe avant de l’utiliser : le fichier
+  `node_modules/reicon-react/icons/<Nom>.js` doit exister (attention à la
+  casse : `Logout`, pas `LogOut`).
 
 ## 9. Données & mocks
 

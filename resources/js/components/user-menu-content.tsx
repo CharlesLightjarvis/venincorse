@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { Logout, Settings } from 'reicon-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -54,7 +54,7 @@ export function UserMenuContent({ user }: Props) {
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <LogOut className="mr-2" />
+                    <Logout className="mr-2" />
                     Log out
                 </Link>
             </DropdownMenuItem>

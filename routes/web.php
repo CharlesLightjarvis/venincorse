@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PermissionEnum;
+use App\Http\Controllers\TrialAvailabilityController;
 use App\Http\Controllers\TrialCheckoutController;
 use App\Http\Controllers\TrialManagementController;
 use App\Http\Controllers\TrialReservationController;
@@ -44,6 +45,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->middleware('can:'.PermissionEnum::ViewAllTrials->value)->name('trial-management.index');
     Route::patch('teaching/trial-reservations/{reservation}', [TrialManagementController::class, 'update'])
         ->middleware('can:update,reservation')->name('trial-management.update');
+    Route::get('teaching/trial-availability', [TrialAvailabilityController::class, 'edit'])
+        ->middleware('can:'.PermissionEnum::ManageAvailability->value)->name('trial-availability.edit');
+    Route::put('teaching/trial-availability', [TrialAvailabilityController::class, 'update'])
+        ->middleware('can:'.PermissionEnum::ManageAvailability->value)->name('trial-availability.update');
 });
 
 Route::inertia('booking/manage', 'booking/manage')->name('booking.manage');
@@ -74,7 +79,7 @@ Route::inertia('blog', 'blog/index')->name('blog');
 Route::inertia('blog/{slug}', 'blog/article')->name('blog.article');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', [TrialReservationController::class, 'dashboard'])->middleware('can:'.PermissionEnum::ViewOwnTrials->value)->name('dashboard');
+    Route::get('dashboard', [TrialReservationController::class, 'dashboard'])->name('dashboard');
 });
 
 require __DIR__.'/settings.php';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search } from 'reicon-react';
 import { sidebarSections, trendingArticles } from '../blog-data';
 import { cn } from '@/lib/utils';
 

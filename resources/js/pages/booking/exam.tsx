@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, GraduationCap } from 'reicon-react';
 import { useState, type FormEvent } from 'react';
 import { BookingShell } from '@/components/booking-shell';
 import { CourseSchedule } from '@/components/course-schedule';

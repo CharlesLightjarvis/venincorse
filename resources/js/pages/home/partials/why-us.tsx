@@ -1,12 +1,12 @@
 import { motion, type Variants } from 'framer-motion';
 import {
     CalendarDays,
-    FileCheck2,
+    FileCheck,
     GraduationCap,
-    MessagesSquare,
-    TrendingUp,
+    Messages,
+    TrendUp,
     UserCheck,
-} from 'lucide-react';
+} from 'reicon-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const services = [
@@ -29,19 +29,19 @@ const services = [
             "Stratégie par épreuve, examens blancs corrigés et rétroplanning calé sur ta date d'examen.",
     },
     {
-        icon: MessagesSquare,
+        icon: Messages,
         title: 'Conversation active',
         description:
             'Tu parles dès la première séance : prononciation, vocabulaire utile et mises en situation réelles.',
     },
     {
-        icon: TrendingUp,
+        icon: TrendUp,
         title: 'Checkpoints réguliers',
         description:
             'Un checkpoint tous les 30 heures et un retour écrit : tu sais toujours où tu en es et ce qui vient.',
     },
     {
-        icon: FileCheck2,
+        icon: FileCheck,
         title: 'Ateliers ciblés',
         description:
             'Articles, temps, subordonnées : un atelier ponctuel pour régler le point qui bloque, en quatre séances.',

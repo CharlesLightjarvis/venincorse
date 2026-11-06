@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateTrialReservation;
 use App\Actions\ReconcileTrialPayment;
+use App\Enums\PermissionEnum;
 use App\Enums\TrialReservationStatus;
 use App\Http\Requests\StoreTrialReservationRequest;
 use App\Http\Resources\TrialReservationResource;
 use App\Models\TrialReservation;
+use App\Models\TrialSlot;
 use App\Queries\AvailableTrialSlots;
 use App\Services\TrialPaymentGateway;
 use Illuminate\Http\JsonResponse;
@@ -128,21 +130,57 @@ final readonly class TrialReservationController
         ]);
     }
 
+    /** One address for everyone: each block is only sent when the user holds the matching permission. */
     public function dashboard(Request $request, ReconcileTrialPayment $reconcile): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('dashboard', [
+            'student' => $user->can(PermissionEnum::ViewOwnTrials->value) ? $this->studentDashboard($request, $reconcile) : null,
+            'management' => $user->can(PermissionEnum::ViewAllTrials->value) ? $this->managementDashboard($request) : null,
+            'canManageAvailability' => $user->can(PermissionEnum::ManageAvailability->value),
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function studentDashboard(Request $request, ReconcileTrialPayment $reconcile): array
     {
         $this->reconcileUnfinished($request, $reconcile);
         $query = TrialReservation::query()->where('user_id', $request->user()->id);
 
-        return Inertia::render('dashboard', [
-            'reservations' => TrialReservationResource::collection((clone $query)->with('slot')->orderByDesc('created_at')->orderByDesc('id')->paginate(10)),
+        return [
+            'reservations' => TrialReservationResource::collection((clone $query)->with('slot')->orderByDesc('created_at')->orderByDesc('id')->limit(10)->get())->resolve($request),
             'overview' => [
                 'confirmed' => (clone $query)->where('status', TrialReservationStatus::Confirmed)->count(),
                 'pending' => (clone $query)->where(fn ($unfinished) => $unfinished
                     ->where(fn ($pending) => $pending->where('status', TrialReservationStatus::Pending)->where('expires_at', '>', now()))
                     ->orWhere('status', TrialReservationStatus::Processing))
                     ->count(),
-                'paidCents' => (clone $query)->where('status', TrialReservationStatus::Confirmed)->sum('amount_cents'),
+                'paidCents' => (int) (clone $query)->where('status', TrialReservationStatus::Confirmed)->sum('amount_cents'),
             ],
-        ]);
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function managementDashboard(Request $request): array
+    {
+        $upcoming = TrialReservation::query()
+            ->where('status', TrialReservationStatus::Confirmed)
+            ->whereHas('slot', fn ($slot) => $slot->where('starts_at', '>=', now()->subMinutes((int) config('trials.duration_minutes'))));
+
+        return [
+            'upcoming' => TrialReservationResource::collection((clone $upcoming)->with(['slot', 'user'])
+                ->orderBy(TrialSlot::query()->select('starts_at')->whereColumn('trial_slots.id', 'trial_reservations.trial_slot_id'))
+                ->limit(5)->get())->resolve($request),
+            'overview' => [
+                'upcoming' => (clone $upcoming)->count(),
+                'paymentReview' => TrialReservation::query()->where('status', TrialReservationStatus::PaymentReview)->count(),
+                'monthRevenueCents' => (int) TrialReservation::query()
+                    ->where('status', TrialReservationStatus::Confirmed)
+                    ->where('paid_at', '>=', now()->startOfMonth())
+                    ->sum('amount_cents'),
+                'freeSlots' => TrialSlot::query()->where('is_published', true)->where('starts_at', '>=', now()->addHours((int) config('trials.minimum_notice_hours')))->whereDoesntHave('hold')->count(),
+            ],
+        ];
     }
 }

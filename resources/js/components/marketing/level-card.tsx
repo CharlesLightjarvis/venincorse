@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight, CalendarDays } from 'lucide-react';
+import { ArrowRight, CalendarDays } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { OfferCard } from '@/components/marketing/offer-card';
 import { formatPrice, type CourseLevel } from '@/data/offer';

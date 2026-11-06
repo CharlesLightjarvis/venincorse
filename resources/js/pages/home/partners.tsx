@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, BookOpen, ClipboardList, Users } from 'lucide-react';
+import { ArrowRight, BookOpen, ClipboardList, Users } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { request } from '@/routes/partners';
 

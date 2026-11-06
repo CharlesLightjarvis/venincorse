@@ -6,7 +6,7 @@ import {
     CalendarDays,
     Check,
     Clock,
-} from 'lucide-react';
+} from 'reicon-react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import {

@@ -1,13 +1,23 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { CalendarDays, Sliders } from 'reicon-react';
 import { Button } from '@/components/ui/button';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     formatReservationDate,
     formatReservationPrice,
     reservationStatusLabels,
-    type ReservationPage,
     type TrialReservation,
 } from '@/lib/trial-reservations';
+import { edit as editAvailability } from '@/routes/trial-availability';
 import { index, update } from '@/routes/trial-management';
 import type { Auth } from '@/types';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
@@ -15,29 +25,54 @@ import { useUserTimezone } from '@/hooks/use-browser-timezone';
 export default function ManageTrials({
     reservations,
 }: {
-    reservations: ReservationPage;
+    reservations: TrialReservation[];
 }) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const timezone = useUserTimezone();
     return (
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6 md:p-10">
-            <Head title="Gestion des cours d’essai" />
-            <h1 className="text-3xl font-semibold">
-                Les cours d’essai, côté professeur.
-            </h1>
-            <p className="text-muted-foreground">
-                Réservations enregistrées en base. Un paiement ne peut pas être
-                marqué comme réglé manuellement depuis cet écran.
-            </p>
-            {reservations.data.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-border p-6">
-                    Aucune réservation pour le moment.
+        <div className="flex h-full flex-1 flex-col gap-6 p-4">
+            <Head title="Gestion des essais" />
+            <div>
+                <h1 className="text-3xl font-semibold">
+                    Les cours d’essai, côté professeur.
+                </h1>
+                <p className="mt-3 text-muted-foreground">
+                    Ajoute le lien de la visio et tes notes privées. Un paiement
+                    ne peut pas être marqué comme réglé manuellement depuis cet
+                    écran.
                 </p>
+            </div>
+            {reservations.length === 0 && (
+                <Empty className="border">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <CalendarDays />
+                        </EmptyMedia>
+                        <EmptyTitle>
+                            Aucune réservation pour le moment
+                        </EmptyTitle>
+                        <EmptyDescription>
+                            Les cours d’essai réservés par les élèves
+                            apparaîtront ici, avec leur paiement et leur lien de
+                            visio.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    {auth.can?.manageAvailability && (
+                        <EmptyContent>
+                            <Button asChild variant="outline">
+                                <Link href={editAvailability()}>
+                                    <Sliders data-icon="inline-start" />
+                                    Gérer mes disponibilités
+                                </Link>
+                            </Button>
+                        </EmptyContent>
+                    )}
+                </Empty>
             )}
-            {reservations.data.map((reservation) => (
+            {reservations.map((reservation) => (
                 <article
                     key={reservation.id}
-                    className="rounded-2xl border border-border p-6"
+                    className="rounded-lg border border-border p-5"
                 >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -71,54 +106,13 @@ export default function ManageTrials({
                     )}
                 </article>
             ))}
-            <div className="flex justify-between gap-3">
-                <Button
-                    asChild
-                    variant="outline"
-                    disabled={reservations.meta.current_page <= 1}
-                >
-                    <Link
-                        href={index({
-                            query: {
-                                page: Math.max(
-                                    1,
-                                    reservations.meta.current_page - 1,
-                                ),
-                            },
-                        })}
-                    >
-                        Précédent
-                    </Link>
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                    Page {reservations.meta.current_page} /{' '}
-                    {reservations.meta.last_page}
-                </span>
-                <Button
-                    asChild
-                    variant="outline"
-                    disabled={
-                        reservations.meta.current_page >=
-                        reservations.meta.last_page
-                    }
-                >
-                    <Link
-                        href={index({
-                            query: {
-                                page: Math.min(
-                                    reservations.meta.last_page,
-                                    reservations.meta.current_page + 1,
-                                ),
-                            },
-                        })}
-                    >
-                        Suivant
-                    </Link>
-                </Button>
-            </div>
         </div>
     );
 }
+
+ManageTrials.layout = {
+    breadcrumbs: [{ title: 'Gestion des essais', href: index() }],
+};
 
 function TrialNotes({ reservation }: { reservation: TrialReservation }) {
     return (
@@ -144,17 +138,38 @@ function TrialNotes({ reservation }: { reservation: TrialReservation }) {
                             {errors.notes}
                         </p>
                     )}
+                    <Label htmlFor={`meeting-url-${reservation.id}`}>
+                        Lien de la visio
+                    </Label>
+                    <Input
+                        id={`meeting-url-${reservation.id}`}
+                        name="meeting_url"
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://meet.google.com/…"
+                        defaultValue={reservation.meeting_url ?? ''}
+                        maxLength={2048}
+                        aria-invalid={errors.meeting_url ? true : undefined}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Visible par l’élève une fois son cours confirmé.
+                    </p>
+                    {errors.meeting_url && (
+                        <p role="alert" className="text-sm text-destructive">
+                            {errors.meeting_url}
+                        </p>
+                    )}
                     <div className="flex items-center gap-3">
                         <Button
                             type="submit"
                             disabled={processing}
                             variant="outline"
                         >
-                            Enregistrer les notes
+                            Enregistrer
                         </Button>
                         {recentlySuccessful && (
                             <p role="status" className="text-sm text-primary">
-                                Notes enregistrées.
+                                Modifications enregistrées.
                             </p>
                         )}
                     </div>

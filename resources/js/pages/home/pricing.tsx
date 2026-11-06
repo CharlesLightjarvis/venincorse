@@ -9,7 +9,7 @@ import {
     FileText,
     GraduationCap,
     Sparkles,
-} from 'lucide-react';
+} from 'reicon-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CtaBand } from '@/components/marketing/cta-band';

@@ -27,6 +27,11 @@ final class TrialReservationResource extends JsonResource
                 'name' => $this->user->name, 'email' => $this->user->email,
             ]),
             'notes' => $this->when($request->user()?->can(PermissionEnum::UpdateTrials->value), $this->notes ?? ''),
+            'meeting_url' => $this->when(
+                $request->user()?->can(PermissionEnum::UpdateTrials->value)
+                    || ($request->user()?->id === $this->user_id && $this->status === TrialReservationStatus::Confirmed),
+                $this->meeting_url,
+            ),
         ];
     }
 }

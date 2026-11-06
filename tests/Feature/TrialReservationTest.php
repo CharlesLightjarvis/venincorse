@@ -328,10 +328,63 @@ test('the dashboard lists only the student own reservations with an overview', f
     $this->actingAs($student)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
-            ->has('reservations.data', 4)
-            ->where('overview.confirmed', 1)
-            ->where('overview.pending', 1)
-            ->where('overview.paidCents', 3900));
+            ->has('student.reservations', 4)
+            ->where('student.overview.confirmed', 1)
+            ->where('student.overview.pending', 1)
+            ->where('student.overview.paidCents', 3900)
+            ->where('management', null));
+});
+
+test('the dashboard shows the management overview to trial managers without student content', function () {
+    $this->freezeTime();
+    $admin = User::factory()->create();
+    $admin->assignRole('administrator');
+    $upcoming = TrialReservation::factory()->create(['status' => TrialReservationStatus::Confirmed, 'paid_at' => now()]);
+    TrialReservation::factory()->create(['status' => TrialReservationStatus::PaymentReview]);
+    TrialReservation::factory()->create([
+        'status' => TrialReservationStatus::Confirmed,
+        'paid_at' => now(),
+        'trial_slot_id' => TrialSlot::factory()->create(['starts_at' => now()->subDay()])->id,
+    ]);
+
+    $this->actingAs($admin)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('student', null)
+            ->has('management.upcoming', 1)
+            ->where('management.upcoming.0.id', $upcoming->id)
+            ->where('management.overview.upcoming', 1)
+            ->where('management.overview.paymentReview', 1)
+            ->where('management.overview.monthRevenueCents', 7800)
+            ->where('canManageAvailability', true));
+});
+
+test('trial managers cannot book a trial for themselves', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('administrator');
+    $slot = TrialSlot::factory()->create();
+
+    $this->actingAs($admin)->get(route('trial-reservations.index'))->assertForbidden();
+    $this->postJson(route('trial-reservations.store'), trialPayload($slot), ['Idempotency-Key' => (string) Str::uuid()])->assertForbidden();
+    $this->assertDatabaseCount('trial_reservations', 0);
+});
+
+test('the meeting link must be a secure address and is shown to the student only once confirmed', function () {
+    $manager = User::factory()->create();
+    $manager->givePermissionTo(['trial-reservations.view-all', 'trial-reservations.update']);
+    $student = trialStudent();
+    $reservation = TrialReservation::factory()->create(['user_id' => $student->id]);
+
+    $this->actingAs($manager)->patch(route('trial-management.update', $reservation), ['meeting_url' => 'http://meet.example.com/abc'])
+        ->assertInvalid(['meeting_url' => 'Le lien de la visio doit être une adresse sécurisée commençant par https://.']);
+    $this->patch(route('trial-management.update', $reservation), ['meeting_url' => 'https://meet.example.com/abc'])->assertRedirect();
+    expect($reservation->fresh()->meeting_url)->toBe('https://meet.example.com/abc');
+
+    $this->actingAs($student)->get(route('trial-reservations.show', $reservation))
+        ->assertInertia(fn (Assert $page) => $page->missing('reservation.meeting_url'));
+    $reservation->update(['status' => TrialReservationStatus::Confirmed, 'paid_at' => now()]);
+    $this->get(route('trial-reservations.show', $reservation))
+        ->assertInertia(fn (Assert $page) => $page->where('reservation.meeting_url', 'https://meet.example.com/abc'));
 });
 
 test('an objective without real words is refused', function (string $goal) {

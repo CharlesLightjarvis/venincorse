@@ -10,7 +10,7 @@ import {
     GraduationCap,
     Sparkles,
     Users,
-} from 'lucide-react';
+} from 'reicon-react';
 import { useState } from 'react';
 import { course as bookCourse } from '@/routes/booking';
 import { Button } from '@/components/ui/button';

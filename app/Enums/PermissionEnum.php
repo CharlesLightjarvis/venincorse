@@ -10,4 +10,5 @@ enum PermissionEnum: string
     case ViewOwnTrials = 'trial-reservations.view-own';
     case ViewAllTrials = 'trial-reservations.view-all';
     case UpdateTrials = 'trial-reservations.update';
+    case ManageAvailability = 'trial-availability.manage';
 }

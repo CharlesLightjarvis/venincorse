@@ -1,20 +1,20 @@
-import { Head, Link, router } from "@inertiajs/react";
-import { motion } from "framer-motion";
+import { Head, Link, router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import {
     ArrowLeft,
     ArrowRight,
     Check,
-    CheckCircle2,
+    CheckCircle,
     Clock,
-    ListChecks,
-    RotateCcw,
+    ListCheck,
+    RotateLeft,
     Sparkles,
     Target,
     Trophy,
     X,
-} from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+} from 'reicon-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -22,20 +22,20 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import {
     getLevelTestOutcome,
     levelTestQuestions,
     levelsPerTest,
     type LevelCode,
-} from "@/data/level-test";
-import { accents, type Accent } from "@/data/offer";
-import Logo from "@/layouts/home/partials/logo";
+} from '@/data/level-test';
+import { accents, type Accent } from '@/data/offer';
+import Logo from '@/layouts/home/partials/logo';
 
-type Stage = "intro" | "quiz" | "result";
+type Stage = 'intro' | 'quiz' | 'result';
 
-const levelOrder: LevelCode[] = ["a1", "a2", "b1", "b2"];
+const levelOrder: LevelCode[] = ['a1', 'a2', 'b1', 'b2'];
 
 const levelAccents: Record<LevelCode, Accent> = {
     a1: accents.chart2,
@@ -46,24 +46,24 @@ const levelAccents: Record<LevelCode, Accent> = {
 
 const instructions = [
     {
-        icon: ListChecks,
-        title: "60 questions",
-        detail: "15 questions par niveau, de A1 à B2.",
+        icon: ListCheck,
+        title: '60 questions',
+        detail: '15 questions par niveau, de A1 à B2.',
     },
     {
         icon: Clock,
-        title: "Environ 10 minutes",
-        detail: "Sans chrono : tu avances à ton rythme.",
+        title: 'Environ 10 minutes',
+        detail: 'Sans chrono : tu avances à ton rythme.',
     },
     {
         icon: Target,
-        title: "Résultat immédiat",
-        detail: "Ton niveau estimé et le parcours recommandé.",
+        title: 'Résultat immédiat',
+        detail: 'Ton niveau estimé et le parcours recommandé.',
     },
 ] as const;
 
 export default function LevelTest() {
-    const [stage, setStage] = useState<Stage>("intro");
+    const [stage, setStage] = useState<Stage>('intro');
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<(number | null)[]>(() =>
         Array<number | null>(levelTestQuestions.length).fill(null),
@@ -83,7 +83,7 @@ export default function LevelTest() {
     const startTest = () => {
         setAnswers(Array<number | null>(total).fill(null));
         setCurrentIndex(0);
-        setStage("quiz");
+        setStage('quiz');
         window.scrollTo({ top: 0 });
     };
 
@@ -102,7 +102,7 @@ export default function LevelTest() {
 
     const finishTest = () => {
         setConfirmFinish(false);
-        setStage("result");
+        setStage('result');
         window.scrollTo({ top: 0 });
     };
 
@@ -126,7 +126,7 @@ export default function LevelTest() {
 
     const quitTest = () => {
         setConfirmQuit(false);
-        router.visit("/");
+        router.visit('/');
     };
 
     return (
@@ -142,7 +142,7 @@ export default function LevelTest() {
                     <div className="absolute bottom-0 left-1/4 h-[360px] w-[360px] rounded-full bg-foreground/[0.025] blur-[130px] dark:bg-foreground/[0.05]" />
                 </div>
 
-                {stage === "quiz" ? (
+                {stage === 'quiz' ? (
                     <header className="sticky top-0 z-40 border-b border-border/40 bg-background/90 backdrop-blur-lg dark:border-border/50">
                         <div className="mx-auto flex h-16 w-full max-w-5xl items-center gap-2.5 px-4 sm:gap-4 sm:px-6">
                             <button
@@ -197,7 +197,7 @@ export default function LevelTest() {
                     </header>
                 )}
 
-                {stage === "intro" && (
+                {stage === 'intro' && (
                     <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-6 sm:py-12">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -214,8 +214,8 @@ export default function LevelTest() {
                             </div>
 
                             <h1 className="mt-6 text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-                                Quel est ton vrai niveau{" "}
-                                <span className="text-primary">d’allemand</span>{" "}
+                                Quel est ton vrai niveau{' '}
+                                <span className="text-primary">d’allemand</span>{' '}
                                 ?
                             </h1>
 
@@ -262,9 +262,9 @@ export default function LevelTest() {
 
                                 <ul className="mt-3 space-y-2.5">
                                     {[
-                                        "Une seule réponse par question, sans dictionnaire ni traduction.",
-                                        "Tu peux revenir en arrière ou terminer à tout moment.",
-                                        "À la fin, ton niveau est calculé sur les 15 questions de chaque palier.",
+                                        'Une seule réponse par question, sans dictionnaire ni traduction.',
+                                        'Tu peux revenir en arrière ou terminer à tout moment.',
+                                        'À la fin, ton niveau est calculé sur les 15 questions de chaque palier.',
                                     ].map((point) => (
                                         <li
                                             key={point}
@@ -310,18 +310,18 @@ export default function LevelTest() {
                     </main>
                 )}
 
-                {stage === "quiz" && (
+                {stage === 'quiz' && (
                     <main className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-5 py-10 sm:px-8 sm:py-14">
                         <motion.div
                             key={question.id}
                             initial={{ opacity: 0, y: 14 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
                             className="w-full"
                         >
                             {/* Question : directement sur la page */}
                             <div className="mx-auto max-w-2xl text-center">
-                                <h1 className="text-balance text-2xl leading-snug font-semibold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+                                <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance text-foreground sm:text-3xl md:text-4xl">
                                     {question.prompt}
                                 </h1>
 
@@ -350,21 +350,21 @@ export default function LevelTest() {
                                                 selectAnswer(optionIndex)
                                             }
                                             className={cn(
-                                                "group relative flex min-h-[76px] w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all duration-200",
-                                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                                                'group relative flex min-h-[76px] w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all duration-200',
+                                                'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none',
                                                 isSelected
-                                                    ? "border-primary bg-primary/[0.07] shadow-sm ring-1 ring-primary/30"
-                                                    : "border-border/80 bg-background/70 hover:border-primary/50 hover:bg-muted/50 dark:border-border dark:bg-card/30 dark:hover:bg-muted/40",
+                                                    ? 'border-primary bg-primary/[0.07] shadow-sm ring-1 ring-primary/30'
+                                                    : 'border-border/80 bg-background/70 hover:border-primary/50 hover:bg-muted/50 dark:border-border dark:bg-card/30 dark:hover:bg-muted/40',
                                             )}
                                         >
                                             {/* Lettre A, B, C, D */}
                                             <span
                                                 aria-hidden="true"
                                                 className={cn(
-                                                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border font-mono text-xs font-semibold transition-colors duration-200",
+                                                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border font-mono text-xs font-semibold transition-colors duration-200',
                                                     isSelected
-                                                        ? "border-primary bg-primary text-primary-foreground"
-                                                        : "border-border bg-muted/50 text-muted-foreground group-hover:border-primary/40 group-hover:text-foreground",
+                                                        ? 'border-primary bg-primary text-primary-foreground'
+                                                        : 'border-border bg-muted/50 text-muted-foreground group-hover:border-primary/40 group-hover:text-foreground',
                                                 )}
                                             >
                                                 {String.fromCharCode(
@@ -375,10 +375,10 @@ export default function LevelTest() {
                                             {/* Texte de la réponse */}
                                             <span
                                                 className={cn(
-                                                    "min-w-0 flex-1 text-sm leading-relaxed sm:text-base",
+                                                    'min-w-0 flex-1 text-sm leading-relaxed sm:text-base',
                                                     isSelected
-                                                        ? "font-medium text-foreground"
-                                                        : "text-foreground/75",
+                                                        ? 'font-medium text-foreground'
+                                                        : 'text-foreground/75',
                                                 )}
                                             >
                                                 {option}
@@ -388,10 +388,10 @@ export default function LevelTest() {
                                             <span
                                                 aria-hidden="true"
                                                 className={cn(
-                                                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all duration-200",
+                                                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all duration-200',
                                                     isSelected
-                                                        ? "border-primary bg-primary text-primary-foreground"
-                                                        : "border-border/80 bg-background",
+                                                        ? 'border-primary bg-primary text-primary-foreground'
+                                                        : 'border-border/80 bg-background',
                                                 )}
                                             >
                                                 {isSelected && (
@@ -431,8 +431,8 @@ export default function LevelTest() {
                                     disabled={selectedAnswer === null}
                                 >
                                     {isLastQuestion
-                                        ? "Voir mon résultat"
-                                        : "Continuer"}
+                                        ? 'Voir mon résultat'
+                                        : 'Continuer'}
 
                                     <ArrowRight
                                         className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
@@ -450,12 +450,12 @@ export default function LevelTest() {
                     </main>
                 )}
 
-                {stage === "result" && (
+                {stage === 'result' && (
                     <main className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
                             className="w-full"
                         >
                             {/* En-tête du résultat */}
@@ -465,7 +465,7 @@ export default function LevelTest() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ duration: 0.45, delay: 0.1 }}
                                     className={cn(
-                                        "mx-auto flex h-16 w-16 items-center justify-center rounded-2xl",
+                                        'mx-auto flex h-16 w-16 items-center justify-center rounded-2xl',
                                         resultAccent.bg,
                                         resultAccent.text,
                                     )}
@@ -581,10 +581,10 @@ export default function LevelTest() {
                                                     <div className="flex items-center gap-3">
                                                         <span
                                                             className={cn(
-                                                                "font-mono text-sm font-semibold",
+                                                                'font-mono text-sm font-semibold',
                                                                 isCurrentLevel
-                                                                    ? "text-primary"
-                                                                    : "text-foreground",
+                                                                    ? 'text-primary'
+                                                                    : 'text-foreground',
                                                             )}
                                                         >
                                                             {level.toUpperCase()}
@@ -629,13 +629,13 @@ export default function LevelTest() {
                                                             delay:
                                                                 0.3 +
                                                                 index * 0.1,
-                                                            ease: "easeOut",
+                                                            ease: 'easeOut',
                                                         }}
                                                         className={cn(
-                                                            "h-full rounded-full",
+                                                            'h-full rounded-full',
                                                             isCurrentLevel
-                                                                ? "bg-primary"
-                                                                : "bg-foreground/30 dark:bg-foreground/40",
+                                                                ? 'bg-primary'
+                                                                : 'bg-foreground/30 dark:bg-foreground/40',
                                                         )}
                                                     />
                                                 </div>
@@ -651,7 +651,7 @@ export default function LevelTest() {
                                     <div>
                                         <div className="flex items-center gap-2.5">
                                             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                                <CheckCircle2
+                                                <CheckCircle
                                                     className="h-4 w-4"
                                                     aria-hidden="true"
                                                 />
@@ -776,7 +776,7 @@ export default function LevelTest() {
                                     className="gap-2 rounded-full px-5 text-muted-foreground hover:text-foreground"
                                     onClick={restart}
                                 >
-                                    <RotateCcw
+                                    <RotateLeft
                                         className="h-4 w-4"
                                         aria-hidden="true"
                                     />
@@ -795,7 +795,7 @@ export default function LevelTest() {
                             </DialogTitle>
                             <DialogDescription>
                                 Tu as répondu à {answeredCount} question
-                                {answeredCount > 1 ? "s" : ""} sur {total}. Les
+                                {answeredCount > 1 ? 's' : ''} sur {total}. Les
                                 réponses manquantes seront comptées comme
                                 fausses.
                             </DialogDescription>

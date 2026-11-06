@@ -22,17 +22,6 @@ export type TrialReservation = {
     notes?: string;
 };
 
-export type ReservationPage = {
-    data: TrialReservation[];
-    links: {
-        first: string;
-        last: string;
-        prev: string | null;
-        next: string | null;
-    };
-    meta: { current_page: number; last_page: number };
-};
-
 export const reservationStatusLabels: Record<
     TrialReservation['status'],
     string

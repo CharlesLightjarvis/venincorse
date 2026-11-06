@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowDown, ArrowRight, Check, Minus } from 'lucide-react';
+import { ArrowDown, ArrowRight, Check, Minus } from 'reicon-react';
 import type { CSSProperties } from 'react';
 import { Book3D } from '@/components/marketing/book-3d';
 import { CtaBand } from '@/components/marketing/cta-band';

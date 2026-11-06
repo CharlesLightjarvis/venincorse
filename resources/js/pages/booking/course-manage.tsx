@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CalendarCheck } from 'lucide-react';
+import { CalendarCheck } from 'reicon-react';
 import { useState } from 'react';
 import { BookingShell } from '@/components/booking-shell';
 import { CourseSchedule } from '@/components/course-schedule';

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Quote } from 'lucide-react';
+import { QuoteUp } from 'reicon-react';
 
 const testimonials = [
     {
@@ -87,7 +87,7 @@ export function Testimonials() {
                             key={`${testimonial.name}-${index}`}
                             className="flex min-h-[260px] w-[320px] shrink-0 flex-col gap-5 rounded-2xl border border-border/40 bg-background/60 p-7 backdrop-blur-sm dark:border-border/50 dark:bg-background/50"
                         >
-                            <Quote
+                            <QuoteUp
                                 className="h-7 w-7 text-primary/40"
                                 aria-hidden="true"
                             />

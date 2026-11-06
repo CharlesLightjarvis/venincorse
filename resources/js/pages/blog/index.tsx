@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'reicon-react';
 import { Head } from '@inertiajs/react';
 import { FeaturedArticle } from './partials/featured-article';
 import { ArticleCard } from './partials/article-card';

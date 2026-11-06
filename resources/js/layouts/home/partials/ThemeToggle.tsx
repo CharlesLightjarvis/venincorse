@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor } from 'reicon-react';
 import { useEffect, useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 

@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { CalendarCheck, CalendarDays, LayoutGrid } from 'lucide-react';
+import { CalendarCheck, CalendarDays, Grid, Sliders } from 'reicon-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -17,25 +17,32 @@ import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import type { Auth } from '@/types';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import { edit as editAvailability } from '@/routes/trial-availability';
 import { index as manageTrials } from '@/routes/trial-management';
 import { index as myTrial } from '@/routes/trial-reservations';
 
 export function AppSidebar() {
     const { auth } = usePage<{ auth: Auth }>().props;
     const { isCurrentUrl } = useCurrentUrl();
-    const mainNavItems: NavItem[] = [];
-    if (auth.can?.viewOwnTrials) {
-        mainNavItems.push({
+    const mainNavItems: NavItem[] = [
+        {
             title: 'Mon espace',
             href: dashboard(),
-            icon: LayoutGrid,
-        });
-    }
+            icon: Grid,
+        },
+    ];
     if (auth.can?.viewAllTrials) {
         mainNavItems.push({
             title: 'Gestion des essais',
             href: manageTrials(),
             icon: CalendarDays,
+        });
+    }
+    if (auth.can?.manageAvailability) {
+        mainNavItems.push({
+            title: 'Disponibilités',
+            href: editAvailability(),
+            icon: Sliders,
         });
     }
     return (

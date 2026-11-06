@@ -15,11 +15,17 @@ final class UpdateTrialReservationRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['notes' => ['nullable', 'string', 'max:5000']];
+        return [
+            'notes' => ['nullable', 'string', 'max:5000'],
+            'meeting_url' => ['nullable', 'string', 'url:https', 'max:2048'],
+        ];
     }
 
     public function messages(): array
     {
-        return ['notes.*' => __('trials.notes_invalid', [], 'fr')];
+        return [
+            'notes.*' => __('trials.notes_invalid', [], 'fr'),
+            'meeting_url.*' => __('trials.meeting_url_invalid', [], 'fr'),
+        ];
     }
 }

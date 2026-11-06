@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 
 type CtaAction = {

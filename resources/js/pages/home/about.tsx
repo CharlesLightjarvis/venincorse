@@ -1,43 +1,43 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 import {
     ArrowRight,
-    MessageSquareQuote,
-    Mic,
-    SlidersHorizontal,
+    QuoteUp,
+    Microphone,
+    Sliders,
     Star,
     Target,
-} from "lucide-react";
-import { Head, Link } from "@inertiajs/react";
-import { Button } from "@/components/ui/button";
+} from 'reicon-react';
+import { Head, Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
 
 const methodPillars = [
     {
-        icon: SlidersHorizontal,
-        title: "Sur mesure",
-        detail: "Un plan construit sur ton niveau, tes objectifs et ton agenda — pas un programme générique.",
+        icon: Sliders,
+        title: 'Sur mesure',
+        detail: 'Un plan construit sur ton niveau, tes objectifs et ton agenda — pas un programme générique.',
     },
     {
-        icon: Mic,
+        icon: Microphone,
         title: "L'oral d'abord",
         detail: "Tu parles dès la première séance : la grammaire travaille pour la conversation, pas l'inverse.",
     },
     {
-        icon: MessageSquareQuote,
-        title: "Feedback continu",
-        detail: "Compte-rendu après chaque séance, corrections précises et exercices ciblés entre les cours.",
+        icon: QuoteUp,
+        title: 'Feedback continu',
+        detail: 'Compte-rendu après chaque séance, corrections précises et exercices ciblés entre les cours.',
     },
     {
         icon: Target,
-        title: "Objectifs & examens",
-        detail: "A1.1 → B2.2 du CECRL, préparation ÖSD et TELC avec examens blancs corrigés.",
+        title: 'Objectifs & examens',
+        detail: 'A1.1 → B2.2 du CECRL, préparation ÖSD et TELC avec examens blancs corrigés.',
     },
 ] as const;
 
 const highlightStats = [
-    { value: "7 ans", label: "d'enseignement de l'allemand" },
-    { value: "1 500+", label: "heures de cours en visio" },
-    { value: "200+", label: "élèves accompagnés" },
-    { value: "5,0", label: "note moyenne des élèves" },
+    { value: '7 ans', label: "d'enseignement de l'allemand" },
+    { value: '1 500+', label: 'heures de cours en visio' },
+    { value: '200+', label: 'élèves accompagnés' },
+    { value: '5,0', label: 'note moyenne des élèves' },
 ] as const;
 
 export default function About() {
@@ -104,7 +104,7 @@ export default function About() {
                         transition={{ duration: 0.8, delay: 0.15 }}
                         className="relative mx-auto w-full max-w-md lg:max-w-none"
                     >
-                        <div className="overflow-hidden rounded-3xl border border-border/40 bg-background/80  ">
+                        <div className="overflow-hidden rounded-3xl border border-border/40 bg-background/80">
                             <img
                                 src="/images/hero-ref.png"
                                 alt="Ton professeur d'allemand"
@@ -174,8 +174,8 @@ export default function About() {
 
                     <p className="max-w-xl text-foreground/60">
                         Un examen ÖSD ou TELC à passer, une mutation
-                        professionnelle, un projet d'études ? Dis-moi où tu
-                        veux aller, je construis le chemin.
+                        professionnelle, un projet d'études ? Dis-moi où tu veux
+                        aller, je construis le chemin.
                     </p>
 
                     <div className="flex flex-col justify-center gap-3 sm:flex-row">

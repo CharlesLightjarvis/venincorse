@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin } from 'lucide-react';
+import { MapPoint } from 'reicon-react';
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,7 +41,7 @@ export function OfferCard({
         >
             <Card
                 className={cn(
-                    'group gap-0 flex h-full flex-col overflow-hidden rounded-xl p-0 border-border/40 bg-background/60 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-border/60 hover:shadow-lg dark:border-border/50 dark:bg-background/50',
+                    'group flex h-full flex-col gap-0 overflow-hidden rounded-xl border-border/40 bg-background/60 p-0 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-border/60 hover:shadow-lg dark:border-border/50 dark:bg-background/50',
                     className,
                 )}
             >
@@ -69,7 +69,7 @@ export function OfferCard({
                         {flag ? (
                             <Badge
                                 variant="secondary"
-                                className="border-white/20 bg-white/10 text-[10px] font-semibold text-white uppercase tracking-wider backdrop-blur hover:bg-white/20"
+                                className="border-white/20 bg-white/10 text-[10px] font-semibold tracking-wider text-white uppercase backdrop-blur hover:bg-white/20"
                             >
                                 {flag}
                             </Badge>
@@ -90,7 +90,7 @@ export function OfferCard({
 
                     {/* Format */}
                     <div className="absolute bottom-3 left-4 flex items-center gap-1.5 text-xs text-white/80">
-                        <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                        <MapPoint className="h-3.5 w-3.5" aria-hidden="true" />
                         {room}
                     </div>
                 </div>

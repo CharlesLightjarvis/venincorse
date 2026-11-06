@@ -1,12 +1,12 @@
 import { motion, type Variants } from 'framer-motion';
 import {
-    MapPin,
+    MapPoint,
     ArrowRight,
     CalendarDays,
     Ticket,
     Sparkles,
     Users,
-} from 'lucide-react';
+} from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 
@@ -245,7 +245,7 @@ export function Courses() {
 
                                 {/* Location */}
                                 <div className="mb-6 flex items-start gap-2 text-sm text-foreground/60">
-                                    <MapPin
+                                    <MapPoint
                                         className="mt-0.5 h-4 w-4 shrink-0 text-foreground/40"
                                         aria-hidden="true"
                                     />
@@ -361,7 +361,7 @@ export function Courses() {
 
                                     {/* Location */}
                                     <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-xs text-white/80">
-                                        <MapPin
+                                        <MapPoint
                                             className="h-3.5 w-3.5"
                                             aria-hidden="true"
                                         />

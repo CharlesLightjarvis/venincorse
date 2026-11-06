@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Flask } from 'reicon-react';
 import type { ReactNode } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ export function BookingShell({
             </header>
             <main className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 sm:py-12">
                 <Alert>
-                    <FlaskConical />
+                    <Flask />
                     <AlertDescription>
                         <p>
                             Mode démo : données fictives, aucun débit ni email

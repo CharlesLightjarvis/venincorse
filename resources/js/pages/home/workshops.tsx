@@ -4,10 +4,10 @@ import {
     BookOpen,
     Check,
     Clock,
-    Gamepad2,
-    MessagesSquare,
-    PenLine,
-} from 'lucide-react';
+    Gamepad,
+    Messages,
+    Pen,
+} from 'reicon-react';
 import { useState } from 'react';
 import { CtaBand } from '@/components/marketing/cta-band';
 import { FaqSection } from '@/components/marketing/faq-section';
@@ -42,9 +42,9 @@ import { courses, levelTest } from '@/routes';
 import { show as workshopDetail } from '@/routes/workshops';
 
 const practiceIcons = {
-    sprechen: MessagesSquare,
-    schreiben: PenLine,
-    wortschatz: Gamepad2,
+    sprechen: Messages,
+    schreiben: Pen,
+    wortschatz: Gamepad,
 };
 
 const workshopFaqs: FaqItem[] = [
@@ -130,7 +130,7 @@ export default function Workshops() {
                         href="#practice"
                         className="flex items-start gap-4 rounded-2xl border border-border/50 bg-muted/20 p-5 transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-primary"
                     >
-                        <MessagesSquare className="mt-1 size-6 shrink-0 text-primary" />
+                        <Messages className="mt-1 size-6 shrink-0 text-primary" />
                         <div>
                             <h2 className="text-lg font-semibold">
                                 « Je veux surtout pratiquer. »
@@ -416,13 +416,13 @@ export default function Workshops() {
                             title: 'Tu produis pendant la séance',
                             description:
                                 'Dialogue, texte, défi de vocabulaire : tu fais quelque chose en allemand, avec un retour du professeur.',
-                            icon: PenLine,
+                            icon: Pen,
                         },
                         {
                             title: 'Tu gardes de quoi réutiliser',
                             description:
                                 'Supports, phrases utiles et corrections : une trace courte pour continuer entre les séances.',
-                            icon: Gamepad2,
+                            icon: Gamepad,
                         },
                     ].map((item) => (
                         <div key={item.title} className="flex flex-col gap-3">

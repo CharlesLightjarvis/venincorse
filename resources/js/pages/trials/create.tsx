@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Check, Clock, Video } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Clock, Video } from 'reicon-react';
 import { useState, type FormEvent } from 'react';
 import {
     AvailableTrialSlotPicker,

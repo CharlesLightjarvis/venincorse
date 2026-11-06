@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\SyncTrialSlots;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -18,5 +19,6 @@ class DatabaseSeeder extends Seeder
         if (app()->environment(['local', 'testing'])) {
             $this->call(DemoUserSeeder::class);
         }
+        app(SyncTrialSlots::class)->handle();
     }
 }

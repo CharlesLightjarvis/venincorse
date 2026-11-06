@@ -5,7 +5,7 @@ import {
     SiX,
 } from '@icons-pack/react-simple-icons';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUp, Globe, Mail, Phone } from 'lucide-react';
+import { ArrowUp, Globe, Envelope, Phone } from 'reicon-react';
 import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -122,7 +122,7 @@ export function Footer() {
                                     placeholder="Ton adresse email"
                                 />
                                 <Button size="sm" aria-label="S'abonner">
-                                    <Mail className="h-4 w-4" aria-hidden />
+                                    <Envelope className="h-4 w-4" aria-hidden />
                                 </Button>
                             </div>
                         </div>
@@ -157,7 +157,7 @@ export function Footer() {
                                 }
                                 className="flex items-center gap-2"
                             >
-                                <Mail className="h-4 w-4" aria-hidden />
+                                <Envelope className="h-4 w-4" aria-hidden />
                                 <span>contact@venincorse.com</span>
                             </motion.div>
                         </div>

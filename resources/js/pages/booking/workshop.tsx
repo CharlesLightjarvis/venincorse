@@ -4,12 +4,12 @@ import {
     ArrowRight,
     BookOpen,
     Check,
-    Gamepad2,
-    MessagesSquare,
-    PenLine,
+    Gamepad,
+    Messages,
+    Pen,
     Users,
-    UserRound,
-} from 'lucide-react';
+    User,
+} from 'reicon-react';
 import { useState, type FormEvent } from 'react';
 import { BookingShell } from '@/components/booking-shell';
 import { CourseSchedule } from '@/components/course-schedule';
@@ -48,9 +48,9 @@ const steps = ['Ta formule', 'Ton planning', 'Tes infos', 'Paiement'];
 
 const icons = {
     grammar: BookOpen,
-    sprechen: MessagesSquare,
-    schreiben: PenLine,
-    wortschatz: Gamepad2,
+    sprechen: Messages,
+    schreiben: Pen,
+    wortschatz: Gamepad,
 };
 
 export default function BookWorkshop() {
@@ -668,7 +668,7 @@ export default function BookWorkshop() {
                         </p>
                     </div>
                     <p className="flex items-center gap-2 text-sm">
-                        {tier === 'solo' ? <UserRound /> : <Users />}
+                        {tier === 'solo' ? <User /> : <Users />}
                         {tierLabels[tier]} · en visio
                     </p>
                     {cohort && (

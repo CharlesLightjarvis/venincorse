@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus } from 'reicon-react';
 
 const faqs = [
     {

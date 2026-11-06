@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                     'viewOwnTrials' => $request->user()?->can(PermissionEnum::ViewOwnTrials->value) ?? false,
                     'viewAllTrials' => $request->user()?->can(PermissionEnum::ViewAllTrials->value) ?? false,
                     'updateTrials' => $request->user()?->can(PermissionEnum::UpdateTrials->value) ?? false,
+                    'manageAvailability' => $request->user()?->can(PermissionEnum::ManageAvailability->value) ?? false,
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

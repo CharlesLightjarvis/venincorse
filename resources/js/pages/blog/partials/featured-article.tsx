@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Clock } from 'lucide-react';
+import { ArrowRight, Clock } from 'reicon-react';
 import { Link } from '@inertiajs/react';
 import type { Article } from '../blog-data';
 import { Button } from '@/components/ui/button';

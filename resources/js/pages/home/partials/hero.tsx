@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { motion, type Variants } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'reicon-react';
 import { Link } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 

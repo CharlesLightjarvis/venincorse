@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'reicon-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -122,7 +122,10 @@ export default function PartnerRequestPage() {
                         Référence : {submitted.id}
                     </p>
                     <div className="mt-7 flex flex-wrap gap-3">
-                        <Button asChild className="h-auto max-w-full rounded-full py-3 text-center whitespace-normal">
+                        <Button
+                            asChild
+                            className="h-auto max-w-full rounded-full py-3 text-center whitespace-normal"
+                        >
                             <Link href={teacher()}>
                                 Voir la demande côté professeur (démo)
                             </Link>

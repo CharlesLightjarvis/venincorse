@@ -3,18 +3,26 @@ import {
     CalendarDays,
     CalendarPlus,
     ChevronRight,
-    CircleCheck,
+    CheckCircle,
     Clock,
     CreditCard,
     Hourglass,
-    MonitorPlay,
-    NotebookPen,
+    VideoPlay,
+    Notebook,
     ShieldCheck,
     Video,
-    type LucideIcon,
-} from 'lucide-react';
+    type IconComponent,
+} from 'reicon-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import {
     formatReservationDate,
@@ -37,7 +45,7 @@ const statusBadgeVariant: Record<
     refunded: 'outline',
 };
 
-type Step = { icon: LucideIcon; title: string; description: string };
+type Step = { icon: IconComponent; title: string; description: string };
 
 export default function MyTrial({
     bookedTrial,
@@ -121,7 +129,7 @@ export default function MyTrial({
                     <InfoCard
                         icon={
                             current.status === 'confirmed'
-                                ? CircleCheck
+                                ? CheckCircle
                                 : CreditCard
                         }
                         label="Statut"
@@ -136,23 +144,25 @@ export default function MyTrial({
                     />
                 </div>
             ) : (
-                <section className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border px-5 py-12 text-center">
-                    <span className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <CalendarPlus className="size-6" aria-hidden="true" />
-                    </span>
-                    <div className="flex flex-col gap-1">
-                        <h2 className="text-lg font-semibold">
-                            Pas encore de cours d’essai
-                        </h2>
-                        <p className="max-w-md text-sm text-muted-foreground">
+                <Empty className="border">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <CalendarPlus />
+                        </EmptyMedia>
+                        <EmptyTitle>Pas encore de cours d’essai</EmptyTitle>
+                        <EmptyDescription>
                             Une heure en individuel pour faire le point sur ton
                             niveau et tes objectifs.
-                        </p>
-                    </div>
-                    <Button asChild>
-                        <Link href={create()}>Réserver mon cours d’essai</Link>
-                    </Button>
-                </section>
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                        <Button asChild>
+                            <Link href={create()}>
+                                Réserver mon cours d’essai
+                            </Link>
+                        </Button>
+                    </EmptyContent>
+                </Empty>
             )}
 
             {history.length > 0 && (
@@ -278,7 +288,7 @@ function StepIcon({
     icon: Icon,
     pulse = false,
 }: {
-    icon: LucideIcon;
+    icon: IconComponent;
     pulse?: boolean;
 }) {
     return (
@@ -310,7 +320,7 @@ function ConfirmedTimeline({ meetingUrl }: { meetingUrl: string | null }) {
     return (
         <ol className="flex flex-col md:flex-row md:items-stretch">
             <li className={timelineCard}>
-                <StepIcon icon={CircleCheck} />
+                <StepIcon icon={CheckCircle} />
                 <h3 className="mt-4 font-semibold text-foreground">
                     Paiement effectué
                 </h3>
@@ -355,7 +365,7 @@ function ConfirmedTimeline({ meetingUrl }: { meetingUrl: string | null }) {
                     meetingUrl === null && 'opacity-55 grayscale select-none',
                 )}
             >
-                <StepIcon icon={MonitorPlay} pulse={meetingUrl !== null} />
+                <StepIcon icon={VideoPlay} pulse={meetingUrl !== null} />
                 <h3 className="mt-4 font-semibold text-foreground">
                     Rejoindre la séance
                 </h3>
@@ -394,7 +404,7 @@ function nextSteps(
             'Le professeur te communiquera les modalités de connexion avant la séance.',
     };
     const prepare: Step = {
-        icon: NotebookPen,
+        icon: Notebook,
         title: 'Prépare ta séance',
         description: `Garde ton objectif en tête : « ${reservation.goal} ». La séance partira de là.`,
     };
@@ -434,7 +444,7 @@ function InfoCard({
     value,
     caption,
 }: {
-    icon: LucideIcon;
+    icon: IconComponent;
     label: string;
     value: string;
     caption: string;

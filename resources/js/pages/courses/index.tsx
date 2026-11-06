@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowRight, CalendarDays } from 'lucide-react';
+import { ArrowRight, CalendarDays } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { CtaBand } from '@/components/marketing/cta-band';
 import { FaqSection } from '@/components/marketing/faq-section';
