@@ -11,32 +11,34 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Aligns the bookable slots with the teacher's availability for the booking window.
+ * Weekdays, hours and closed dates are read in the school's time zone (`trials.timezone`), so a slot keeps its
+ * local hour across daylight saving changes; slots are stored in UTC.
  * Slots are never deleted: reservations keep their slot, and a slot leaving the schedule is only unpublished.
  */
 final readonly class SyncTrialSlots
 {
-    /** @return array{published: int, withdrawn: int} */
+    /** @return array{published: int, withdrawn: int, booked_outside: int} */
     public function handle(?TrialAvailability $availability = null): array
     {
         $availability ??= TrialAvailability::current();
+        $timezone = (string) config('trials.timezone');
         $earliest = CarbonImmutable::now('UTC')->addHours((int) config('trials.minimum_notice_hours'));
-        $desired = [];
+        $scheduled = [];
 
         for ($offset = 0; $offset < (int) config('trials.window_days'); $offset++) {
-            $day = CarbonImmutable::now('UTC')->startOfDay()->addDays($offset);
+            $day = CarbonImmutable::now($timezone)->startOfDay()->addDays($offset);
             if (! in_array($day->dayOfWeek, $availability->weekdays, true)
                 || in_array($day->toDateString(), $availability->closed_dates, true)) {
                 continue;
             }
             foreach ($availability->hours as $hour) {
-                $start = $day->setTime($hour, 0);
-                if ($start->gte($earliest)) {
-                    $desired[$start->format('Y-m-d H:i:s')] = $start;
-                }
+                $start = $day->setTime($hour, 0)->utc();
+                $scheduled[$start->format('Y-m-d H:i:s')] = $start;
             }
         }
+        $desired = array_filter($scheduled, fn (CarbonImmutable $start): bool => $start->gte($earliest));
 
-        return DB::transaction(function () use ($desired): array {
+        return DB::transaction(function () use ($desired, $scheduled): array {
             $published = 0;
             foreach ($desired as $start) {
                 $slot = TrialSlot::query()->firstOrCreate(['starts_at' => $start], ['is_published' => true]);
@@ -56,7 +58,15 @@ final readonly class SyncTrialSlots
                 ->each(fn (TrialSlot $slot) => $slot->update(['is_published' => false]))
                 ->count();
 
-            return ['published' => $published, 'withdrawn' => $withdrawn];
+            $windowEnd = now()->addDays((int) config('trials.window_days'));
+            $bookedOutside = TrialSlot::query()
+                ->whereHas('hold')
+                ->whereBetween('starts_at', [now(), $windowEnd])
+                ->get()
+                ->reject(fn (TrialSlot $slot): bool => isset($scheduled[$slot->starts_at->format('Y-m-d H:i:s')]))
+                ->count();
+
+            return ['published' => $published, 'withdrawn' => $withdrawn, 'booked_outside' => $bookedOutside];
         });
     }
 }

@@ -66,6 +66,7 @@ final readonly class CreateTrialReservation
                     'submission_key' => $submissionKey,
                     'submission_hash' => $hash,
                     'level' => $data['level'], 'goal' => trim($data['goal']), 'timezone' => $data['timezone'],
+                    'terms_accepted_at' => now(), 'terms_version' => config('trials.terms_version'),
                     'amount_cents' => config('trials.amount_cents'), 'currency' => config('trials.currency'),
                     'status' => TrialReservationStatus::Pending,
                     'expires_at' => now()->addMinutes(config('trials.hold_minutes')),
@@ -158,6 +159,7 @@ final readonly class CreateTrialReservation
         if ($reservation->checkout_started_at === null) {
             $reservation->update([
                 'level' => $data['level'], 'goal' => trim($data['goal']), 'timezone' => $data['timezone'],
+                'terms_accepted_at' => now(), 'terms_version' => config('trials.terms_version'),
                 'expires_at' => now()->addMinutes(config('trials.hold_minutes')),
             ]);
         }

@@ -28,8 +28,11 @@ import {
 } from '@/lib/trial-reservations';
 import { dashboard } from '@/routes';
 import { edit as editAvailability } from '@/routes/trial-availability';
-import { index as manageTrials } from '@/routes/trial-management';
-import { create, show } from '@/routes/trial-reservations';
+import {
+    index as manageTrials,
+    show as showTrial,
+} from '@/routes/trial-management';
+import { create, index } from '@/routes/trial-reservations';
 import type { Auth } from '@/types';
 
 type StudentDashboard = {
@@ -42,6 +45,7 @@ type ManagementDashboard = {
     overview: {
         upcoming: number;
         paymentReview: number;
+        awaitingOutcome: number;
         monthRevenueCents: number;
         freeSlots: number;
     };
@@ -125,6 +129,20 @@ function ManagementSection({
                     dans la gestion des essais.
                 </p>
             )}
+            {overview.awaitingOutcome > 0 && (
+                <p className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+                    {overview.awaitingOutcome === 1
+                        ? 'Une séance passée attend d’être clôturée'
+                        : `${overview.awaitingOutcome} séances passées attendent d’être clôturées`}
+                    .{' '}
+                    <Link
+                        href={manageTrials({ query: { category: 'done' } })}
+                        className="font-medium text-foreground underline underline-offset-4"
+                    >
+                        Les clôturer
+                    </Link>
+                </p>
+            )}
             {canManageAvailability && overview.freeSlots === 0 && (
                 <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
                     Aucun créneau n’est proposé aux élèves pour le moment.{' '}
@@ -181,9 +199,10 @@ function ManagementSection({
                     </Empty>
                 )}
                 {upcoming.map((reservation) => (
-                    <div
+                    <Link
                         key={reservation.id}
-                        className="flex flex-col gap-3 rounded-lg border border-border p-5 sm:flex-row sm:items-center sm:justify-between"
+                        href={showTrial(reservation.id)}
+                        className="flex flex-col gap-3 rounded-lg border border-border p-5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div>
                             <h3 className="font-semibold">
@@ -208,7 +227,7 @@ function ManagementSection({
                                 ? 'Lien de visio prêt'
                                 : 'Lien de visio à ajouter'}
                         </p>
-                    </div>
+                    </Link>
                 ))}
             </section>
         </>
@@ -296,7 +315,7 @@ function StudentSection({ student }: { student: StudentDashboard }) {
                 {reservations.map((reservation) => (
                     <Link
                         key={reservation.id}
-                        href={show(reservation.id)}
+                        href={index()}
                         className="flex flex-col gap-3 rounded-lg border border-border p-5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div>

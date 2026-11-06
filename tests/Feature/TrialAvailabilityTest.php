@@ -53,8 +53,31 @@ test('saving the availability publishes matching slots and withdraws free ones o
         ->and($availability->hours)->toBe([9, 11])
         ->and($outside->fresh()->is_published)->toBeFalse();
     // 14-day window: Monday 2 Nov is within the 24 h notice and Wednesday 11 Nov is closed.
+    // Hours are Paris time, stored in UTC (Paris is UTC+1 in November).
     expect(TrialSlot::query()->where('is_published', true)->orderBy('starts_at')->pluck('starts_at')->map->format('Y-m-d H:i')->all())
-        ->toBe(['2026-11-04 09:00', '2026-11-04 11:00', '2026-11-09 09:00', '2026-11-09 11:00']);
+        ->toBe(['2026-11-04 08:00', '2026-11-04 10:00', '2026-11-09 08:00', '2026-11-09 10:00']);
+});
+
+test('slots keep their local hour across a daylight saving change', function () {
+    // Wednesday 25 March 2026; Paris moves to summer time on Sunday 29 March.
+    $this->travelTo(Carbon::parse('2026-03-25 08:00:00', 'UTC'));
+
+    $this->actingAs(availabilityManager())->put(route('trial-availability.update'), [
+        'weekdays' => [1, 4], 'hours' => [9], 'closed_dates' => [],
+    ])->assertSessionHasNoErrors();
+
+    expect(TrialSlot::query()->where('is_published', true)->orderBy('starts_at')->limit(2)->pluck('starts_at')->map->format('Y-m-d H:i')->all())
+        ->toBe(['2026-03-26 08:00', '2026-03-30 07:00']);
+});
+
+test('the teacher is warned when booked sessions fall outside the new schedule', function () {
+    $reservation = TrialReservation::factory()->confirmed(Carbon::parse('2026-11-05 13:00:00', 'UTC'))->create();
+
+    $this->actingAs(availabilityManager())->put(route('trial-availability.update'), [
+        'weekdays' => [1], 'hours' => [9], 'closed_dates' => [],
+    ])->assertSessionHasNoErrors()->assertInertiaFlash('toast.type', 'warning');
+
+    $this->assertDatabaseHas('trial_slot_holds', ['trial_reservation_id' => $reservation->id]);
 });
 
 test('a reserved slot is kept even when it leaves the schedule', function () {

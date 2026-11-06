@@ -23,14 +23,10 @@ import {
 } from '@/lib/trial-reservations';
 import { cn } from '@/lib/utils';
 import { courses } from '@/routes';
+import { sales } from '@/routes/legal';
 import { trial as demoTrial } from '@/routes/demo';
 import { store as checkoutStore } from '@/routes/trial-checkout';
-import {
-    index as myTrial,
-    prepare,
-    show,
-    store,
-} from '@/routes/trial-reservations';
+import { index as myTrial, prepare, store } from '@/routes/trial-reservations';
 import type { Auth } from '@/types';
 
 const steps = ['Ton créneau', 'À propos de toi', 'Récapitulatif'];
@@ -150,9 +146,7 @@ export default function CreateTrial({
                     </p>
                     <div className="flex flex-wrap gap-3">
                         <Button asChild className="rounded-full">
-                            <Link href={show(bookedTrial.id)}>
-                                Voir mon cours d’essai
-                            </Link>
+                            <Link href={myTrial()}>Voir mon cours d’essai</Link>
                         </Button>
                         <Button
                             asChild
@@ -194,7 +188,7 @@ export default function CreateTrial({
                             )}
                             .{' '}
                             <Link
-                                href={show(pendingPayment.id)}
+                                href={myTrial()}
                                 className="font-medium text-primary underline underline-offset-4"
                             >
                                 Reprendre le paiement
@@ -262,7 +256,7 @@ export default function CreateTrial({
                         )}
                         {reservationId && Object.keys(errors).length > 0 && (
                             <Link
-                                href={show(reservationId)}
+                                href={myTrial()}
                                 className="text-sm text-primary underline underline-offset-4"
                             >
                                 Retrouver cette réservation dans mon espace
@@ -413,10 +407,24 @@ export default function CreateTrial({
                                         }
                                         className="mt-1 size-4 shrink-0 accent-primary"
                                     />
-                                    Je comprends que le créneau est bloqué
-                                    pendant 45 minutes le temps du paiement et
-                                    que la réservation n’est confirmée qu’après
-                                    vérification de celui-ci.
+                                    <span>
+                                        J’accepte les{' '}
+                                        <a
+                                            href={sales.url()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-primary underline underline-offset-4"
+                                        >
+                                            conditions générales de vente
+                                        </a>{' '}
+                                        : report gratuit une fois et annulation
+                                        remboursée jusqu’à 24 h avant la séance,
+                                        cours non remboursé en cas d’absence. Je
+                                        demande que le cours puisse avoir lieu
+                                        avant la fin du délai de rétractation de
+                                        14 jours. Le créneau est bloqué 45
+                                        minutes le temps du paiement.
+                                    </span>
                                 </label>
                             </div>
                         )}

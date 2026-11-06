@@ -5,68 +5,45 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Enums\TrialReservationStatus;
+use App\Exceptions\TrialRefundFailed;
 use App\Models\TrialReservation;
 use App\Models\TrialSlotHold;
+use App\Notifications\TrialRefunded;
 use App\Services\TrialPaymentGateway;
-use Illuminate\Database\UniqueConstraintViolationException;
+use App\Services\TrialReservationLock;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 
 final readonly class ApplyTrialPayment
 {
-    public function __construct(private TrialPaymentGateway $gateway) {}
+    public function __construct(
+        private CreateTrialSlotHold $createSlotHold,
+        private CreateTrialRefund $createRefund,
+        private CreateTrialBookedNotifications $notifyBooked,
+        private CreateTrialPaymentAlert $alert,
+        private TrialReservationLock $lock,
+    ) {}
 
     /** @param array<string, mixed> $session */
     public function handle(array $session, string $eventType): void
     {
         $reference = data_get($session, 'metadata.reservation_id');
-        if (! is_string($reference) || ($session['livemode'] ?? true) !== false) {
+        if (! is_string($reference) || ($session['livemode'] ?? null) !== TrialPaymentGateway::liveMode()) {
             return;
         }
-        $refundable = DB::transaction(function () use ($session, $reference, $eventType): ?TrialReservation {
-            $reservation = TrialReservation::query()->lockForUpdate()->find($reference);
-            if (! $reservation || in_array($reservation->status, [TrialReservationStatus::Confirmed, TrialReservationStatus::Refunded], true)) {
-                return null;
-            }
-            if (($session['client_reference_id'] ?? null) !== $reservation->id
-                || ! is_string($session['id'] ?? null)
-                || ($reservation->stripe_session_id && $reservation->stripe_session_id !== $session['id'])) {
-                return null;
-            }
-            if (($session['amount_total'] ?? null) !== $reservation->amount_cents
-                || strtoupper($session['currency'] ?? '') !== $reservation->currency) {
-                $reservation->update(['status' => TrialReservationStatus::PaymentReview]);
 
-                return null;
-            }
-            $reservation->stripe_session_id = $session['id'];
-            $refundable = null;
-            if (($session['payment_status'] ?? '') === 'paid') {
-                $reservation->paid_at ??= now();
-                if ($this->secureSlot($reservation)) {
-                    $reservation->status = TrialReservationStatus::Confirmed;
-                } else {
-                    $reservation->status = TrialReservationStatus::PaymentReview;
-                    $refundable = $reservation;
-                }
-            } elseif (($eventType === 'checkout.session.expired' && ($session['status'] ?? '') === 'expired'
-                && $reservation->status === TrialReservationStatus::Pending)
-                || ($eventType === 'checkout.session.async_payment_failed'
-                    && in_array($reservation->status, [TrialReservationStatus::Pending, TrialReservationStatus::Processing], true))) {
-                $reservation->status = TrialReservationStatus::Expired;
-                TrialSlotHold::query()->where('trial_reservation_id', $reservation->id)->delete();
-            } elseif (($session['status'] ?? '') === 'complete'
-                && $reservation->status === TrialReservationStatus::Pending) {
-                $reservation->status = TrialReservationStatus::Processing;
-            }
-            $reservation->save();
+        $this->lock->run($reference, function () use ($session, $reference, $eventType): void {
+            /** @var array{refundable: ?TrialReservation, confirmed: ?TrialReservation, alert: ?string} $outcome */
+            $outcome = DB::transaction(fn (): array => $this->apply($session, $reference, $eventType), 5);
 
-            return $refundable;
-        }, 5);
-
-        if ($refundable) {
-            $this->refundLatePayment($refundable, $session['payment_intent'] ?? null);
-        }
+            if ($outcome['confirmed']) {
+                $this->notifyBooked->handle($outcome['confirmed']);
+            }
+            if ($outcome['refundable']) {
+                $this->refundLatePayment($outcome['refundable'], $session['payment_intent'] ?? null);
+            } elseif ($outcome['alert'] !== null) {
+                $this->alert->handle(TrialReservation::query()->find($reference), $outcome['alert']);
+            }
+        });
     }
 
     public function expireUnstarted(TrialReservation $reservation): void
@@ -83,50 +60,123 @@ final readonly class ApplyTrialPayment
     }
 
     /**
-     * Keep the slot for a paid reservation: its own hold, or the slot again if it is still free
-     * and the student has no other trial lesson.
+     * @param  array<string, mixed>  $session
+     * @return array{refundable: ?TrialReservation, confirmed: ?TrialReservation, alert: ?string}
      */
-    private function secureSlot(TrialReservation $reservation): bool
+    private function apply(array $session, string $reference, string $eventType): array
     {
-        $hold = TrialSlotHold::query()->where('trial_reservation_id', $reservation->id)->first();
-        if ($hold) {
-            return $hold->trial_slot_id === $reservation->trial_slot_id;
+        $none = ['refundable' => null, 'confirmed' => null, 'alert' => null];
+        $reservation = TrialReservation::query()->with('slot')->lockForUpdate()->find($reference);
+        if (! $reservation || in_array($reservation->status, TrialReservationStatus::finalCases(), true)) {
+            return $none;
         }
-        $hasOtherTrial = TrialReservation::query()
-            ->where('user_id', $reservation->user_id)
-            ->whereKeyNot($reservation->id)
-            ->whereIn('status', TrialReservationStatus::bookedCases())
-            ->exists();
-        if ($hasOtherTrial) {
-            return false;
+        if (($session['client_reference_id'] ?? null) !== $reservation->id
+            || ! is_string($session['id'] ?? null)
+            || ($reservation->stripe_session_id && $reservation->stripe_session_id !== $session['id'])) {
+            return $none;
         }
-        try {
-            DB::transaction(fn () => TrialSlotHold::query()->create([
-                'trial_slot_id' => $reservation->trial_slot_id,
-                'trial_reservation_id' => $reservation->id,
-            ]));
-        } catch (UniqueConstraintViolationException) {
-            return false;
+        $isPaid = ($session['payment_status'] ?? '') === 'paid';
+        $reservation->stripe_session_id = $session['id'];
+
+        if (($session['amount_total'] ?? null) !== $reservation->amount_cents
+            || strtoupper($session['currency'] ?? '') !== $reservation->currency) {
+            $wasUnderReview = $reservation->status === TrialReservationStatus::PaymentReview;
+            $reservation->status = TrialReservationStatus::PaymentReview;
+            $reservation->save();
+
+            return $wasUnderReview ? $none : [...$none, 'alert' => 'le montant payé ne correspond pas au prix du cours d’essai.'];
         }
 
-        return true;
+        if ($reservation->status === TrialReservationStatus::PaymentReview) {
+            if (! $isPaid || $reservation->paid_at !== null) {
+                $reservation->save();
+
+                return $none;
+            }
+            $reservation->paid_at = now();
+            $reservation->save();
+
+            return [...$none, 'alert' => 'le paiement est arrivé pour un essai déjà en vérification. Confirme la séance ou rembourse l’élève.'];
+        }
+
+        if ($isPaid) {
+            $reservation->paid_at ??= now();
+            if (! $this->slotStillBookable($reservation)) {
+                $reservation->status = TrialReservationStatus::PaymentReview;
+                $reservation->save();
+
+                return [...$none, 'refundable' => $reservation];
+            }
+            if ($this->createSlotHold->handle($reservation)) {
+                $reservation->status = TrialReservationStatus::Confirmed;
+                $reservation->save();
+
+                return [...$none, 'confirmed' => $reservation];
+            }
+            $reservation->status = TrialReservationStatus::PaymentReview;
+            $reservation->save();
+
+            return [...$none, 'refundable' => $reservation];
+        }
+
+        if (($eventType === 'checkout.session.expired' && ($session['status'] ?? '') === 'expired'
+            && $reservation->status === TrialReservationStatus::Pending)
+            || ($eventType === 'checkout.session.async_payment_failed'
+                && in_array($reservation->status, [TrialReservationStatus::Pending, TrialReservationStatus::Processing], true))) {
+            $reservation->status = TrialReservationStatus::Expired;
+            TrialSlotHold::query()->where('trial_reservation_id', $reservation->id)->delete();
+        } elseif (($session['status'] ?? '') === 'complete'
+            && $reservation->status === TrialReservationStatus::Pending) {
+            $reservation->status = TrialReservationStatus::Processing;
+        }
+        $reservation->save();
+
+        return $none;
     }
 
-    /** A late payment for a slot given to someone else is refunded; a failure stays visible for manual review. */
+    /**
+     * A payment that arrives late (delayed bank payment, or after the attempt expired) only keeps its slot when the
+     * session is still comfortably ahead and the slot was not withdrawn from the schedule meanwhile.
+     */
+    private function slotStillBookable(TrialReservation $reservation): bool
+    {
+        $slot = $reservation->slot;
+        if ($slot->starts_at->lt(now()->addHours((int) config('trials.late_payment_cutoff_hours')))) {
+            return false;
+        }
+        $hasHold = TrialSlotHold::query()->where('trial_reservation_id', $reservation->id)->exists();
+        $withinBookingWindow = $slot->starts_at->gte(now()->addHours((int) config('trials.minimum_notice_hours')));
+
+        return $hasHold || $slot->is_published || ! $withinBookingWindow;
+    }
+
+    /** A late payment that cannot keep its slot is refunded; a failure stays visible for manual review. */
     private function refundLatePayment(TrialReservation $reservation, mixed $paymentIntent): void
     {
-        if (! is_string($paymentIntent) || ! $this->gateway->ready()) {
-            return;
-        }
-        try {
-            $this->gateway->refund($reservation, $paymentIntent);
-        } catch (Throwable $exception) {
-            report($exception);
+        if (! is_string($paymentIntent)) {
+            $this->alert->handle($reservation, 'un paiement est arrivé trop tard pour garder son créneau, et Stripe n’a pas indiqué le paiement à rembourser.');
 
             return;
         }
-        TrialReservation::query()->whereKey($reservation->id)
-            ->where('status', TrialReservationStatus::PaymentReview)
-            ->update(['status' => TrialReservationStatus::Refunded]);
+        try {
+            $this->createRefund->handle($reservation, $paymentIntent);
+        } catch (TrialRefundFailed) {
+            $this->alert->handle($reservation, 'un paiement est arrivé trop tard pour garder son créneau et son remboursement automatique a échoué. Rembourse l’élève.');
+
+            return;
+        }
+        $refunded = DB::transaction(function () use ($reservation): int {
+            $updated = TrialReservation::query()->whereKey($reservation->id)
+                ->where('status', TrialReservationStatus::PaymentReview)
+                ->update(['status' => TrialReservationStatus::Refunded]);
+            if ($updated > 0) {
+                TrialSlotHold::query()->where('trial_reservation_id', $reservation->id)->delete();
+            }
+
+            return $updated;
+        });
+        if ($refunded > 0) {
+            $reservation->loadMissing(['slot', 'user'])->user->notify(new TrialRefunded($reservation));
+        }
     }
 }

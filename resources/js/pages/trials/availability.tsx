@@ -9,7 +9,6 @@ import {
 } from 'reicon-react';
 import { type FormEvent, type ReactNode } from 'react';
 import { fr } from 'react-day-picker/locale';
-import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -119,12 +118,14 @@ export default function TrialAvailabilityPage({
     selectableHours,
     windowDays,
     noticeHours,
+    timezone,
     overview,
 }: {
     availability: Availability;
     selectableHours: number[];
     windowDays: number;
     noticeHours: number;
+    timezone: string;
     overview: { freeSlots: number; reservedSlots: number };
 }) {
     const form = useForm<Availability>(availability);
@@ -142,12 +143,7 @@ export default function TrialAvailabilityPage({
         event.preventDefault();
         form.put(update.url(), {
             preserveScroll: true,
-            onSuccess: () => {
-                form.setDefaults();
-                toast.success(
-                    'Disponibilités enregistrées. Les séances déjà réservées sont conservées.',
-                );
-            },
+            onSuccess: () => form.setDefaults(),
         });
     }
 
@@ -221,7 +217,7 @@ export default function TrialAvailabilityPage({
                 </Section>
                 <Separator />
                 <Section
-                    title="Heures de début (UTC)"
+                    title={`Heures de début (${timezone})`}
                     description="Séances de 60 min. Les heures trop proches d’un début déjà choisi sont désactivées pour garder 60 min de pause. Chaque élève voit les horaires dans son propre fuseau."
                     error={hoursError}
                 >

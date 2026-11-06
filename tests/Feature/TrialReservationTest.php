@@ -380,11 +380,11 @@ test('the meeting link must be a secure address and is shown to the student only
     $this->patch(route('trial-management.update', $reservation), ['meeting_url' => 'https://meet.example.com/abc'])->assertRedirect();
     expect($reservation->fresh()->meeting_url)->toBe('https://meet.example.com/abc');
 
-    $this->actingAs($student)->get(route('trial-reservations.show', $reservation))
-        ->assertInertia(fn (Assert $page) => $page->missing('reservation.meeting_url'));
+    $this->actingAs($student)->get(route('trial-reservations.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('pendingPayment.id', $reservation->id)->missing('pendingPayment.meeting_url'));
     $reservation->update(['status' => TrialReservationStatus::Confirmed, 'paid_at' => now()]);
-    $this->get(route('trial-reservations.show', $reservation))
-        ->assertInertia(fn (Assert $page) => $page->where('reservation.meeting_url', 'https://meet.example.com/abc'));
+    $this->get(route('trial-reservations.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('bookedTrial.meeting_url', 'https://meet.example.com/abc'));
 });
 
 test('an objective without real words is refused', function (string $goal) {
@@ -420,14 +420,51 @@ test('changed payload cannot reuse a durable submission key', function () {
 test('students cannot access other reservations or private notes', function () {
     $student = trialStudent();
     $reservation = TrialReservation::factory()->create(['user_id' => $student->id, 'notes' => 'Confidentiel']);
-    $this->actingAs($student)->get(route('trial-reservations.show', $reservation))->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('trials/show')->missing('reservation.notes'));
+    $this->actingAs($student)->get(route('trial-reservations.index'))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('trials/index')
+            ->where('pendingPayment.id', $reservation->id)->missing('pendingPayment.notes'));
 
-    $this->actingAs(trialStudent())->get(route('trial-reservations.show', $reservation))->assertNotFound();
+    $this->actingAs(trialStudent())->get(route('trial-reservations.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('pendingPayment', null)->where('bookedTrial', null)->has('history', 0));
     $this->postJson(route('trial-checkout.store', $reservation), [], ['Idempotency-Key' => (string) Str::uuid()])->assertNotFound();
     $this->patch(route('trial-management.update', $reservation), ['notes' => 'Changed'])->assertForbidden();
     $this->get(route('trial-management.index'))->assertForbidden();
     expect($reservation->fresh()->notes)->toBe('Confidentiel');
+});
+
+test('a trial that will not take place or has ended refuses a visio link but keeps private notes', function (array $attributes) {
+    $manager = User::factory()->create();
+    $manager->givePermissionTo(['trial-reservations.view-all', 'trial-reservations.update']);
+    $reservation = TrialReservation::factory()->create($attributes);
+
+    $this->actingAs($manager)->patch(route('trial-management.update', $reservation), ['meeting_url' => 'https://meet.example.com/abc'])
+        ->assertInvalid(['meeting_url' => 'Cet essai n’aura pas lieu ou est déjà terminé : le lien de la visio ne peut plus être modifié.']);
+    $this->patch(route('trial-management.update', $reservation), ['notes' => 'A refusé l’horaire, recontacter'])->assertRedirect();
+
+    expect($reservation->fresh())
+        ->meeting_url->toBeNull()
+        ->notes->toBe('A refusé l’horaire, recontacter');
+})->with([
+    'expired' => [['status' => TrialReservationStatus::Expired]],
+    'refunded' => [['status' => TrialReservationStatus::Refunded]],
+    'payment window over' => [['expires_at' => now()->subMinute()]],
+    'cancelled by the teacher' => [['status' => TrialReservationStatus::Cancelled]],
+    'session over' => [fn () => ['status' => TrialReservationStatus::Confirmed, 'trial_slot_id' => TrialSlot::factory()->create(['starts_at' => now()->subHours(2)])->id]],
+]);
+
+test('trial managers open a trial detail that students cannot reach', function () {
+    $student = trialStudent();
+    $reservation = TrialReservation::factory()->create(['user_id' => $student->id, 'notes' => 'Niveau A2']);
+    $manager = User::factory()->create();
+    $manager->givePermissionTo('trial-reservations.view-all');
+
+    $this->actingAs($manager)->get(route('trial-management.show', $reservation))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('trials/manage-show')
+            ->where('reservation.id', $reservation->id)
+            ->where('reservation.student.email', $student->email));
+
+    $this->actingAs($student)->get(route('trial-management.show', $reservation))->assertForbidden();
 });
 
 test('direct management permissions allow private note updates without an administrator role', function () {
@@ -515,9 +552,9 @@ test('returning to the reservation confirms a payment whose webhook never arrive
     $gateway->shouldReceive('ready')->andReturnTrue();
     $gateway->shouldReceive('session')->once()->with('cs_test_trial')->andReturn(trialSession($reservation));
 
-    $this->actingAs($student)->get(route('trial-reservations.show', $reservation))
+    $this->actingAs($student)->get(route('trial-reservations.index', ['refresh' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('reservation.status', 'confirmed')->where('reservation.can_checkout', false));
+        ->assertInertia(fn (Assert $page) => $page->where('bookedTrial.status', 'confirmed')->where('bookedTrial.can_checkout', false));
 
     expect($reservation->fresh()->paid_at)->not->toBeNull();
 });

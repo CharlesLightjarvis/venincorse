@@ -1,20 +1,34 @@
-import { Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
+    BookOpen,
     CalendarDays,
     CalendarPlus,
-    ChevronRight,
+    MessageCircle,
     CheckCircle,
     Clock,
     CreditCard,
     Hourglass,
     VideoPlay,
     Notebook,
+    Refresh,
     ShieldCheck,
     Video,
     type IconComponent,
 } from 'reicon-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import {
     Empty,
     EmptyContent,
@@ -23,41 +37,92 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
+import { TrialInfoCard as InfoCard } from '@/components/trial-info-card';
+import { Spinner } from '@/components/ui/spinner';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
+import { usePageRestore } from '@/hooks/use-page-restore';
 import {
     formatReservationDate,
+    postTrialRequest,
+    reservationStatusBadgeVariant,
     reservationStatusLabels,
+    TrialRequestError,
     type TrialReservation,
 } from '@/lib/trial-reservations';
 import { cn } from '@/lib/utils';
-import { contact } from '@/routes';
-import { create, index, show } from '@/routes/trial-reservations';
+import { contact, courses } from '@/routes';
+import { sales } from '@/routes/legal';
+import { store } from '@/routes/trial-checkout';
+import { create, index } from '@/routes/trial-reservations';
+import { create as reschedule } from '@/routes/trial-reschedules';
+import { store as cancelOwn } from '@/routes/trial-student-cancellations';
 
-const statusBadgeVariant: Record<
-    TrialReservation['status'],
-    'default' | 'secondary' | 'outline'
-> = {
-    confirmed: 'default',
-    pending: 'secondary',
-    processing: 'secondary',
-    payment_review: 'secondary',
-    expired: 'outline',
-    refunded: 'outline',
-};
+const statusBadgeVariant = reservationStatusBadgeVariant;
 
 type Step = { icon: IconComponent; title: string; description: string };
+
+const historyNotes: Partial<Record<TrialReservation['status'], string>> = {
+    expired: 'Non payée, aucun montant débité.',
+    refunded:
+        'Le paiement n’a pas pu être conservé : remboursée intégralement.',
+    cancelled: 'Annulée par le professeur : remboursée intégralement.',
+};
 
 export default function MyTrial({
     bookedTrial,
     pendingPayment,
     history,
+    paymentReady,
+    checkoutKey,
 }: {
     bookedTrial: TrialReservation | null;
     pendingPayment: TrialReservation | null;
     history: TrialReservation[];
+    paymentReady: boolean;
+    checkoutKey: string;
 }) {
     const timezone = useUserTimezone();
     const current = bookedTrial ?? pendingPayment;
+    const sessionOver =
+        current !== null &&
+        (current.status === 'ended' ||
+            current.status === 'completed' ||
+            current.status === 'no_show');
+    const inProgress =
+        current?.status === 'confirmed' &&
+        current.has_started &&
+        !current.has_ended;
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState('');
+    const refresh = () =>
+        router.reload({
+            data: { refresh: 1 },
+            onFinish: () => setProcessing(false),
+        });
+    usePageRestore(() => {
+        setProcessing(false);
+        refresh();
+    });
+
+    async function checkout(reservation: TrialReservation) {
+        setProcessing(true);
+        setError('');
+        try {
+            const response = await postTrialRequest<{ checkout_url: string }>(
+                store.url(reservation.id),
+                checkoutKey,
+                {},
+            );
+            window.location.assign(response.checkout_url);
+        } catch (exception) {
+            setError(
+                exception instanceof TrialRequestError
+                    ? exception.message
+                    : 'Connexion interrompue. Réessaie depuis cette page, sans créer une autre réservation.',
+            );
+            router.reload({ onFinish: () => setProcessing(false) });
+        }
+    }
     const format = (value: string, options: Intl.DateTimeFormatOptions) =>
         new Intl.DateTimeFormat('fr-FR', {
             timeZone: timezone,
@@ -90,15 +155,122 @@ export default function MyTrial({
                                 Choisir un autre créneau
                             </Link>
                         </Button>
-                        <Button asChild>
-                            <Link href={show(pendingPayment.id)}>
-                                <CreditCard data-icon="inline-start" />
-                                Reprendre le paiement
-                            </Link>
-                        </Button>
+                        {pendingPayment.can_checkout && (
+                            <Button
+                                onClick={() => checkout(pendingPayment)}
+                                disabled={!paymentReady || processing}
+                            >
+                                {processing ? (
+                                    <Spinner data-icon="inline-start" />
+                                ) : (
+                                    <CreditCard data-icon="inline-start" />
+                                )}
+                                {processing
+                                    ? 'Ouverture de Stripe…'
+                                    : 'Reprendre le paiement'}
+                            </Button>
+                        )}
                     </div>
                 )}
+                {current?.status === 'processing' && (
+                    <Button
+                        variant="outline"
+                        disabled={processing}
+                        onClick={() => {
+                            setProcessing(true);
+                            refresh();
+                        }}
+                    >
+                        {processing ? (
+                            <Spinner data-icon="inline-start" />
+                        ) : (
+                            <Refresh data-icon="inline-start" />
+                        )}
+                        Actualiser le statut
+                    </Button>
+                )}
+                {current?.student_actions &&
+                    !current.student_actions.rebook &&
+                    (current.student_actions.reschedule ||
+                        current.student_actions.cancel) && (
+                        <div className="flex flex-wrap gap-2">
+                            {current.student_actions.cancel && (
+                                <StudentCancelDialog reservation={current} />
+                            )}
+                            {current.student_actions.reschedule && (
+                                <Button asChild>
+                                    <Link href={reschedule(current.id)}>
+                                        <CalendarDays data-icon="inline-start" />
+                                        Déplacer mon cours
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
+                    )}
             </div>
+
+            {current?.status === 'confirmed' && !current.has_ended && (
+                <p className="text-sm text-muted-foreground">
+                    {current.is_rebooked ? (
+                        <>
+                            Ce créneau t’a été offert après une absence : il ne
+                            peut plus être déplacé ni remboursé. En cas
+                            d’imprévu,{' '}
+                            <Link
+                                href={contact()}
+                                className="font-medium text-primary underline underline-offset-4"
+                            >
+                                contacte-nous
+                            </Link>
+                            .
+                        </>
+                    ) : current.student_actions?.cancel ? (
+                        <>
+                            {current.student_actions.reschedule
+                                ? 'Tu peux déplacer gratuitement ton cours (une fois) ou l’annuler avec remboursement intégral'
+                                : 'Ton report gratuit est utilisé. Tu peux encore annuler avec remboursement intégral'}{' '}
+                            jusqu’au{' '}
+                            {format(current.change_deadline, {
+                                dateStyle: 'long',
+                                timeStyle: 'short',
+                            })}
+                            .
+                        </>
+                    ) : (
+                        <>
+                            Il est trop tard pour déplacer ou annuler ton cours
+                            en ligne. En cas d’imprévu,{' '}
+                            <Link
+                                href={contact()}
+                                className="font-medium text-primary underline underline-offset-4"
+                            >
+                                contacte-nous
+                            </Link>
+                            .
+                        </>
+                    )}{' '}
+                    <Link
+                        href={sales()}
+                        className="underline underline-offset-4"
+                    >
+                        Voir les conditions
+                    </Link>
+                </p>
+            )}
+
+            {pendingPayment && !paymentReady && (
+                <Alert>
+                    <AlertDescription>
+                        Le paiement n’est pas disponible pour le moment. Ton
+                        créneau reste réservé jusqu’à la fin du délai.
+                    </AlertDescription>
+                </Alert>
+            )}
+            {error && (
+                <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
 
             {current ? (
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -128,18 +300,28 @@ export default function MyTrial({
                     />
                     <InfoCard
                         icon={
-                            current.status === 'confirmed'
-                                ? CheckCircle
-                                : CreditCard
+                            current.status === 'pending' ||
+                            current.status === 'processing' ||
+                            current.status === 'payment_review'
+                                ? CreditCard
+                                : CheckCircle
                         }
                         label="Statut"
                         value={reservationStatusLabels[current.status]}
                         caption={
                             current.status === 'pending'
                                 ? `Créneau réservé jusqu’à ${format(current.expires_at, { timeStyle: 'short' })}`
-                                : current.status === 'confirmed'
-                                  ? 'Paiement vérifié'
-                                  : 'Ne règle pas une deuxième fois'
+                                : current.status === 'no_show'
+                                  ? 'Séance manquée'
+                                  : current.status === 'ended'
+                                    ? 'Bilan bientôt disponible'
+                                    : sessionOver
+                                      ? 'Merci pour ta présence'
+                                      : inProgress
+                                        ? 'Séance en cours'
+                                        : current.status === 'confirmed'
+                                          ? 'Paiement vérifié'
+                                          : 'Ne règle pas une deuxième fois'
                         }
                     />
                 </div>
@@ -165,66 +347,31 @@ export default function MyTrial({
                 </Empty>
             )}
 
-            {history.length > 0 && (
-                <section className="flex flex-col rounded-lg border border-border">
-                    <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-                        <h2 className="font-semibold">Historique</h2>
-                        <Badge variant="outline">{history.length}</Badge>
-                    </div>
-                    <ul className="flex flex-col divide-y divide-border">
-                        {history.map((reservation) => (
-                            <li key={reservation.id}>
-                                <Link
-                                    href={show(reservation.id)}
-                                    className="flex items-center justify-between gap-3 px-5 py-3 text-sm transition-colors hover:bg-muted/30"
-                                >
-                                    <span>
-                                        {formatReservationDate(
-                                            reservation.starts_at,
-                                            timezone,
-                                        )}
-                                    </span>
-                                    <span className="flex items-center gap-2">
-                                        <Badge
-                                            variant={
-                                                statusBadgeVariant[
-                                                    reservation.status
-                                                ]
-                                            }
-                                        >
-                                            {
-                                                reservationStatusLabels[
-                                                    reservation.status
-                                                ]
-                                            }
-                                        </Badge>
-                                        <ChevronRight
-                                            className="size-4 text-muted-foreground"
-                                            aria-hidden="true"
-                                        />
-                                    </span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </section>
-            )}
-
             {current && (
                 <section className="mt-6 flex flex-col gap-12 pb-6">
                     <div className="mx-auto max-w-2xl text-center">
                         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/40 bg-secondary px-4 py-2 text-xs font-semibold tracking-[0.25em] text-secondary-foreground uppercase">
-                            La suite
+                            {inProgress ? 'En ce moment' : 'La suite'}
                         </div>
                         <h2 className="mb-4 text-3xl font-semibold tracking-tight">
-                            {current.status === 'confirmed'
-                                ? 'Tout est prêt de ton côté'
-                                : current.status === 'pending'
-                                  ? 'Plus qu’une étape'
-                                  : 'On vérifie ton paiement'}
+                            {current.status === 'no_show'
+                                ? 'On s’est manqués'
+                                : sessionOver
+                                  ? 'Et maintenant ?'
+                                  : inProgress
+                                    ? 'Ta séance est en cours'
+                                    : current.status === 'confirmed'
+                                      ? 'Tout est prêt de ton côté'
+                                      : current.status === 'pending'
+                                        ? 'Plus qu’une étape'
+                                        : 'On vérifie ton paiement'}
                         </h2>
                         <p className="text-foreground/60">
-                            Une question avant la séance ?{' '}
+                            {sessionOver
+                                ? 'Une question sur la suite ? '
+                                : inProgress
+                                  ? 'Ton professeur t’attend. Un souci pour te connecter ? '
+                                  : 'Une question avant la séance ? '}
                             <Link
                                 href={contact()}
                                 className="font-medium text-primary underline underline-offset-4"
@@ -234,9 +381,12 @@ export default function MyTrial({
                             .
                         </p>
                     </div>
-                    {current.status === 'confirmed' ? (
+                    {sessionOver ? (
+                        <SessionOver reservation={current} />
+                    ) : current.status === 'confirmed' ? (
                         <ConfirmedTimeline
                             meetingUrl={current.meeting_url ?? null}
+                            inProgress={inProgress}
                         />
                     ) : (
                         <div className="grid gap-5 md:grid-cols-3">
@@ -266,6 +416,70 @@ export default function MyTrial({
                             ))}
                         </div>
                     )}
+                </section>
+            )}
+
+            {history.length > 0 && (
+                <section className="flex flex-col rounded-lg border border-border">
+                    <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+                        <h2 className="font-semibold">Historique</h2>
+                        <Badge variant="outline">{history.length}</Badge>
+                    </div>
+                    <ul className="flex flex-col divide-y divide-border">
+                        {history.map((reservation) => (
+                            <li
+                                key={reservation.id}
+                                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm"
+                            >
+                                <span className="flex flex-col">
+                                    {formatReservationDate(
+                                        reservation.starts_at,
+                                        timezone,
+                                    )}
+                                    {reservation.status === 'cancelled' &&
+                                    reservation.cancelled_by === 'student' ? (
+                                        <span className="text-muted-foreground">
+                                            Annulée par toi : remboursée
+                                            intégralement.
+                                        </span>
+                                    ) : (
+                                        <>
+                                            {historyNotes[
+                                                reservation.status
+                                            ] && (
+                                                <span className="text-muted-foreground">
+                                                    {
+                                                        historyNotes[
+                                                            reservation.status
+                                                        ]
+                                                    }
+                                                </span>
+                                            )}
+                                            {reservation.cancellation_reason && (
+                                                <span className="text-muted-foreground">
+                                                    Motif :{' '}
+                                                    {
+                                                        reservation.cancellation_reason
+                                                    }
+                                                </span>
+                                            )}
+                                        </>
+                                    )}
+                                </span>
+                                <Badge
+                                    variant={
+                                        statusBadgeVariant[reservation.status]
+                                    }
+                                >
+                                    {
+                                        reservationStatusLabels[
+                                            reservation.status
+                                        ]
+                                    }
+                                </Badge>
+                            </li>
+                        ))}
+                    </ul>
                 </section>
             )}
         </div>
@@ -316,7 +530,13 @@ function StepIcon({
  * Once paid: the payment, the visio link, then joining the session.
  * The join step only pulses and offers its button once a visio link exists.
  */
-function ConfirmedTimeline({ meetingUrl }: { meetingUrl: string | null }) {
+function ConfirmedTimeline({
+    meetingUrl,
+    inProgress,
+}: {
+    meetingUrl: string | null;
+    inProgress: boolean;
+}) {
     return (
         <ol className="flex flex-col md:flex-row md:items-stretch">
             <li className={timelineCard}>
@@ -373,9 +593,11 @@ function ConfirmedTimeline({ meetingUrl }: { meetingUrl: string | null }) {
                     Étape 3
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                    {meetingUrl
-                        ? 'Le lien est prêt : rejoins la visio à l’heure du cours.'
-                        : 'Tu pourras rejoindre la séance ici dès que le lien sera disponible.'}
+                    {meetingUrl && inProgress
+                        ? 'Ta séance a commencé : rejoins-la maintenant.'
+                        : meetingUrl
+                          ? 'Le lien est prêt : rejoins la visio à l’heure du cours.'
+                          : 'Tu pourras rejoindre la séance ici dès que le lien sera disponible.'}
                 </p>
                 {meetingUrl && (
                     <Button asChild className="mt-4">
@@ -390,6 +612,150 @@ function ConfirmedTimeline({ meetingUrl }: { meetingUrl: string | null }) {
                 )}
             </li>
         </ol>
+    );
+}
+
+/** After the session (or a missed one): what the student can do next. */
+function SessionOver({ reservation }: { reservation: TrialReservation }) {
+    const noShow = reservation.status === 'no_show';
+
+    return (
+        <div className="flex flex-col gap-5">
+            {reservation.session_summary && (
+                <div className="rounded-2xl border border-primary/15 bg-primary/[0.05] p-6 dark:bg-primary/[0.07]">
+                    <p className="text-xs font-semibold tracking-[0.25em] text-primary uppercase">
+                        Le bilan de ton professeur
+                    </p>
+                    <p className="mt-3 leading-relaxed break-words whitespace-pre-line text-foreground/80">
+                        {reservation.session_summary}
+                    </p>
+                </div>
+            )}
+            {reservation.student_actions?.rebook && (
+                <div className="flex flex-col items-start gap-3 rounded-2xl border border-primary/15 bg-primary/[0.05] p-6 sm:flex-row sm:items-center sm:justify-between dark:bg-primary/[0.07]">
+                    <p className="text-foreground/80">
+                        Ton professeur t’offre un nouveau créneau, sans frais
+                        {reservation.rebook_offer_expires_at &&
+                            `, à choisir avant le ${new Intl.DateTimeFormat(
+                                'fr-FR',
+                                { dateStyle: 'long' },
+                            ).format(
+                                new Date(reservation.rebook_offer_expires_at),
+                            )}`}
+                        . Il ne pourra plus être déplacé ni remboursé.
+                    </p>
+                    <Button asChild>
+                        <Link href={reschedule(reservation.id)}>
+                            Choisir mon nouveau créneau
+                        </Link>
+                    </Button>
+                </div>
+            )}
+            <div className="grid gap-5 md:grid-cols-2">
+                <div className={timelineCard}>
+                    <StepIcon icon={noShow ? MessageCircle : BookOpen} />
+                    <h3 className="mt-4 font-semibold text-foreground">
+                        {noShow
+                            ? 'Tu n’as pas pu venir ?'
+                            : 'Continue sur ta lancée'}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-foreground/60">
+                        {noShow
+                            ? 'Écris-nous : nous verrons ensemble comment reprogrammer un échange.'
+                            : 'Découvre les parcours pour progresser régulièrement, en individuel ou en groupe.'}
+                    </p>
+                    <Button
+                        asChild
+                        className="mt-4"
+                        variant={noShow ? 'default' : 'outline'}
+                    >
+                        <Link href={noShow ? contact() : courses()}>
+                            {noShow
+                                ? 'Nous contacter'
+                                : 'Découvrir les parcours'}
+                        </Link>
+                    </Button>
+                </div>
+                <div className={timelineCard}>
+                    <StepIcon icon={noShow ? BookOpen : MessageCircle} />
+                    <h3 className="mt-4 font-semibold text-foreground">
+                        {noShow ? 'Découvre les parcours' : 'Une question ?'}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-foreground/60">
+                        {noShow
+                            ? 'Des cours réguliers, en individuel ou en groupe, pour avancer à ton rythme.'
+                            : 'Un doute sur ton niveau ou sur le parcours qui te convient ? Nous te répondons rapidement.'}
+                    </p>
+                    <Button asChild className="mt-4" variant="outline">
+                        <Link href={noShow ? courses() : contact()}>
+                            {noShow ? 'Voir les parcours' : 'Nous contacter'}
+                        </Link>
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/** The student cancels their own paid session before the deadline; the refund is full and automatic. */
+function StudentCancelDialog({
+    reservation,
+}: {
+    reservation: TrialReservation;
+}) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost">Annuler</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Annuler ton cours d’essai ?</DialogTitle>
+                    <DialogDescription>
+                        Tu seras remboursé intégralement, sous quelques jours
+                        selon ta banque, et le créneau sera libéré. Tu pourras
+                        réserver un nouveau cours d’essai plus tard.
+                        {reservation.student_actions?.reschedule &&
+                            ' Tu peux aussi simplement le déplacer gratuitement.'}
+                    </DialogDescription>
+                </DialogHeader>
+                <Form
+                    {...cancelOwn.form(reservation.id)}
+                    onSuccess={() => setOpen(false)}
+                >
+                    {({ processing, errors }) => (
+                        <div className="flex flex-col gap-4">
+                            {errors.cancellation && (
+                                <Alert variant="destructive">
+                                    <AlertDescription>
+                                        {errors.cancellation}
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="ghost">
+                                        Garder mon cours
+                                    </Button>
+                                </DialogClose>
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    disabled={processing}
+                                >
+                                    {processing && (
+                                        <Spinner data-icon="inline-start" />
+                                    )}
+                                    Annuler et être remboursé
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    )}
+                </Form>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -436,34 +802,6 @@ function nextSteps(
         visio,
         prepare,
     ];
-}
-
-function InfoCard({
-    icon: Icon,
-    label,
-    value,
-    caption,
-}: {
-    icon: IconComponent;
-    label: string;
-    value: string;
-    caption: string;
-}) {
-    return (
-        <div className="rounded-lg border border-border p-5">
-            <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">{label}</p>
-                <Icon
-                    className="size-5 text-muted-foreground"
-                    aria-hidden="true"
-                />
-            </div>
-            <p className="mt-3 text-2xl font-semibold first-letter:uppercase">
-                {value}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{caption}</p>
-        </div>
-    );
 }
 
 MyTrial.layout = {

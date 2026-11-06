@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\TrialReservationStatus;
+use App\Models\TrialReservation;
 use App\Models\User;
 
 test('profile page is displayed', function () {
@@ -65,6 +67,33 @@ test('user can delete their account', function () {
 
     $this->assertGuest();
     expect($user->fresh())->toBeNull();
+});
+
+test('a student with a past trial is anonymised instead of deleted, so paid reservations stay in the accounts', function () {
+    $reservation = TrialReservation::factory()->create(['status' => TrialReservationStatus::Completed, 'paid_at' => now()]);
+    $user = $reservation->user;
+
+    $this->actingAs($user)->delete(route('profile.destroy'), ['password' => 'password'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('home'));
+
+    $this->assertGuest();
+    expect($user->fresh())
+        ->name->toBe('Compte supprimé')
+        ->email->toBe('deleted-'.$user->id.'@deleted.invalid')
+        ->and($reservation->fresh())->not->toBeNull()->goal->toBe('—');
+});
+
+test('an account with an upcoming trial cannot be deleted', function () {
+    $reservation = TrialReservation::factory()->confirmed(now()->addDays(3))->create();
+    $user = $reservation->user;
+
+    $this->actingAs($user)->from(route('profile.edit'))
+        ->delete(route('profile.destroy'), ['password' => 'password'])
+        ->assertSessionHasErrors('password');
+
+    $this->assertAuthenticated();
+    expect($user->fresh()->email)->toBe($user->email);
 });
 
 test('correct password must be provided to delete account', function () {

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { partners } from '@/routes';
+import { notice, privacy, sales, terms } from '@/routes/legal';
 
 const footerLinks = [
     {
@@ -46,9 +47,10 @@ const footerLinks = [
     {
         title: 'Légal',
         links: [
-            { label: 'Confidentialité', href: '#' },
-            { label: 'CGU', href: '#' },
-            { label: 'Mentions légales', href: '#' },
+            { label: 'Confidentialité', href: privacy.url() },
+            { label: 'CGU', href: terms.url() },
+            { label: 'CGV', href: sales.url() },
+            { label: 'Mentions légales', href: notice.url() },
         ],
     },
 ];

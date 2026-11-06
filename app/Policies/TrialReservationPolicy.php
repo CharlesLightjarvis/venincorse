@@ -24,6 +24,13 @@ final class TrialReservationPolicy
             ? Response::allow() : Response::denyAsNotFound();
     }
 
+    /** Only the student who booked may move or cancel their own trial; the timing rules live on the model. */
+    public function changeOwn(User $user, TrialReservation $reservation): Response
+    {
+        return $user->id === $reservation->user_id && $user->can(PermissionEnum::ViewOwnTrials->value)
+            ? Response::allow() : Response::denyAsNotFound();
+    }
+
     public function update(User $user, TrialReservation $reservation): bool
     {
         return $user->can(PermissionEnum::UpdateTrials->value);

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * The teacher's weekly trial schedule (UTC) and closed days. A single row, created from the config defaults.
+ * The teacher's weekly trial schedule and closed days, in the school's time zone (`trials.timezone`). A single row, created from the config defaults.
  *
  * @property list<int> $weekdays
  * @property list<int> $hours

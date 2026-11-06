@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -26,6 +28,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureDevCommands();
+        $this->configureRateLimits();
+    }
+
+    /**
+     * Queued emails respect the sending rate of the mail provider.
+     */
+    protected function configureRateLimits(): void
+    {
+        RateLimiter::for('mail', fn (): Limit => filled(config('mail.max_per_second'))
+            ? Limit::perSecond((int) config('mail.max_per_second'))
+            : Limit::none());
     }
 
     /**

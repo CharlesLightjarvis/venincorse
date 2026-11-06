@@ -11,15 +11,48 @@ export type TrialReservation = {
         | 'pending'
         | 'processing'
         | 'confirmed'
+        | 'ended'
         | 'expired'
         | 'payment_review'
-        | 'refunded';
+        | 'refunded'
+        | 'completed'
+        | 'no_show'
+        | 'cancelled';
     expires_at: string;
     paid_at: string | null;
+    is_active: boolean;
+    has_started: boolean;
+    has_ended: boolean;
+    cancellation_reason: string | null;
+    cancelled_by: 'student' | 'teacher' | null;
+    cancelled_at: string | null;
+    reschedule_count: number;
+    /** Until this moment the student may move or cancel the session themselves. */
+    change_deadline: string;
+    session_summary: string | null;
+    rebook_offered: boolean;
+    rebook_offer_expires_at: string | null;
+    is_rebooked: boolean;
+    /** Only sent to the student who booked. */
+    student_actions?: {
+        reschedule: boolean;
+        cancel: boolean;
+        rebook: boolean;
+    };
     can_checkout: boolean;
     meeting_url?: string | null;
     student?: { name: string; email: string };
     notes?: string;
+    /** What the teaching team may still do; only sent to people allowed to update trials. */
+    actions?: {
+        edit_meeting_link: boolean;
+        cancel: boolean;
+        record_outcome: boolean;
+        resolve_review: boolean;
+        confirm_review: boolean;
+        release_review: boolean;
+        offer_rebook: boolean;
+    };
 };
 
 export const reservationStatusLabels: Record<
@@ -29,9 +62,29 @@ export const reservationStatusLabels: Record<
     pending: 'En attente de paiement',
     processing: 'Paiement en cours de vérification',
     confirmed: 'Confirmée',
+    ended: 'Séance terminée',
     expired: 'Expirée',
     payment_review: 'Vérification manuelle nécessaire',
     refunded: 'Remboursée',
+    completed: 'Réalisée',
+    no_show: 'Élève absent',
+    cancelled: 'Annulée',
+};
+
+export const reservationStatusBadgeVariant: Record<
+    TrialReservation['status'],
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+    confirmed: 'default',
+    ended: 'secondary',
+    pending: 'secondary',
+    processing: 'secondary',
+    payment_review: 'destructive',
+    expired: 'outline',
+    refunded: 'outline',
+    completed: 'secondary',
+    no_show: 'outline',
+    cancelled: 'outline',
 };
 
 export type TrialReservationSummary = {

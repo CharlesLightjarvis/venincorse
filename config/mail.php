@@ -17,6 +17,13 @@ return [
     'default' => env('MAIL_MAILER', 'log'),
 
     /*
+    | Queued emails are held back above this many per second (empty: no limit). Useful for providers
+    | with a strict sending rate, such as the Mailtrap sandbox.
+    */
+
+    'max_per_second' => env('MAIL_MAX_PER_SECOND'),
+
+    /*
     |--------------------------------------------------------------------------
     | Mailer Configurations
     |--------------------------------------------------------------------------

@@ -25,9 +25,10 @@ final readonly class TrialAvailabilityController
                 'hours' => $availability->hours,
                 'closed_dates' => array_values(array_filter(
                     $availability->closed_dates,
-                    fn (string $date): bool => $date >= now('UTC')->toDateString(),
+                    fn (string $date): bool => $date >= now((string) config('trials.timezone'))->toDateString(),
                 )),
             ],
+            'timezone' => config('trials.timezone'),
             'selectableHours' => config('trials.selectable_hours'),
             'windowDays' => config('trials.window_days'),
             'noticeHours' => config('trials.minimum_notice_hours'),
@@ -48,7 +49,10 @@ final readonly class TrialAvailabilityController
             'hours' => $request->hours(),
             'closed_dates' => $request->closedDates(),
         ]);
-        $syncSlots->handle($availability);
+        $bookedOutside = $syncSlots->handle($availability)['booked_outside'];
+        Inertia::flash('toast', $bookedOutside > 0
+            ? ['type' => 'warning', 'message' => __('trials.availability_booked_outside', ['count' => $bookedOutside], 'fr')]
+            : ['type' => 'success', 'message' => __('trials.availability_saved', [], 'fr')]);
 
         return back();
     }

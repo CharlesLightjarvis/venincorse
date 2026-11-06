@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateTrialReservation;
 use App\Actions\ReconcileTrialPayment;
+use App\Actions\UpdateEndedTrialSessions;
 use App\Enums\PermissionEnum;
 use App\Enums\TrialReservationStatus;
 use App\Http\Requests\StoreTrialReservationRequest;
@@ -16,7 +17,6 @@ use App\Queries\AvailableTrialSlots;
 use App\Services\TrialPaymentGateway;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,9 +42,13 @@ final readonly class TrialReservationController
         ]);
     }
 
-    /** A payment completed at Stripe must show up as soon as the student is back, even without a webhook. */
+    /**
+     * A payment completed at Stripe must show up as soon as the student is back, even without a webhook.
+     * `?refresh=1` (Stripe return, "Actualiser") shortens the throttle, and the routes are rate limited.
+     */
     private function reconcileUnfinished(Request $request, ReconcileTrialPayment $reconcile): void
     {
+        $force = $request->boolean('refresh');
         if ($request->user() === null) {
             return;
         }
@@ -55,7 +59,7 @@ final readonly class TrialReservationController
             ->latest()
             ->limit(3)
             ->get()
-            ->each(fn (TrialReservation $reservation) => $reconcile->handle($reservation));
+            ->each(fn (TrialReservation $reservation) => $reconcile->handle($reservation, force: $force));
     }
 
     private function bookedTrial(Request $request): ?TrialReservation
@@ -98,21 +102,10 @@ final readonly class TrialReservationController
         return response()->json(['reservation_id' => $reservation->id], 201);
     }
 
-    public function show(Request $request, TrialReservation $reservation, TrialPaymentGateway $gateway, ReconcileTrialPayment $reconcile): Response
-    {
-        Gate::authorize('view', $reservation);
-        $reconcile->handle($reservation, force: $request->boolean('refresh'));
-
-        return Inertia::render('trials/show', [
-            'reservation' => (new TrialReservationResource($reservation->load(['slot', 'user'])))->resolve($request),
-            'paymentReady' => $gateway->ready(),
-            'submissionKey' => (string) Str::uuid(),
-        ]);
-    }
-
-    public function index(Request $request, ReconcileTrialPayment $reconcile): Response
+    public function index(Request $request, ReconcileTrialPayment $reconcile, TrialPaymentGateway $gateway, UpdateEndedTrialSessions $updateEnded): Response
     {
         $this->reconcileUnfinished($request, $reconcile);
+        $updateEnded->handle();
         $bookedTrial = $this->bookedTrial($request);
         $pendingPayment = $bookedTrial ? null : $this->pendingPayment($request);
         $history = TrialReservation::query()->with('slot')
@@ -127,13 +120,16 @@ final readonly class TrialReservationController
             'bookedTrial' => $bookedTrial ? TrialReservationResource::make($bookedTrial)->resolve($request) : null,
             'pendingPayment' => $pendingPayment ? TrialReservationResource::make($pendingPayment)->resolve($request) : null,
             'history' => TrialReservationResource::collection($history)->resolve($request),
+            'paymentReady' => $gateway->ready(),
+            'checkoutKey' => (string) Str::uuid(),
         ]);
     }
 
     /** One address for everyone: each block is only sent when the user holds the matching permission. */
-    public function dashboard(Request $request, ReconcileTrialPayment $reconcile): Response
+    public function dashboard(Request $request, ReconcileTrialPayment $reconcile, UpdateEndedTrialSessions $updateEnded): Response
     {
         $user = $request->user();
+        $updateEnded->handle();
 
         return Inertia::render('dashboard', [
             'student' => $user->can(PermissionEnum::ViewOwnTrials->value) ? $this->studentDashboard($request, $reconcile) : null,
@@ -151,12 +147,12 @@ final readonly class TrialReservationController
         return [
             'reservations' => TrialReservationResource::collection((clone $query)->with('slot')->orderByDesc('created_at')->orderByDesc('id')->limit(10)->get())->resolve($request),
             'overview' => [
-                'confirmed' => (clone $query)->where('status', TrialReservationStatus::Confirmed)->count(),
+                'confirmed' => (clone $query)->whereIn('status', TrialReservationStatus::paidCases())->count(),
                 'pending' => (clone $query)->where(fn ($unfinished) => $unfinished
                     ->where(fn ($pending) => $pending->where('status', TrialReservationStatus::Pending)->where('expires_at', '>', now()))
                     ->orWhere('status', TrialReservationStatus::Processing))
                     ->count(),
-                'paidCents' => (int) (clone $query)->where('status', TrialReservationStatus::Confirmed)->sum('amount_cents'),
+                'paidCents' => (int) (clone $query)->whereIn('status', TrialReservationStatus::paidCases())->sum('amount_cents'),
             ],
         ];
     }
@@ -166,7 +162,7 @@ final readonly class TrialReservationController
     {
         $upcoming = TrialReservation::query()
             ->where('status', TrialReservationStatus::Confirmed)
-            ->whereHas('slot', fn ($slot) => $slot->where('starts_at', '>=', now()->subMinutes((int) config('trials.duration_minutes'))));
+            ->whereHas('slot', fn ($slot) => $slot->where('starts_at', '>', now()->subMinutes((int) config('trials.duration_minutes'))));
 
         return [
             'upcoming' => TrialReservationResource::collection((clone $upcoming)->with(['slot', 'user'])
@@ -175,8 +171,9 @@ final readonly class TrialReservationController
             'overview' => [
                 'upcoming' => (clone $upcoming)->count(),
                 'paymentReview' => TrialReservation::query()->where('status', TrialReservationStatus::PaymentReview)->count(),
+                'awaitingOutcome' => TrialReservation::query()->where('status', TrialReservationStatus::Ended)->count(),
                 'monthRevenueCents' => (int) TrialReservation::query()
-                    ->where('status', TrialReservationStatus::Confirmed)
+                    ->whereIn('status', TrialReservationStatus::paidCases())
                     ->where('paid_at', '>=', now()->startOfMonth())
                     ->sum('amount_cents'),
                 'freeSlots' => TrialSlot::query()->where('is_published', true)->where('starts_at', '>=', now()->addHours((int) config('trials.minimum_notice_hours')))->whereDoesntHave('hold')->count(),

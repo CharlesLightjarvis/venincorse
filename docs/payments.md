@@ -1,6 +1,6 @@
 # Paiements du cours d’essai — exploitation
 
-Mémo pour faire tourner le paiement Stripe du cours d’essai, en local et en production.
+Mémo pour faire tourner le paiement Stripe du cours d’essai, en local et en production. La liste complète de mise en ligne est dans [production.md](production.md).
 
 ## Variables d’environnement
 
@@ -10,8 +10,11 @@ Mémo pour faire tourner le paiement Stripe du cours d’essai, en local et en p
 | `STRIPE_PUBLIC_KEY` | Clé publique `pk_…` (non utilisée par le Checkout hébergé, conservée pour la suite). |
 | `STRIPE_WEBHOOK_SECRET` | Secret de signature des webhooks `whsec_…`. Sans lui, le bouton « Payer » reste désactivé. |
 | `TRIAL_PUBLIC_URL` | URL publique du site, utilisée pour le retour depuis Stripe. |
+| `TRIAL_TEST_MODE_ONLY` | `true` par défaut : seules les clés de test sont acceptées. Passer à `false` en production pour accepter les clés `sk_live_…` / `rk_live_…`. Les événements Stripe de l’autre mode (test ou réel) sont ignorés. |
+| `TRIAL_TIMEZONE` | Fuseau des disponibilités et des emails de l’équipe (`Europe/Paris` par défaut). |
+| `MAIL_MAX_PER_SECOND` | Débit maximal d’envoi des emails (`1` pour la sandbox Mailtrap ; vide = sans limite). |
 
-L’application n’accepte que des clés de **test** tant que `TrialPaymentGateway::ready()` l’impose. Ne jamais commiter de clé, ni coller une clé `live` dans un outil ou une conversation.
+L’application n’accepte que des clés de **test** tant que `TRIAL_TEST_MODE_ONLY` n’est pas désactivé. Ne jamais commiter de clé, ni coller une clé `live` dans un outil ou une conversation.
 
 Après toute modification du `.env`, **redémarrer les processus longs** (file d’attente, planificateur) : ils gardent la configuration lue à leur démarrage.
 
@@ -29,7 +32,7 @@ Trois choses doivent tourner en plus du site servi par Herd :
 3. **Le transfert des webhooks** — Stripe ne peut pas joindre `venincorse.test`. Lancer la [Stripe CLI](https://docs.stripe.com/stripe-cli) et la garder ouverte :
 
    ```bash
-   stripe listen --forward-to http://venincorse.test/payments/webhook/stripe --events "checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired"
+   stripe listen --forward-to http://venincorse.test/payments/webhook/stripe --events "checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,refund.failed,charge.dispute.created"
    ```
 
    Garder la liste d’événements **entre guillemets** : sous PowerShell, sans guillemets, la liste est mal transmise et aucun événement de paiement n’est relayé. Le secret `whsec_…` affiché au démarrage doit être celui de `STRIPE_WEBHOOK_SECRET`.
@@ -45,10 +48,12 @@ Trois choses doivent tourner en plus du site servi par Herd :
 
 - **Enregistrer le webhook** dans le tableau de bord Stripe (Développeurs → Webhooks) :
   - URL : `https://<domaine>/payments/webhook/stripe`
-  - Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`
+  - Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `refund.failed`, `charge.dispute.created`
   - Copier le secret de signature de cet endpoint dans `STRIPE_WEBHOOK_SECRET`.
-- **Lancer un worker de file d’attente** supervisé (Supervisor, Laravel Cloud…) : sans lui, les webhooks ne sont pas traités.
-- **Lancer le planificateur** chaque minute (cron `* * * * * php artisan schedule:run`).
+- **Lancer un worker de file d’attente** supervisé (Supervisor, Laravel Cloud…) : sans lui, ni les webhooks ni les emails ne partent (tous les emails des essais sont mis en file d’attente).
+- **Lancer le planificateur** chaque minute (cron `* * * * * php artisan schedule:run`) : expiration des tentatives impayées, rattrapage Stripe, publication des créneaux et rappels 24 h avant chaque séance. Détail dans [trial-lifecycle.md](trial-lifecycle.md).
+- **Configurer l’envoi d’emails** (`MAIL_*`) avec un vrai fournisseur ; Mailtrap Sandbox ne sert qu’aux tests.
+- **Base MySQL (ou PostgreSQL) et cache partagé** (`CACHE_STORE=database` ou `redis`) : les verrous des paiements et `onOneServer()` du planificateur en dépendent ; SQLite ne verrouille pas les lignes.
 - **À chaque déploiement**, exécuter :
 
   ```bash

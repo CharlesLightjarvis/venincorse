@@ -29,7 +29,8 @@ final readonly class ReconcileTrialPayment
             || ! $this->gateway->ready()) {
             return $reservation;
         }
-        if (! $force && ! Cache::add('trial-reconcile:'.$reservation->id, true, 5)) {
+        // Even a forced check (Stripe return, "Actualiser", scheduler) asks Stripe at most once every 2 seconds.
+        if (! Cache::add('trial-reconcile:'.$reservation->id, true, $force ? 2 : 5)) {
             return $reservation;
         }
         try {
