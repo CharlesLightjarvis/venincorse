@@ -36,8 +36,8 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureRateLimits(): void
     {
-        RateLimiter::for('mail', fn (): Limit => filled(config('mail.max_per_second'))
-            ? Limit::perSecond((int) config('mail.max_per_second'))
+        RateLimiter::for('mail', fn (): Limit => filled(config('mail.send_interval_seconds'))
+            ? Limit::perSecond(1, (int) config('mail.send_interval_seconds'))
             : Limit::none());
     }
 

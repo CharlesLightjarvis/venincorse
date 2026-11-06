@@ -17,11 +17,11 @@ return [
     'default' => env('MAIL_MAILER', 'log'),
 
     /*
-    | Queued emails are held back above this many per second (empty: no limit). Useful for providers
-    | with a strict sending rate, such as the Mailtrap sandbox.
+    | Minimum number of seconds between two queued emails (empty: no limit). Useful for providers with
+    | a strict sending rate, such as the free Mailtrap sandbox (one email every 10 seconds).
     */
 
-    'max_per_second' => env('MAIL_MAX_PER_SECOND'),
+    'send_interval_seconds' => env('MAIL_SEND_INTERVAL_SECONDS'),
 
     /*
     |--------------------------------------------------------------------------

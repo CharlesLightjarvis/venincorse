@@ -62,7 +62,7 @@ Délais et nombre de reports : `config/trials.php` (`change_notice_hours`, `max_
 
 ## Emails
 
-Tous les emails sont des notifications Laravel **mises en file d’attente** (`ShouldQueue`) : ils ne ralentissent ni ne bloquent jamais une action. Ils partent **après validation de la transaction** (`afterCommit`), sont retentés pendant une heure (3 erreurs maximum), respectent un **débit maximal** (`MAIL_MAX_PER_SECOND`, par ex. `1` pour la sandbox Mailtrap, vide en production) et sont écrits en français. La date est dans le fuseau de l’élève pour l’élève, dans celui de l’école pour l’équipe. Les textes saisis par les élèves (nom, objectif) sont affichés tels quels : aucun lien ni mise en forme n’est interprété.
+Tous les emails sont des notifications Laravel **mises en file d’attente** (`ShouldQueue`) : ils ne ralentissent ni ne bloquent jamais une action. Ils partent **après validation de la transaction** (`afterCommit`), sont retentés pendant une heure (3 erreurs maximum), respectent un **délai minimal entre deux envois** (`MAIL_SEND_INTERVAL_SECONDS` : `10` pour la sandbox Mailtrap gratuite, qui n’accepte qu’un email toutes les 10 secondes ; vide en production) et sont écrits en français. La date est dans le fuseau de l’élève pour l’élève, dans celui de l’école pour l’équipe. Les textes saisis par les élèves (nom, objectif) sont affichés tels quels : aucun lien ni mise en forme n’est interprété.
 
 | Email | Destinataire | Déclencheur |
 | --- | --- | --- |

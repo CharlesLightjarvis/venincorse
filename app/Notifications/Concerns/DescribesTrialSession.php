@@ -28,7 +28,7 @@ trait DescribesTrialSession
     /** @return list<object> */
     public function middleware(object $notifiable, string $channel): array
     {
-        return $channel === 'mail' ? [(new RateLimited('mail'))->releaseAfter(2)] : [];
+        return $channel === 'mail' ? [new RateLimited('mail')] : [];
     }
 
     /** The student sees their own time zone; the team sees the school's, so dates never shift between members. */

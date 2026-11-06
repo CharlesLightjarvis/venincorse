@@ -42,7 +42,7 @@ Tout ce qu’il faut faire avant (et pendant) la mise en ligne du cours d’essa
 | `SESSION_SECURE_COOKIE` | `true` |
 | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | Fournisseur d’emails réel (Postmark, Resend, Mailgun, SES…). **Pas** la sandbox Mailtrap |
 | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | Adresse de l’école, sur un domaine dont les enregistrements **SPF, DKIM et DMARC** sont configurés (sinon les emails tombent en spam) |
-| `MAIL_MAX_PER_SECOND` | Vide (pas de limite), ou la limite de débit du fournisseur |
+| `MAIL_SEND_INTERVAL_SECONDS` | Vide (pas de limite), sauf si le fournisseur impose un délai entre deux emails |
 | `STRIPE_SECRET_KEY` | Clé **live** : de préférence une clé restreinte `rk_live_…` (Checkout Sessions et Refunds en écriture) |
 | `STRIPE_PUBLIC_KEY` | `pk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | Secret `whsec_…` de l’endpoint de production (§ 4), **différent** de celui de la Stripe CLI locale |
@@ -114,6 +114,8 @@ php artisan up
 - [ ] Prévoir la purge des comptes inactifs depuis 3 ans (annoncée dans la politique de confidentialité) : elle n’est pas encore automatisée.
 
 ## 9. Points connus, à décider plus tard
+
+Les évolutions prévues (purge des comptes inactifs, alerte si le planificateur ou la file s’arrête) sont détaillées dans [backlog.md](backlog.md).
 
 - Un seul professeur / une seule école : tout compte ayant la permission de gérer les essais agit sur tous les essais. À revoir si plusieurs professeurs arrivent (attribution des essais par professeur).
 - Les tests automatiques tournent sur SQLite en mémoire ; les verrous de lignes ne sont donc vérifiés qu’en conditions réelles sur MySQL.

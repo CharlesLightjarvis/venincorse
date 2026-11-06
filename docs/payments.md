@@ -12,7 +12,7 @@ Mémo pour faire tourner le paiement Stripe du cours d’essai, en local et en p
 | `TRIAL_PUBLIC_URL` | URL publique du site, utilisée pour le retour depuis Stripe. |
 | `TRIAL_TEST_MODE_ONLY` | `true` par défaut : seules les clés de test sont acceptées. Passer à `false` en production pour accepter les clés `sk_live_…` / `rk_live_…`. Les événements Stripe de l’autre mode (test ou réel) sont ignorés. |
 | `TRIAL_TIMEZONE` | Fuseau des disponibilités et des emails de l’équipe (`Europe/Paris` par défaut). |
-| `MAIL_MAX_PER_SECOND` | Débit maximal d’envoi des emails (`1` pour la sandbox Mailtrap ; vide = sans limite). |
+| `MAIL_SEND_INTERVAL_SECONDS` | Délai minimal entre deux emails, en secondes (`10` pour la sandbox Mailtrap gratuite ; vide = sans limite). |
 
 L’application n’accepte que des clés de **test** tant que `TRIAL_TEST_MODE_ONLY` n’est pas désactivé. Ne jamais commiter de clé, ni coller une clé `live` dans un outil ou une conversation.
 
