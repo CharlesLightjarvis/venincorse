@@ -18,6 +18,7 @@ void createInertiaApp({
             case name.startsWith('booking/'):
                 return BlankLayout;
             case name.startsWith('home/'):
+            case name === 'trials/create':
             case name.startsWith('courses/'):
             case name.startsWith('workshops/'):
             case name.startsWith('textbooks/'):

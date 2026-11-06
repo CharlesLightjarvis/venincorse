@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 return [
 
@@ -131,6 +133,12 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    /*
+     * Only the JSON responses replayed by the idempotency middleware may be restored from the cache.
+     */
+    'serializable_classes' => [
+        JsonResponse::class,
+        ResponseHeaderBag::class,
+    ],
 
 ];

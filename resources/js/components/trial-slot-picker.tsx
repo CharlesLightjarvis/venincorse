@@ -28,8 +28,35 @@ export function TrialSlotPicker({
     timezone: string;
     onTimezoneChange: (zone: string) => void;
 }) {
+    return (
+        <AvailableTrialSlotPicker
+            slots={getTrialSlots(state)}
+            value={value}
+            onChange={onChange}
+            timezone={timezone}
+            onTimezoneChange={onTimezoneChange}
+        />
+    );
+}
+
+export function AvailableTrialSlotPicker({
+    slots,
+    value,
+    onChange,
+    timezone,
+    onTimezoneChange,
+    timezones = timezoneOptions,
+    emptyMessage = 'Aucun créneau disponible sur les 14 prochains jours. Reviens plus tard ou modifie les disponibilités dans la démo professeur.',
+}: {
+    slots: string[];
+    value: string;
+    onChange: (slot: string) => void;
+    timezone: string;
+    onTimezoneChange: (zone: string) => void;
+    timezones?: string[];
+    emptyMessage?: string;
+}) {
     const [selectedDay, setSelectedDay] = useState('');
-    const slots = getTrialSlots(state);
     const dayFormatter = new Intl.DateTimeFormat('en-CA', {
         timeZone: timezone,
         year: 'numeric',
@@ -64,7 +91,7 @@ export function TrialSlotPicker({
                     }}
                     className={selectClassName}
                 >
-                    {timezoneOptions.map((zone) => (
+                    {timezones.map((zone) => (
                         <option key={zone} value={zone}>
                             {zone.replaceAll('_', ' ')}
                         </option>
@@ -73,9 +100,7 @@ export function TrialSlotPicker({
             </div>
             {days.length === 0 ? (
                 <p role="status" className="py-8 text-sm text-muted-foreground">
-                    Aucun créneau disponible sur les 14 prochains jours. Reviens
-                    plus tard ou modifie les disponibilités dans la démo
-                    professeur.
+                    {emptyMessage}
                 </p>
             ) : (
                 <>
@@ -102,7 +127,10 @@ export function TrialSlotPicker({
                                             name="booking-day"
                                             value={day}
                                             checked={activeDay === day}
-                                            onChange={() => setSelectedDay(day)}
+                                            onChange={() => {
+                                                setSelectedDay(day);
+                                                onChange('');
+                                            }}
                                         />
                                         <span className="block text-xs text-muted-foreground">
                                             {new Intl.DateTimeFormat('fr-FR', {
@@ -163,6 +191,7 @@ export function TrialSlotPicker({
             )}
             {value && (
                 <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="self-start"

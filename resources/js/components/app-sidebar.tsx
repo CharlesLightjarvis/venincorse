@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { CalendarCheck, CalendarDays, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,29 +15,29 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+import type { Auth } from '@/types';
+import { useCurrentUrl } from '@/hooks/use-current-url';
+import { index as manageTrials } from '@/routes/trial-management';
+import { index as myTrial } from '@/routes/trial-reservations';
 
 export function AppSidebar() {
+    const { auth } = usePage<{ auth: Auth }>().props;
+    const { isCurrentUrl } = useCurrentUrl();
+    const mainNavItems: NavItem[] = [];
+    if (auth.can?.viewOwnTrials) {
+        mainNavItems.push({
+            title: 'Mon espace',
+            href: dashboard(),
+            icon: LayoutGrid,
+        });
+    }
+    if (auth.can?.viewAllTrials) {
+        mainNavItems.push({
+            title: 'Gestion des essais',
+            href: manageTrials(),
+            icon: CalendarDays,
+        });
+    }
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -57,7 +57,23 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                <NavFooter items={[]} className="mt-auto" />
+                {auth.can?.viewOwnTrials && (
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isCurrentUrl(myTrial())}
+                                tooltip={{ children: 'Ma réservation d’essai' }}
+                            >
+                                <Link href={myTrial()} prefetch>
+                                    <CalendarCheck />
+                                    <span>Ma réservation d’essai</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                )}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

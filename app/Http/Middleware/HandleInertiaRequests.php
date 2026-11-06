@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\PermissionEnum;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,6 +41,12 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'can' => [
+                    'reserveTrial' => $request->user()?->can(PermissionEnum::ReserveTrial->value) ?? false,
+                    'viewOwnTrials' => $request->user()?->can(PermissionEnum::ViewOwnTrials->value) ?? false,
+                    'viewAllTrials' => $request->user()?->can(PermissionEnum::ViewAllTrials->value) ?? false,
+                    'updateTrials' => $request->user()?->can(PermissionEnum::UpdateTrials->value) ?? false,
+                ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

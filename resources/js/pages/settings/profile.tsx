@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
 import type { Auth } from '@/types';
 import { send } from '@/routes/verification';
+import TimezonePicker from '@/components/timezone-picker';
 
 type PageProps = {
     auth: Auth;
@@ -123,6 +124,10 @@ export default function Profile({
                 </Form>
             </div>
 
+            <TimezonePicker
+                key={auth.user.timezone ?? 'automatic'}
+                timezone={auth.user.timezone}
+            />
             <DeleteUser />
         </>
     );

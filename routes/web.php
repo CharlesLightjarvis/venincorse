@@ -1,5 +1,10 @@
 <?php
 
+use App\Enums\PermissionEnum;
+use App\Http\Controllers\TrialCheckoutController;
+use App\Http\Controllers\TrialManagementController;
+use App\Http\Controllers\TrialReservationController;
+use App\Http\Middleware\ScopeIdempotencyKey;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'home/index')->name('home');
@@ -20,7 +25,26 @@ Route::inertia('pricing', 'home/pricing')->name('pricing');
 
 Route::inertia('level-test', 'level-test/index')->name('level-test');
 
-Route::inertia('trial', 'booking/index')->name('trial');
+Route::redirect('trial', '/trial-reservations/create')->name('trial');
+Route::inertia('demo/trial', 'booking/index')->name('demo.trial');
+Route::get('trial-reservations/create', [TrialReservationController::class, 'create'])->name('trial-reservations.create');
+
+Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('trial-reservations/prepare', [TrialReservationController::class, 'create'])
+        ->middleware('can:'.PermissionEnum::ReserveTrial->value)->name('trial-reservations.prepare');
+    Route::post('trial-reservations', [TrialReservationController::class, 'store'])
+        ->middleware(['can:'.PermissionEnum::ReserveTrial->value, 'throttle:10,1', ScopeIdempotencyKey::class])->name('trial-reservations.store');
+    Route::get('trial-reservations', [TrialReservationController::class, 'index'])
+        ->middleware('can:'.PermissionEnum::ViewOwnTrials->value)->name('trial-reservations.index');
+    Route::get('trial-reservations/{reservation}', [TrialReservationController::class, 'show'])
+        ->middleware('can:view,reservation')->name('trial-reservations.show');
+    Route::post('trial-reservations/{reservation}/checkout', [TrialCheckoutController::class, 'store'])
+        ->middleware(['can:checkout,reservation', 'throttle:10,1', ScopeIdempotencyKey::class])->name('trial-checkout.store');
+    Route::get('teaching/trial-reservations', [TrialManagementController::class, 'index'])
+        ->middleware('can:'.PermissionEnum::ViewAllTrials->value)->name('trial-management.index');
+    Route::patch('teaching/trial-reservations/{reservation}', [TrialManagementController::class, 'update'])
+        ->middleware('can:update,reservation')->name('trial-management.update');
+});
 
 Route::inertia('booking/manage', 'booking/manage')->name('booking.manage');
 
@@ -50,7 +74,7 @@ Route::inertia('blog', 'blog/index')->name('blog');
 Route::inertia('blog/{slug}', 'blog/article')->name('blog.article');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [TrialReservationController::class, 'dashboard'])->middleware('can:'.PermissionEnum::ViewOwnTrials->value)->name('dashboard');
 });
 
 require __DIR__.'/settings.php';

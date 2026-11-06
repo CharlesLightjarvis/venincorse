@@ -1,5 +1,7 @@
 # Réservation du cours d’essai — prototype frontend
 
+> Ce document décrit le prototype simulé, conservé sur `/demo/trial`. Le parcours réel est servi par `/trial-reservations/create` ; son paiement Stripe est documenté dans [payments.md](payments.md).
+
 ## Objectif
 
 Remplacer la page marketing du cours d’essai par un parcours court : créneau → informations → paiement simulé → confirmation. Le visiteur réserve sans compte et sans test de niveau obligatoire.

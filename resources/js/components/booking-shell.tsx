@@ -4,7 +4,8 @@ import type { ReactNode } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import Logo from '@/layouts/home/partials/logo';
-import { home, trial } from '@/routes';
+import { home } from '@/routes';
+import { trial } from '@/routes/demo';
 import { teacher } from '@/routes/booking';
 
 export function BookingShell({
