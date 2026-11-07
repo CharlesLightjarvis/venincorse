@@ -1,5 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { CalendarCheck, CalendarDays, Grid, Sliders } from 'reicon-react';
+import {
+    CalendarCheck,
+    CalendarDays,
+    Grid,
+    Sliders,
+    Users,
+} from 'reicon-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -17,6 +23,7 @@ import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import type { Auth } from '@/types';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import { index as manageCohorts } from '@/routes/course-cohorts';
 import { edit as editAvailability } from '@/routes/trial-availability';
 import { index as manageTrials } from '@/routes/trial-management';
 import { index as myTrial } from '@/routes/trial-reservations';
@@ -36,6 +43,13 @@ export function AppSidebar() {
             title: 'Gestion des essais',
             href: manageTrials(),
             icon: CalendarDays,
+        });
+    }
+    if (auth.can?.manageCourses) {
+        mainNavItems.push({
+            title: 'Groupes des parcours',
+            href: manageCohorts(),
+            icon: Users,
         });
     }
     if (auth.can?.manageAvailability) {

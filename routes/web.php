@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PermissionEnum;
+use App\Http\Controllers\CourseCohortController;
 use App\Http\Controllers\TrialAvailabilityController;
 use App\Http\Controllers\TrialCancellationController;
 use App\Http\Controllers\TrialCheckoutController;
@@ -65,6 +66,11 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->middleware('can:update,reservation')->name('trial-rebook-offers.store');
     Route::put('teaching/trial-reservations/{reservation}/payment-review', [TrialPaymentReviewController::class, 'update'])
         ->middleware(['can:update,reservation', 'throttle:10,1'])->name('trial-payment-reviews.update');
+    Route::prefix('teaching')->middleware('can:'.PermissionEnum::ManageCourses->value)->group(function (): void {
+        Route::resource('course-cohorts', CourseCohortController::class)
+            ->parameters(['course-cohorts' => 'cohort'])
+            ->except(['edit']);
+    });
     Route::get('teaching/trial-availability', [TrialAvailabilityController::class, 'edit'])
         ->middleware('can:'.PermissionEnum::ManageAvailability->value)->name('trial-availability.edit');
     Route::put('teaching/trial-availability', [TrialAvailabilityController::class, 'update'])

@@ -19,6 +19,7 @@ export type Auth = {
         viewAllTrials: boolean;
         updateTrials: boolean;
         manageAvailability: boolean;
+        manageCourses: boolean;
     };
 };
 
