@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\CourseEnrollmentStatus;
+use App\Enums\CourseInstallmentStatus;
 use App\Enums\CoursePaymentPlan;
 use Carbon\CarbonImmutable;
 use Database\Factories\CourseEnrollmentFactory;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'course_cohort_id', 'status', 'payment_plan', 'goal', 'timezone', 'amount_cents', 'currency', 'expires_at', 'checkout_started_at', 'stripe_session_id', 'checkout_url', 'stripe_customer_id', 'stripe_payment_method_id', 'paid_at', 'terms_accepted_at', 'terms_version', 'early_start_requested_at', 'notes'])]
+#[Fillable(['user_id', 'course_cohort_id', 'status', 'payment_plan', 'goal', 'timezone', 'amount_cents', 'currency', 'expires_at', 'checkout_started_at', 'stripe_session_id', 'checkout_url', 'stripe_customer_id', 'stripe_payment_method_id', 'paid_at', 'refunded_cents', 'cancelled_at', 'cancellation_reason', 'terms_accepted_at', 'terms_version', 'early_start_requested_at', 'notes'])]
 final class CourseEnrollment extends Model
 {
     /** @use HasFactory<CourseEnrollmentFactory> */
@@ -32,6 +33,8 @@ final class CourseEnrollment extends Model
             'expires_at' => 'immutable_datetime',
             'checkout_started_at' => 'immutable_datetime',
             'paid_at' => 'immutable_datetime',
+            'refunded_cents' => 'integer',
+            'cancelled_at' => 'immutable_datetime',
             'terms_accepted_at' => 'immutable_datetime',
             'early_start_requested_at' => 'immutable_datetime',
         ];
@@ -63,6 +66,24 @@ final class CourseEnrollment extends Model
     public function checkoutAmountCents(): int
     {
         return $this->payment_plan->amountsCents($this->amount_cents)[0];
+    }
+
+    /** What the student actually paid so far: the full price, or the instalments settled. */
+    public function paidCents(): int
+    {
+        if ($this->paid_at === null) {
+            return 0;
+        }
+
+        return $this->payment_plan === CoursePaymentPlan::Installments
+            ? (int) $this->installments()->where('status', CourseInstallmentStatus::Paid)->sum('amount_cents')
+            : $this->amount_cents;
+    }
+
+    /** Only a paid enrollment of a group still running (or about to) is cancelled by the teacher. */
+    public function isCancellable(): bool
+    {
+        return in_array($this->status, [CourseEnrollmentStatus::Confirmed, CourseEnrollmentStatus::PaymentReview], true);
     }
 
     public function installments(): HasMany

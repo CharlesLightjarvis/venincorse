@@ -45,8 +45,36 @@ final class CourseEnrollmentResource extends JsonResource
                 $isManager || ($isOwner && $this->status === CourseEnrollmentStatus::Confirmed && $cohort->ends_at->isFuture()),
                 $cohort->meeting_url,
             ),
+            'refunded_cents' => $this->refunded_cents,
+            'cancellation_reason' => $this->cancellation_reason,
+            'cancelled_at' => $this->cancelled_at?->toIso8601String(),
+            'management' => $this->when($isManager, fn (): array => $this->management()),
             'student' => $this->when($isManager, fn (): array => ['name' => $this->user->name, 'email' => $this->user->email]),
             'notes' => $this->when($isManager, $this->notes ?? ''),
+        ];
+    }
+
+    /**
+     * What the teacher needs to cancel fairly: on a withdrawal after the course started, the student owes the part
+     * already followed (Code de la consommation, art. L221-25), so the suggested refund is what they paid beyond it.
+     *
+     * @return array{paid_cents: int, refundable_cents: int, prorata_refund_cents: int, hours_done: float, can_cancel: bool, withdrawal_open: bool}
+     */
+    private function management(): array
+    {
+        $paid = $this->resource->paidCents();
+        $refundable = max(0, $paid - $this->refunded_cents);
+        $minutesDone = (int) $this->cohort->sessions()->where('starts_at', '<=', now())->sum('duration_minutes');
+        $totalMinutes = (int) config('courses.total_hours') * 60;
+        $owed = (int) round($this->amount_cents * min(1, $minutesDone / $totalMinutes));
+
+        return [
+            'paid_cents' => $paid,
+            'refundable_cents' => $refundable,
+            'prorata_refund_cents' => max(0, min($refundable, $paid - $owed)),
+            'hours_done' => round($minutesDone / 60, 1),
+            'can_cancel' => $this->resource->isCancellable(),
+            'withdrawal_open' => $this->resource->withdrawalEndsAt()->isFuture(),
         ];
     }
 }

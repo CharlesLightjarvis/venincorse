@@ -3,7 +3,10 @@
 namespace App\Http\Requests\Settings;
 
 use App\Concerns\PasswordValidationRules;
+use App\Enums\CourseEnrollmentStatus;
+use App\Enums\CourseInstallmentStatus;
 use App\Enums\TrialReservationStatus;
+use App\Models\CourseEnrollment;
 use App\Models\TrialReservation;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -49,6 +52,22 @@ class ProfileDeleteRequest extends FormRequest
                     ->exists();
                 if ($hasActiveTrial) {
                     $validator->errors()->add('password', __('trials.account_has_active_trial', [], 'fr'));
+
+                    return;
+                }
+                $hasActiveCourse = CourseEnrollment::query()
+                    ->where('user_id', $this->user()->id)
+                    ->where(fn ($query) => $query
+                        ->whereIn('status', [CourseEnrollmentStatus::Processing, CourseEnrollmentStatus::PaymentReview])
+                        ->orWhere(fn ($query) => $query->where('status', CourseEnrollmentStatus::Pending)->where('expires_at', '>', now()))
+                        ->orWhere(fn ($query) => $query->where('status', CourseEnrollmentStatus::Confirmed)
+                            ->where(fn ($query) => $query
+                                ->whereHas('cohort', fn ($cohort) => $cohort->where('ends_at', '>', now()))
+                                ->orWhereHas('installments', fn ($installments) => $installments
+                                    ->whereIn('status', [CourseInstallmentStatus::Scheduled, CourseInstallmentStatus::Failed])))))
+                    ->exists();
+                if ($hasActiveCourse) {
+                    $validator->errors()->add('password', __('courses.account_has_active_course', [], 'fr'));
                 }
             },
         ];

@@ -37,10 +37,21 @@ import {
     type TierKey,
 } from '@/data/offer';
 
-export default function CourseDetail() {
+type UpcomingCohort = {
+    starts_at: string;
+    seats_left: number;
+    capacity: number;
+} | null;
+
+export default function CourseDetail({
+    upcoming = {},
+}: {
+    upcoming?: Partial<Record<TierKey, UpcomingCohort>>;
+}) {
     const slug = usePage().url.split('?')[0].split('/').filter(Boolean).pop();
     const level = getLevel(slug);
     const [tier, setTier] = useState<TierKey>('group');
+    const nextCohort = upcoming[tier] ?? null;
 
     if (!level) {
         return (
@@ -317,23 +328,47 @@ export default function CourseDetail() {
                                     </p>
 
                                     <div className="mt-5 rounded-xl border border-border/40 bg-muted/30 p-3 dark:border-border/50 dark:bg-foreground/[0.02]">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-foreground/60">
-                                                Cohorte du {level.nextCohort}
-                                            </span>
-                                            <span className="font-semibold text-primary">
-                                                {level.seats.left} places
-                                            </span>
-                                        </div>
-
-                                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border/60">
-                                            <div
-                                                className="h-full rounded-full bg-primary"
-                                                style={{
-                                                    width: `${(level.seats.left / level.seats.total) * 100}%`,
-                                                }}
-                                            />
-                                        </div>
+                                        {nextCohort ? (
+                                            <>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-foreground/60">
+                                                        Prochain groupe le{' '}
+                                                        {new Intl.DateTimeFormat(
+                                                            'fr-FR',
+                                                            {
+                                                                day: 'numeric',
+                                                                month: 'long',
+                                                            },
+                                                        ).format(
+                                                            new Date(
+                                                                nextCohort.starts_at,
+                                                            ),
+                                                        )}
+                                                    </span>
+                                                    <span className="font-semibold text-primary">
+                                                        {tier === 'solo'
+                                                            ? 'Disponible'
+                                                            : `${nextCohort.seats_left} place${nextCohort.seats_left > 1 ? 's' : ''}`}
+                                                    </span>
+                                                </div>
+                                                {tier === 'group' && (
+                                                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border/60">
+                                                        <div
+                                                            className="h-full rounded-full bg-primary"
+                                                            style={{
+                                                                width: `${(nextCohort.seats_left / nextCohort.capacity) * 100}%`,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p className="text-xs text-foreground/60">
+                                                Prochains groupes bientôt
+                                                annoncés. Écris-nous pour être
+                                                prévenu.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

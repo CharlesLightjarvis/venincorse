@@ -1,8 +1,11 @@
 <?php
 
 use App\Enums\PermissionEnum;
+use App\Http\Controllers\CourseCatalogController;
 use App\Http\Controllers\CourseCohortController;
+use App\Http\Controllers\CourseEnrollmentCancellationController;
 use App\Http\Controllers\CourseEnrollmentController;
+use App\Http\Controllers\CourseEnrollmentManagementController;
 use App\Http\Controllers\CourseInstallmentCheckoutController;
 use App\Http\Controllers\TrialAvailabilityController;
 use App\Http\Controllers\TrialCancellationController;
@@ -21,7 +24,7 @@ Route::inertia('/', 'home/index')->name('home');
 
 Route::inertia('courses', 'courses/index')->name('courses');
 
-Route::inertia('courses/{slug}', 'courses/course-detail')->name('courses.show');
+Route::get('courses/{slug}', [CourseCatalogController::class, 'show'])->name('courses.show');
 
 Route::inertia('exams', 'home/exams')->name('exams');
 
@@ -84,6 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::resource('course-cohorts', CourseCohortController::class)
             ->parameters(['course-cohorts' => 'cohort'])
             ->except(['edit']);
+        Route::patch('course-enrollments/{enrollment}', [CourseEnrollmentManagementController::class, 'update'])
+            ->name('course-enrollment-management.update');
+        Route::post('course-enrollments/{enrollment}/cancellation', [CourseEnrollmentCancellationController::class, 'store'])
+            ->middleware('throttle:10,1')->name('course-enrollment-cancellations.store');
     });
     Route::get('teaching/trial-availability', [TrialAvailabilityController::class, 'edit'])
         ->middleware('can:'.PermissionEnum::ManageAvailability->value)->name('trial-availability.edit');

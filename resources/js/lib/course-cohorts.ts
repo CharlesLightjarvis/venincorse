@@ -64,6 +64,17 @@ export type CourseEnrollment = {
     can_pay: boolean;
     cohort: CourseCohort;
     meeting_url?: string | null;
+    refunded_cents: number;
+    cancellation_reason: string | null;
+    cancelled_at: string | null;
+    management?: {
+        paid_cents: number;
+        refundable_cents: number;
+        prorata_refund_cents: number;
+        hours_done: number;
+        can_cancel: boolean;
+        withdrawal_open: boolean;
+    };
     student?: { name: string; email: string };
     notes?: string;
 };

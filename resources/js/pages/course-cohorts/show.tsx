@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import {
     Empty,
@@ -35,6 +36,8 @@ import {
     type CourseEnrollment,
 } from '@/lib/course-cohorts';
 import { destroy, index, show, update } from '@/routes/course-cohorts';
+import { store as storeCancellation } from '@/routes/course-enrollment-cancellations';
+import { update as updateEnrollment } from '@/routes/course-enrollment-management';
 
 export default function ShowCourseCohort({
     cohort,
@@ -186,6 +189,7 @@ export default function ShowCourseCohort({
                                             Échéance impayée
                                         </span>
                                     )}
+                                    <EnrollmentDialog enrollment={enrollment} />
                                 </div>
                             </li>
                         ))}
@@ -330,6 +334,237 @@ function SettingsForm({ cohort }: { cohort: CourseCohort }) {
                 Enregistrer
             </Button>
         </form>
+    );
+}
+
+function EnrollmentDialog({ enrollment }: { enrollment: CourseEnrollment }) {
+    const [open, setOpen] = useState(false);
+    const management = enrollment.management;
+    const notes = useForm({ notes: enrollment.notes ?? '' });
+    const cancel = useForm({
+        refund_euros: management?.withdrawal_open
+            ? (management.prorata_refund_cents / 100).toFixed(2)
+            : '0.00',
+        reason: '',
+    });
+    const euros = (cents: number) =>
+        formatCoursePrice(cents, enrollment.currency);
+
+    if (!management) {
+        return null;
+    }
+
+    function saveNotes(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        notes.patch(updateEnrollment.url(enrollment.id), {
+            preserveScroll: true,
+            onSuccess: () => notes.setDefaults(),
+        });
+    }
+
+    function submitCancellation(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        cancel.transform((data) => ({
+            refund_cents: Math.round(
+                Number(data.refund_euros.replace(',', '.')) * 100,
+            ),
+            reason: data.reason,
+        }));
+        cancel.post(storeCancellation.url(enrollment.id), {
+            preserveScroll: true,
+            onSuccess: () => setOpen(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="mt-1">
+                    Gérer
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>{enrollment.student?.name}</DialogTitle>
+                    <DialogDescription>
+                        Payé : {euros(management.paid_cents)}
+                        {enrollment.refunded_cents > 0 &&
+                            ` · remboursé : ${euros(enrollment.refunded_cents)}`}{' '}
+                        · {management.hours_done} h suivies sur 60 ·{' '}
+                        {management.withdrawal_open
+                            ? 'délai de rétractation en cours'
+                            : 'délai de rétractation terminé'}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={saveNotes} className="flex flex-col gap-2">
+                    <Label htmlFor={`notes-${enrollment.id}`}>
+                        Notes privées
+                    </Label>
+                    <Textarea
+                        id={`notes-${enrollment.id}`}
+                        rows={4}
+                        maxLength={5000}
+                        value={notes.data.notes}
+                        onChange={(event) =>
+                            notes.setData('notes', event.target.value)
+                        }
+                        placeholder="Niveau, progrès, points à travailler… Visible uniquement par l’équipe."
+                    />
+                    {notes.errors.notes && (
+                        <p role="alert" className="text-sm text-destructive">
+                            {notes.errors.notes}
+                        </p>
+                    )}
+                    <Button
+                        type="submit"
+                        size="sm"
+                        variant="outline"
+                        className="self-end"
+                        disabled={notes.processing || !notes.isDirty}
+                    >
+                        Enregistrer les notes
+                    </Button>
+                </form>
+
+                {management.can_cancel ? (
+                    <form
+                        onSubmit={submitCancellation}
+                        className="flex flex-col gap-3 border-t border-border pt-4"
+                    >
+                        <h3 className="font-medium">Annuler l’inscription</h3>
+                        <p className="text-sm text-muted-foreground">
+                            Rétractation dans les 14 jours : rembourse la part
+                            non suivie (au prorata). Groupe annulé par l’école :
+                            remboursement intégral. Après le délai : aucun
+                            remboursement n’est dû. Les échéances restantes sont
+                            annulées.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                    cancel.setData(
+                                        'refund_euros',
+                                        (
+                                            management.refundable_cents / 100
+                                        ).toFixed(2),
+                                    )
+                                }
+                            >
+                                Intégral ({euros(management.refundable_cents)})
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                    cancel.setData(
+                                        'refund_euros',
+                                        (
+                                            management.prorata_refund_cents /
+                                            100
+                                        ).toFixed(2),
+                                    )
+                                }
+                            >
+                                Au prorata (
+                                {euros(management.prorata_refund_cents)})
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                    cancel.setData('refund_euros', '0.00')
+                                }
+                            >
+                                Sans remboursement
+                            </Button>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor={`refund-${enrollment.id}`}>
+                                Montant remboursé (€)
+                            </Label>
+                            <Input
+                                id={`refund-${enrollment.id}`}
+                                inputMode="decimal"
+                                className="w-36"
+                                value={cancel.data.refund_euros}
+                                onChange={(event) =>
+                                    cancel.setData(
+                                        'refund_euros',
+                                        event.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor={`reason-${enrollment.id}`}>
+                                Motif communiqué à l’élève
+                            </Label>
+                            <Textarea
+                                id={`reason-${enrollment.id}`}
+                                required
+                                minLength={5}
+                                maxLength={500}
+                                rows={3}
+                                value={cancel.data.reason}
+                                onChange={(event) =>
+                                    cancel.setData('reason', event.target.value)
+                                }
+                                placeholder="Ex. : rétractation demandée par email le 12 novembre."
+                            />
+                        </div>
+                        {(cancel.errors as Record<string, string>)
+                            .refund_cents && (
+                            <p
+                                role="alert"
+                                className="text-sm text-destructive"
+                            >
+                                {
+                                    (cancel.errors as Record<string, string>)
+                                        .refund_cents
+                                }
+                            </p>
+                        )}
+                        {cancel.errors.reason && (
+                            <p
+                                role="alert"
+                                className="text-sm text-destructive"
+                            >
+                                {cancel.errors.reason}
+                            </p>
+                        )}
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="ghost">
+                                    Garder l’inscription
+                                </Button>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                disabled={cancel.processing}
+                            >
+                                {cancel.processing && (
+                                    <Spinner data-icon="inline-start" />
+                                )}
+                                Annuler l’inscription
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                ) : (
+                    enrollment.cancellation_reason && (
+                        <p className="border-t border-border pt-4 text-sm text-muted-foreground">
+                            Annulée : {enrollment.cancellation_reason}
+                        </p>
+                    )
+                )}
+            </DialogContent>
+        </Dialog>
     );
 }
 

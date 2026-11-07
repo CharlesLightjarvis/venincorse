@@ -147,7 +147,7 @@ class CoursePaymentGateway
                 'amount' => $amountCents,
                 'metadata' => ['course_enrollment_id' => $enrollment->id],
             ], fn (mixed $value): bool => $value !== null),
-            ['idempotency_key' => 'course-refund-'.$enrollment->id.'-'.($amountCents ?? 'full')],
+            ['idempotency_key' => 'course-refund-'.$paymentIntentId.'-'.($amountCents ?? 'full').'-'.$enrollment->refunded_cents],
         );
     }
 

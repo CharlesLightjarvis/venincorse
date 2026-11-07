@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Models\CourseEnrollment;
 use App\Models\TrialReservation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +20,15 @@ final readonly class DeleteUserAccount
     public function handle(User $user): void
     {
         DB::transaction(function () use ($user): void {
-            if (! TrialReservation::query()->where('user_id', $user->id)->exists()) {
+            $hasTrials = TrialReservation::query()->where('user_id', $user->id)->exists();
+            $hasCourses = CourseEnrollment::query()->where('user_id', $user->id)->exists();
+            if (! $hasTrials && ! $hasCourses) {
                 $user->delete();
 
                 return;
             }
             TrialReservation::query()->where('user_id', $user->id)->update(['goal' => '—', 'meeting_url' => null]);
+            CourseEnrollment::query()->where('user_id', $user->id)->update(['goal' => '—', 'notes' => null]);
             $user->passkeys()->delete();
             $user->syncRoles([]);
             $user->syncPermissions([]);

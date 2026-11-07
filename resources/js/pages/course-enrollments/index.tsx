@@ -194,6 +194,17 @@ function EnrollmentCard({ enrollment }: { enrollment: CourseEnrollment }) {
                     </AlertDescription>
                 </Alert>
             )}
+            {enrollment.status === 'cancelled' && (
+                <Alert>
+                    <AlertTitle>Inscription annulée</AlertTitle>
+                    <AlertDescription>
+                        {enrollment.cancellation_reason}{' '}
+                        {enrollment.refunded_cents > 0
+                            ? `Remboursement : ${formatCoursePrice(enrollment.refunded_cents, enrollment.currency)}, sous quelques jours selon ta banque.`
+                            : 'Aucun remboursement.'}
+                    </AlertDescription>
+                </Alert>
+            )}
             {enrollment.status === 'refunded' && (
                 <Alert>
                     <AlertDescription>
