@@ -10,6 +10,7 @@ Tout ce qu’il faut faire avant (et pendant) la mise en ligne du cours d’essa
 - [ ] **Faire relire les CGU, CGV et la politique de confidentialité par un juriste** (`/cgu`, `/cgv`, `/confidentialite`), notamment : droit de rétractation de 14 jours, absence non remboursée, créneau offert ni déplaçable ni remboursable, anonymisation des comptes.
 - [ ] À chaque changement des conditions : mettre à jour `legalUpdatedAt` (`legal.ts`) **et** `terms_version` (`config/trials.php`), qui est enregistrée avec chaque réservation.
 - [ ] Vérifier le prix (`trials.amount_cents`, `trialPolicy.price`) et la durée affichés.
+- [ ] **Promesses marketing non encore construites** (crédit du cours d’essai de 39 €, replays 30 jours, checkpoints oral et écrit) : les construire ou les retirer des pages avant la mise en ligne, pour éviter une pratique commerciale trompeuse. Détail dans [backlog.md](backlog.md).
 - [ ] **Paiement en 3 fois des parcours** : faire valider par le juriste l’absence de frais (ou les frais choisis), l’autorisation de prélèvement des échéances sur la carte enregistrée, et le fait que les échéances restent dues après le délai de rétractation.
 
 ## 2. Hébergement et services
