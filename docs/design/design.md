@@ -21,23 +21,23 @@ ci-dessous sont dérivées des pages existantes (home, `/courses`, fiche cours,
 
 ## 2. Palette de marque
 
-| Token                 | Valeur                      | Usage                                    |
-| --------------------- | --------------------------- | ---------------------------------------- |
-| `--primary`           | `oklch(0.5848 0.1357 157.63)` | vert du logo — CTA principaux, icônes actives |
-| `--secondary`         | neutre doux (= muted)       | chips/badges, bouton « Connexion »       |
-| accents catégoriels   | `chart-1…chart-5`           | catégories & niveaux (voir mapping)      |
+| Token               | Valeur                        | Usage                                         |
+| ------------------- | ----------------------------- | --------------------------------------------- |
+| `--primary`         | `oklch(0.5848 0.1357 157.63)` | vert du logo — CTA principaux, icônes actives |
+| `--secondary`       | neutre doux (= muted)         | chips/badges, bouton « Connexion »            |
+| accents catégoriels | `chart-1…chart-5`             | catégories & niveaux (voir mapping)           |
 
 **Mapping catégories / niveaux** (source de vérité :
 `resources/js/data/courses.ts` — `categoryMeta`, `levelClasses`) :
 
-| Catégorie       | Token    |
-| --------------- | -------- |
-| Cours standard  | primary  |
-| Grammaire       | chart-4  |
-| Conversation    | chart-2  |
-| Examens         | chart-1  |
-| Affaires        | chart-3  |
-| Soutien         | chart-5  |
+| Catégorie      | Token   |
+| -------------- | ------- |
+| Cours standard | primary |
+| Grammaire      | chart-4 |
+| Conversation   | chart-2 |
+| Examens        | chart-1 |
+| Affaires       | chart-3 |
+| Soutien        | chart-5 |
 
 Niveaux CECRL : `A1 → chart-2`, `A2 → chart-4`, `B1 → chart-1`,
 `B2 → chart-3`. Badge = `bg-chart-X/10 text-chart-X rounded-full`.
@@ -129,10 +129,13 @@ pages « profil » (about, fiche cours).
         <EmptyDescription>Les réservations apparaîtront ici.</EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
-        <Button asChild variant="outline">…</Button>
+        <Button asChild variant="outline">
+            …
+        </Button>
     </EmptyContent>
 </Empty>
 ```
+
 - **Fil d'Ariane** : `nav aria-label="Fil d'Ariane"` + `ChevronRight h-4 w-4 text-foreground/50`.
 - **Carrousel défilant** (avis) : conteneur `min-h-[260px] w-[320px] shrink-0`.
 - **Filtres pills** (catalogue) : actif `border-primary bg-primary text-primary-foreground`, inactif `border-border/60 bg-background text-foreground/70 hover:border-primary/40`.
@@ -166,11 +169,10 @@ Toutes les icônes de l’app viennent de **[Reicon](https://reicon.dev/icons)**
   la permission de l’utilisateur (élève : « Mes parcours » ; équipe : « Gestion
   des essais », « Groupes des parcours », « Disponibilités »). **Seule « Ma
   réservation d’essai » est en bas**, au-dessus du profil.
-- **« Mon espace »** (`resources/js/pages/dashboard.tsx`) résume tout ce qui
-  concerne l’utilisateur : pour l’élève, ses parcours en cours (état vide
-  `Empty` « Pas encore de parcours » avec « Découvrir les parcours » et « Voir
-  les groupes ouverts »), puis sa réservation d’essai. Chaque carte renvoie à la
-  page détaillée (« Mes parcours », « Ma réservation d’essai »).
+- **« Mon espace »** (`resources/js/pages/dashboard.tsx`) affiche le tableau de
+  bord du cours d’essai (résumé et réservations de l’élève, ou vue équipe).
+  Les parcours ne sont **pas** affichés ici : ils ont leur propre page, « Mes
+  parcours », accessible depuis la sidebar.
 - Icônes de la sidebar et des pages : Reicon (voir [§ Icônes](#icônes)).
 
 ## 9. Données & mocks
@@ -191,14 +193,14 @@ Toutes les icônes de l’app viennent de **[Reicon](https://reicon.dev/icons)**
 
 ## 11. Pages existantes (références)
 
-| Page            | Fichier                    | Highlights de design            |
-| --------------- | -------------------------- | ------------------------------- |
-| Landing         | `home/index.tsx` + partials| hero canvas-waves, marquee      |
-| Catalogue       | `home/courses.tsx`         | filtres catégorie × niveau      |
-| Fiche cours     | `home/course.tsx`          | carte sticky prix, sessions     |
-| À propos        | `home/about.tsx`           | photo + carte étoiles flottante |
-| Contact         | `home/contact.tsx`         | canaux + formulaire (mock)      |
-| Blog            | `blog/index.tsx` + partials| sidebar sticky (recherche + catégories), article à la une image plein cadre |
+| Page        | Fichier                     | Highlights de design                                                        |
+| ----------- | --------------------------- | --------------------------------------------------------------------------- |
+| Landing     | `home/index.tsx` + partials | hero canvas-waves, marquee                                                  |
+| Catalogue   | `home/courses.tsx`          | filtres catégorie × niveau                                                  |
+| Fiche cours | `home/course.tsx`           | carte sticky prix, sessions                                                 |
+| À propos    | `home/about.tsx`            | photo + carte étoiles flottante                                             |
+| Contact     | `home/contact.tsx`          | canaux + formulaire (mock)                                                  |
+| Blog        | `blog/index.tsx` + partials | sidebar sticky (recherche + catégories), article à la une image plein cadre |
 
 Layouts/partiels globaux : `resources/js/layouts/home/partials/`
 (header, footer, logo `venincorse.png` responsive `h-7 sm:h-8 lg:h-9`).
