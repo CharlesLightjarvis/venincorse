@@ -27,7 +27,12 @@ enum RoleEnum: string
                 PermissionEnum::ManageAvailability,
                 PermissionEnum::ManageCourses,
             ],
-            self::Student => [PermissionEnum::ReserveTrial, PermissionEnum::ViewOwnTrials],
+            self::Student => [
+                PermissionEnum::ReserveTrial,
+                PermissionEnum::ViewOwnTrials,
+                PermissionEnum::EnrollInCourses,
+                PermissionEnum::ViewOwnCourses,
+            ],
         };
     }
 

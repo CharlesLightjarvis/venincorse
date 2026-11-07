@@ -6,10 +6,13 @@ export type CourseCohort = {
     format_label: string;
     rhythm: string;
     rhythm_label: string;
+    weekdays: number[];
+    session_hours: number;
     starts_at: string;
     ends_at: string;
     capacity: number;
     seats_left: number;
+    is_bookable: boolean;
     price_cents: number;
     currency: string;
     is_published: boolean;
@@ -21,6 +24,72 @@ export type CourseCohort = {
         duration_minutes: number;
     }[];
     meeting_url?: string | null;
+};
+
+const weekdayNames = [
+    '',
+    'lun.',
+    'mar.',
+    'mer.',
+    'jeu.',
+    'ven.',
+    'sam.',
+    'dim.',
+];
+
+/** "lun., mer., ven. · 1 h" from ISO weekdays (1 = Monday). */
+export function describeRhythm(cohort: CourseCohort): string {
+    return `${cohort.weekdays.map((day) => weekdayNames[day]).join(', ')} · séances de ${cohort.session_hours} h`;
+}
+
+export type CourseEnrollment = {
+    id: string;
+    status:
+        | 'pending'
+        | 'processing'
+        | 'confirmed'
+        | 'payment_review'
+        | 'expired'
+        | 'refunded'
+        | 'cancelled';
+    amount_cents: number;
+    currency: string;
+    goal: string;
+    created_at: string;
+    paid_at: string | null;
+    expires_at: string;
+    withdrawal_ends_at: string;
+    can_pay: boolean;
+    cohort: CourseCohort;
+    meeting_url?: string | null;
+    student?: { name: string; email: string };
+    notes?: string;
+};
+
+export const enrollmentStatusLabels: Record<
+    CourseEnrollment['status'],
+    string
+> = {
+    pending: 'Paiement en attente',
+    processing: 'Paiement en vérification',
+    confirmed: 'Inscrit',
+    payment_review: 'Paiement à vérifier',
+    expired: 'Expirée',
+    refunded: 'Remboursée',
+    cancelled: 'Annulée',
+};
+
+export const enrollmentStatusVariant: Record<
+    CourseEnrollment['status'],
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+    pending: 'secondary',
+    processing: 'secondary',
+    confirmed: 'default',
+    payment_review: 'destructive',
+    expired: 'outline',
+    refunded: 'outline',
+    cancelled: 'outline',
 };
 
 export function formatCoursePrice(cents: number, currency: string): string {

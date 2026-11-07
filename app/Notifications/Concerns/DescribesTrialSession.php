@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Notifications\Concerns;
 
+use App\Models\CourseEnrollment;
 use App\Models\TrialReservation;
+use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Queue\Middleware\RateLimited;
 
@@ -44,6 +46,17 @@ trait DescribesTrialSession
             ->locale('fr')
             ->isoFormat('dddd D MMMM YYYY [à] HH:mm')
             .' ('.$timezone.')';
+    }
+
+    /** A course date: in the student's time zone for the student, in the school's for the team. */
+    protected function courseDate(CourseEnrollment $enrollment, CarbonImmutable $at, object $notifiable): string
+    {
+        $isStudent = ($notifiable->id ?? null) === $enrollment->user_id;
+        $timezone = ($notifiable->timezone ?? null)
+            ?? ($isStudent ? $enrollment->timezone : null)
+            ?? config('trials.timezone');
+
+        return $at->setTimezone($timezone)->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm').' ('.$timezone.')';
     }
 
     /** Text typed by users is shown as written: Markdown such as links or images is never interpreted. */

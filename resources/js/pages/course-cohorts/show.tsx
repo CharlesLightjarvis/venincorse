@@ -20,13 +20,29 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import {
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
+import {
     cohortState,
+    enrollmentStatusLabels,
+    enrollmentStatusVariant,
     formatCoursePrice,
     type CourseCohort,
+    type CourseEnrollment,
 } from '@/lib/course-cohorts';
 import { destroy, index, show, update } from '@/routes/course-cohorts';
 
-export default function ShowCourseCohort({ cohort }: { cohort: CourseCohort }) {
+export default function ShowCourseCohort({
+    cohort,
+    enrollments,
+}: {
+    cohort: CourseCohort;
+    enrollments: CourseEnrollment[];
+}) {
     const timezone = useUserTimezone();
     const state = cohortState(cohort);
     const format = (value: string, options: Intl.DateTimeFormatOptions) =>
@@ -96,6 +112,75 @@ export default function ShowCourseCohort({ cohort }: { cohort: CourseCohort }) {
                     caption="Niveau complet, 60 heures"
                 />
             </div>
+
+            <section className="flex flex-col rounded-lg border border-border">
+                <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+                    <h2 className="font-semibold">Élèves</h2>
+                    <Badge variant="outline">
+                        {cohort.capacity - cohort.seats_left} /{' '}
+                        {cohort.capacity}
+                    </Badge>
+                </div>
+                {enrollments.length === 0 ? (
+                    <Empty>
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <Users />
+                            </EmptyMedia>
+                            <EmptyTitle>Aucun élève inscrit</EmptyTitle>
+                            <EmptyDescription>
+                                {cohort.is_published
+                                    ? 'Le groupe est ouvert : les élèves peuvent s’inscrire depuis la page du parcours.'
+                                    : 'Le groupe est fermé aux inscriptions.'}
+                            </EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+                ) : (
+                    <ul className="divide-y divide-border">
+                        {enrollments.map((enrollment) => (
+                            <li
+                                key={enrollment.id}
+                                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
+                            >
+                                <div className="min-w-0">
+                                    <p className="truncate font-medium">
+                                        {enrollment.student?.name}
+                                    </p>
+                                    <p className="truncate text-sm text-muted-foreground">
+                                        {enrollment.student?.email}
+                                    </p>
+                                    <p className="mt-1 line-clamp-2 text-sm break-words text-muted-foreground">
+                                        <span className="font-medium text-foreground">
+                                            Objectif :
+                                        </span>{' '}
+                                        {enrollment.goal}
+                                    </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                    <Badge
+                                        variant={
+                                            enrollmentStatusVariant[
+                                                enrollment.status
+                                            ]
+                                        }
+                                    >
+                                        {
+                                            enrollmentStatusLabels[
+                                                enrollment.status
+                                            ]
+                                        }
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                        {enrollment.paid_at
+                                            ? `Payé le ${format(enrollment.paid_at, { day: 'numeric', month: 'short' })}`
+                                            : 'Non payé'}
+                                    </span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
                 <SettingsForm cohort={cohort} />
@@ -253,7 +338,8 @@ function DeleteDialog({ cohort }: { cohort: CourseCohort }) {
                     <DialogTitle>Supprimer ce groupe ?</DialogTitle>
                     <DialogDescription>
                         Le groupe et son planning sont supprimés définitivement.
-                        Seul un groupe sans inscrit peut l’être.
+                        Seul un groupe sans inscrit peut l’être : sinon,
+                        ferme-le aux inscriptions.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>

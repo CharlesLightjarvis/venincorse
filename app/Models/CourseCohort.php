@@ -41,6 +41,24 @@ final class CourseCohort extends Model
         return $this->starts_at->isPast();
     }
 
+    public function seatsLeft(): int
+    {
+        $taken = $this->taken_seats ?? $this->enrollments()->holdingSeat()->count();
+
+        return max(0, $this->capacity - (int) $taken);
+    }
+
+    /** Students can join a published group that has not started and still has a free seat. */
+    public function isBookable(): bool
+    {
+        return $this->is_published && ! $this->hasStarted() && $this->seatsLeft() > 0;
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
     public function sessions(): HasMany
     {
         return $this->hasMany(CourseSession::class)->orderBy('position');

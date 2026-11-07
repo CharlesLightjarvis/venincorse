@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('trials:expire-reservations')->everyMinute()->withoutOverlapping()->onOneServer();
+Schedule::command('courses:expire-enrollments')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('trials:publish-slots')->daily()->withoutOverlapping()->onOneServer();
 Schedule::command('trials:end-sessions')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('trials:send-reminders')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();

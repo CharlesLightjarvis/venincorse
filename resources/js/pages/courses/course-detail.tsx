@@ -12,7 +12,7 @@ import {
     Users,
 } from 'reicon-react';
 import { useState } from 'react';
-import { course as bookCourse } from '@/routes/booking';
+import { create as enroll } from '@/routes/course-enrollments';
 import { Button } from '@/components/ui/button';
 import {
     Accordion,
@@ -301,10 +301,10 @@ export default function CourseDetail() {
                                         asChild
                                     >
                                         <Link
-                                            href={bookCourse({
+                                            href={enroll({
                                                 query: {
                                                     level: level.slug,
-                                                    tier,
+                                                    format: tier,
                                                 },
                                             })}
                                         >
@@ -638,8 +638,8 @@ export default function CourseDetail() {
                 description="Choisis ta formule, ton rythme et ton planning pour rejoindre le parcours."
                 primary={{
                     label: 'Réserver une place',
-                    href: bookCourse.url({
-                        query: { level: level.slug, tier },
+                    href: enroll.url({
+                        query: { level: level.slug, format: tier },
                     }),
                 }}
             />
@@ -657,8 +657,8 @@ export default function CourseDetail() {
 
                     <Button className="rounded-full" asChild>
                         <Link
-                            href={bookCourse({
-                                query: { level: level.slug, tier },
+                            href={enroll({
+                                query: { level: level.slug, format: tier },
                             })}
                         >
                             Réserver

@@ -48,6 +48,8 @@ class HandleInertiaRequests extends Middleware
                     'updateTrials' => $request->user()?->can(PermissionEnum::UpdateTrials->value) ?? false,
                     'manageAvailability' => $request->user()?->can(PermissionEnum::ManageAvailability->value) ?? false,
                     'manageCourses' => $request->user()?->can(PermissionEnum::ManageCourses->value) ?? false,
+                    'enrollInCourses' => $request->user()?->can(PermissionEnum::EnrollInCourses->value) ?? false,
+                    'viewOwnCourses' => $request->user()?->can(PermissionEnum::ViewOwnCourses->value) ?? false,
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

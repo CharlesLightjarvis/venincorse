@@ -7,12 +7,14 @@ namespace App\Http\Controllers;
 use App\Actions\CreateCourseCohort;
 use App\Actions\DeleteCourseCohort;
 use App\Actions\UpdateCourseCohort;
+use App\Enums\CourseEnrollmentStatus;
 use App\Enums\CourseFormat;
 use App\Enums\CourseLevel;
 use App\Enums\CourseRhythm;
 use App\Http\Requests\StoreCourseCohortRequest;
 use App\Http\Requests\UpdateCourseCohortRequest;
 use App\Http\Resources\CourseCohortResource;
+use App\Http\Resources\CourseEnrollmentResource;
 use App\Models\CourseCohort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,19 +25,19 @@ final readonly class CourseCohortController
 {
     public function index(Request $request): Response
     {
-        $cohorts = CourseCohort::query()->withCount('sessions')
+        $cohorts = CourseCohort::query()->withCount(['sessions', 'enrollments as taken_seats' => fn ($query) => $query->holdingSeat()])
             ->orderByRaw('ends_at < ? asc', [now()])
             ->orderBy('starts_at')
             ->get();
 
-        return Inertia::render('courses/cohorts/index', [
+        return Inertia::render('course-cohorts/index', [
             'cohorts' => CourseCohortResource::collection($cohorts)->resolve($request),
         ]);
     }
 
     public function create(): Response
     {
-        return Inertia::render('courses/cohorts/create', [
+        return Inertia::render('course-cohorts/create', [
             'levels' => array_map(fn (CourseLevel $level): array => [
                 'value' => $level->value,
                 'label' => $level->label(),
@@ -68,8 +70,18 @@ final readonly class CourseCohortController
 
     public function show(Request $request, CourseCohort $cohort): Response
     {
-        return Inertia::render('courses/cohorts/show', [
+        $enrollments = $cohort->enrollments()->with(['user', 'cohort'])
+            ->whereIn('status', [
+                CourseEnrollmentStatus::Pending, CourseEnrollmentStatus::Processing, CourseEnrollmentStatus::Confirmed,
+                CourseEnrollmentStatus::PaymentReview, CourseEnrollmentStatus::Refunded, CourseEnrollmentStatus::Cancelled,
+            ])
+            ->where(fn ($query) => $query->where('status', '!=', CourseEnrollmentStatus::Pending)->orWhere('expires_at', '>', now()))
+            ->oldest()
+            ->get();
+
+        return Inertia::render('course-cohorts/show', [
             'cohort' => CourseCohortResource::make($cohort->load('sessions')->loadCount('sessions'))->resolve($request),
+            'enrollments' => CourseEnrollmentResource::collection($enrollments)->resolve($request),
             'timezone' => config('trials.timezone'),
         ]);
     }

@@ -40,7 +40,7 @@ test('only people allowed to manage courses can see or create groups', function 
     $this->post(route('course-cohorts.store'), cohortPayload())->assertForbidden();
 
     $this->actingAs(courseManager())->get(route('course-cohorts.create'))
-        ->assertInertia(fn (Assert $page) => $page->component('courses/cohorts/create')->has('levels', 4)->has('rhythms', 4));
+        ->assertInertia(fn (Assert $page) => $page->component('course-cohorts/create')->has('levels', 4)->has('rhythms', 4));
 });
 
 test('a new group lays out its 60 hours on the rhythm weekdays, in Paris time, with the catalog price', function () {
@@ -113,12 +113,12 @@ test('the teacher sees the groups and the full schedule of each one', function (
     $cohort = CourseCohort::query()->sole();
 
     $this->get(route('course-cohorts.index'))
-        ->assertInertia(fn (Assert $page) => $page->component('courses/cohorts/index')
+        ->assertInertia(fn (Assert $page) => $page->component('course-cohorts/index')
             ->has('cohorts', 1)
             ->where('cohorts.0.level_label', 'B1 — S’exprimer')
             ->where('cohorts.0.seats_left', 6));
     $this->get(route('course-cohorts.show', $cohort))
-        ->assertInertia(fn (Assert $page) => $page->component('courses/cohorts/show')
+        ->assertInertia(fn (Assert $page) => $page->component('course-cohorts/show')
             ->has('cohort.sessions', 20)
             ->where('cohort.sessions.0.duration_minutes', 180));
 });

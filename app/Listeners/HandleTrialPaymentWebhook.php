@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
+use App\Actions\ApplyCourseEnrollmentPayment;
 use App\Actions\ApplyTrialPayment;
 use App\Actions\CreateTrialPaymentAlert;
 use App\Models\TrialReservation;
@@ -18,6 +19,7 @@ final readonly class HandleTrialPaymentWebhook
 
     public function __construct(
         private ApplyTrialPayment $applyPayment,
+        private ApplyCourseEnrollmentPayment $applyCoursePayment,
         private CreateTrialPaymentAlert $alert,
     ) {}
 
@@ -31,6 +33,7 @@ final readonly class HandleTrialPaymentWebhook
 
         if (in_array($type, self::CheckoutEvents, true)) {
             $this->applyPayment->handle($object, $type);
+            $this->applyCoursePayment->handle($object, $type);
         } elseif ($type === 'refund.failed') {
             $reference = data_get($object, 'metadata.reservation_id');
             $this->alert->handle(

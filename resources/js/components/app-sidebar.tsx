@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    BookOpen,
     CalendarCheck,
     CalendarDays,
     Grid,
@@ -24,6 +25,7 @@ import type { NavItem } from '@/types';
 import type { Auth } from '@/types';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { index as manageCohorts } from '@/routes/course-cohorts';
+import { index as myCourses } from '@/routes/course-enrollments';
 import { edit as editAvailability } from '@/routes/trial-availability';
 import { index as manageTrials } from '@/routes/trial-management';
 import { index as myTrial } from '@/routes/trial-reservations';
@@ -79,6 +81,22 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={[]} className="mt-auto" />
+                {auth.can?.viewOwnCourses && (
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isCurrentUrl(myCourses())}
+                                tooltip={{ children: 'Mes parcours' }}
+                            >
+                                <Link href={myCourses()} prefetch>
+                                    <BookOpen />
+                                    <span>Mes parcours</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                )}
                 {auth.can?.viewOwnTrials && (
                     <SidebarMenu>
                         <SidebarMenuItem>

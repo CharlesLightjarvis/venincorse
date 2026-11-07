@@ -20,7 +20,7 @@ final class CourseCohortFactory extends Factory
      */
     public function definition(): array
     {
-        $startsAt = now()->addWeeks(2)->setTime(9, 0);
+        $startsAt = now()->addWeeks(3)->setTime(9, 0);
 
         return [
             'level' => CourseLevel::A1,

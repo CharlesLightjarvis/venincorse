@@ -12,4 +12,6 @@ enum PermissionEnum: string
     case UpdateTrials = 'trial-reservations.update';
     case ManageAvailability = 'trial-availability.manage';
     case ManageCourses = 'course-cohorts.manage';
+    case EnrollInCourses = 'course-enrollments.create';
+    case ViewOwnCourses = 'course-enrollments.view-own';
 }
