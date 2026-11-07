@@ -16,7 +16,10 @@ return [
     'withdrawal_days' => 14,
     'installments' => [
         'count' => 3,
-        'surcharge_percent' => 5,
+        // Fees on a payment plan may make it consumer credit (Code de la consommation, art. L312-4): keep 0 unless a
+        // lawyer confirmed the surcharge is allowed.
+        'surcharge_percent' => (float) env('COURSE_INSTALLMENT_SURCHARGE_PERCENT', 0),
+        'retry_days' => [3, 4],
         'interval_days' => 30,
     ],
     'capacity' => [

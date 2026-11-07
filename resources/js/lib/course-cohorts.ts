@@ -54,6 +54,8 @@ export type CourseEnrollment = {
         | 'cancelled';
     amount_cents: number;
     currency: string;
+    payment_plan: 'full' | 'installments';
+    installments?: CourseInstallment[];
     goal: string;
     created_at: string;
     paid_at: string | null;
@@ -65,6 +67,38 @@ export type CourseEnrollment = {
     student?: { name: string; email: string };
     notes?: string;
 };
+
+export type CourseInstallment = {
+    id: number;
+    position: number;
+    amount_cents: number;
+    status: 'scheduled' | 'failed' | 'paid' | 'cancelled';
+    due_at: string;
+    paid_at: string | null;
+    next_attempt_at: string | null;
+    can_pay: boolean;
+};
+
+export type InstallmentSettings = {
+    count: number;
+    surcharge_percent: number;
+    interval_days: number;
+};
+
+/** Same split as the server: total with the surcharge, the remainder on the last instalment. */
+export function splitInstallments(
+    priceCents: number,
+    settings: InstallmentSettings,
+): { total: number; amounts: number[] } {
+    const total = Math.round(
+        (priceCents * (100 + settings.surcharge_percent)) / 100,
+    );
+    const base = Math.floor(total / settings.count);
+    const amounts = Array.from({ length: settings.count }, () => base);
+    amounts[settings.count - 1] += total - base * settings.count;
+
+    return { total, amounts };
+}
 
 export const enrollmentStatusLabels: Record<
     CourseEnrollment['status'],

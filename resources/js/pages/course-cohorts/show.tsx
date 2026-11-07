@@ -171,10 +171,21 @@ export default function ShowCourseCohort({
                                         }
                                     </Badge>
                                     <span className="text-xs text-muted-foreground">
-                                        {enrollment.paid_at
-                                            ? `Payé le ${format(enrollment.paid_at, { day: 'numeric', month: 'short' })}`
-                                            : 'Non payé'}
+                                        {enrollment.payment_plan ===
+                                            'installments' &&
+                                        enrollment.installments?.length
+                                            ? `${enrollment.installments.filter((item) => item.status === 'paid').length}/${enrollment.installments.length} échéances réglées`
+                                            : enrollment.paid_at
+                                              ? `Payé le ${format(enrollment.paid_at, { day: 'numeric', month: 'short' })}`
+                                              : 'Non payé'}
                                     </span>
+                                    {enrollment.installments?.some(
+                                        (item) => item.status === 'failed',
+                                    ) && (
+                                        <span className="text-xs font-medium text-destructive">
+                                            Échéance impayée
+                                        </span>
+                                    )}
                                 </div>
                             </li>
                         ))}

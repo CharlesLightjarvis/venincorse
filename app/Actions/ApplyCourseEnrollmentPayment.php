@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Enums\CourseEnrollmentStatus;
+use App\Enums\CourseInstallmentStatus;
+use App\Enums\CoursePaymentPlan;
 use App\Models\CourseCohort;
 use App\Models\CourseEnrollment;
 use App\Notifications\CourseEnrollmentRefunded;
@@ -71,7 +73,7 @@ final readonly class ApplyCourseEnrollmentPayment
         $enrollment->stripe_session_id = $session['id'];
         $isPaid = ($session['payment_status'] ?? '') === 'paid';
 
-        if (($session['amount_total'] ?? null) !== $enrollment->amount_cents
+        if (($session['amount_total'] ?? null) !== $enrollment->checkoutAmountCents()
             || strtoupper($session['currency'] ?? '') !== $enrollment->currency) {
             $wasUnderReview = $enrollment->status === CourseEnrollmentStatus::PaymentReview;
             $enrollment->status = CourseEnrollmentStatus::PaymentReview;
@@ -93,11 +95,17 @@ final readonly class ApplyCourseEnrollmentPayment
             $enrollment->status = $this->seatStillAvailable($enrollment)
                 ? CourseEnrollmentStatus::Confirmed
                 : CourseEnrollmentStatus::PaymentReview;
+            if (is_string($session['customer'] ?? null)) {
+                $enrollment->stripe_customer_id = $session['customer'];
+            }
             $enrollment->save();
+            if ($enrollment->status === CourseEnrollmentStatus::Confirmed) {
+                $this->scheduleInstallments($enrollment, $session['payment_intent'] ?? null);
 
-            return $enrollment->status === CourseEnrollmentStatus::Confirmed
-                ? [...$none, 'confirmed' => $enrollment]
-                : [...$none, 'refundable' => $enrollment];
+                return [...$none, 'confirmed' => $enrollment];
+            }
+
+            return [...$none, 'refundable' => $enrollment];
         }
 
         if (($eventType === 'checkout.session.expired' && ($session['status'] ?? '') === 'expired'
@@ -111,6 +119,25 @@ final readonly class ApplyCourseEnrollmentPayment
         $enrollment->save();
 
         return $none;
+    }
+
+    /** The first instalment was just paid; the next ones fall due every 30 days from that payment. */
+    private function scheduleInstallments(CourseEnrollment $enrollment, mixed $paymentIntent): void
+    {
+        if ($enrollment->payment_plan !== CoursePaymentPlan::Installments || $enrollment->installments()->exists()) {
+            return;
+        }
+        $interval = (int) config('courses.installments.interval_days');
+        foreach ($enrollment->payment_plan->amountsCents($enrollment->amount_cents) as $index => $amount) {
+            $enrollment->installments()->create([
+                'position' => $index + 1,
+                'amount_cents' => $amount,
+                'status' => $index === 0 ? CourseInstallmentStatus::Paid : CourseInstallmentStatus::Scheduled,
+                'due_at' => $enrollment->paid_at->addDays($interval * $index),
+                'paid_at' => $index === 0 ? $enrollment->paid_at : null,
+                'stripe_payment_intent_id' => $index === 0 && is_string($paymentIntent) ? $paymentIntent : null,
+            ]);
+        }
     }
 
     /** The seat held during the payment window, or a free one if the hold expired; never once the group has started. */

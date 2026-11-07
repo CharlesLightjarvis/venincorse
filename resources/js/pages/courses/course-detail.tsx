@@ -313,7 +313,7 @@ export default function CourseDetail() {
                                     </Button>
 
                                     <p className="mt-3 text-center text-[11px] text-foreground/50">
-                                        Paiement en 3× possible · +5 %
+                                        Paiement en 3× sans frais possible
                                     </p>
 
                                     <div className="mt-5 rounded-xl border border-border/40 bg-muted/30 p-3 dark:border-border/50 dark:bg-foreground/[0.02]">

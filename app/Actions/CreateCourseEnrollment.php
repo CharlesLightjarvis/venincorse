@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class CreateCourseEnrollment
 {
-    /** @param array{goal: string, timezone: string, early_start: bool} $data */
+    /** @param array{goal: string, timezone: string, early_start: bool, payment_plan: CoursePaymentPlan} $data */
     public function handle(User $user, CourseCohort $cohort, array $data): CourseEnrollment
     {
         return DB::transaction(function () use ($user, $cohort, $data): CourseEnrollment {
@@ -42,9 +42,16 @@ final readonly class CreateCourseEnrollment
                 'terms_version' => config('trials.terms_version'),
                 'early_start_requested_at' => $data['early_start'] ? now() : null,
             ];
+            $plan = [
+                'payment_plan' => $data['payment_plan'],
+                'amount_cents' => $data['payment_plan']->totalCents($cohort->price_cents),
+            ];
             if ($existing) {
+                if ($existing->checkout_started_at !== null && $existing->payment_plan !== $data['payment_plan']) {
+                    throw ValidationException::withMessages(['payment_plan' => __('courses.payment_plan_locked', [], 'fr')]);
+                }
                 $existing->update($existing->checkout_started_at === null
-                    ? [...$attributes, 'expires_at' => now()->addMinutes((int) config('courses.hold_minutes'))]
+                    ? [...$attributes, ...$plan, 'expires_at' => now()->addMinutes((int) config('courses.hold_minutes'))]
                     : $attributes);
 
                 return $existing;
@@ -52,11 +59,10 @@ final readonly class CreateCourseEnrollment
 
             return CourseEnrollment::query()->create([
                 ...$attributes,
+                ...$plan,
                 'user_id' => $user->id,
                 'course_cohort_id' => $cohort->id,
                 'status' => CourseEnrollmentStatus::Pending,
-                'payment_plan' => CoursePaymentPlan::Full,
-                'amount_cents' => $cohort->price_cents,
                 'currency' => $cohort->currency,
                 'expires_at' => now()->addMinutes((int) config('courses.hold_minutes')),
             ]);

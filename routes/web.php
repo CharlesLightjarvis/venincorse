@@ -3,6 +3,7 @@
 use App\Enums\PermissionEnum;
 use App\Http\Controllers\CourseCohortController;
 use App\Http\Controllers\CourseEnrollmentController;
+use App\Http\Controllers\CourseInstallmentCheckoutController;
 use App\Http\Controllers\TrialAvailabilityController;
 use App\Http\Controllers\TrialCancellationController;
 use App\Http\Controllers\TrialCheckoutController;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:60,1'])->name('course-enrollments.index');
     Route::post('course-enrollments/{enrollment}/checkout', [CourseEnrollmentController::class, 'checkout'])
         ->middleware(['can:'.PermissionEnum::EnrollInCourses->value, 'throttle:10,1'])->name('course-enrollments.checkout');
+    Route::post('course-installments/{installment}/checkout', [CourseInstallmentCheckoutController::class, 'store'])
+        ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:10,1'])->name('course-installments.checkout');
     Route::get('trial-reservations/prepare', [TrialReservationController::class, 'create'])
         ->middleware(['can:'.PermissionEnum::ReserveTrial->value, 'throttle:60,1'])->name('trial-reservations.prepare');
     Route::post('trial-reservations', [TrialReservationController::class, 'store'])

@@ -15,8 +15,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'course_cohort_id', 'status', 'payment_plan', 'goal', 'timezone', 'amount_cents', 'currency', 'expires_at', 'checkout_started_at', 'stripe_session_id', 'checkout_url', 'paid_at', 'terms_accepted_at', 'terms_version', 'early_start_requested_at', 'notes'])]
+#[Fillable(['user_id', 'course_cohort_id', 'status', 'payment_plan', 'goal', 'timezone', 'amount_cents', 'currency', 'expires_at', 'checkout_started_at', 'stripe_session_id', 'checkout_url', 'stripe_customer_id', 'stripe_payment_method_id', 'paid_at', 'terms_accepted_at', 'terms_version', 'early_start_requested_at', 'notes'])]
 final class CourseEnrollment extends Model
 {
     /** @use HasFactory<CourseEnrollmentFactory> */
@@ -56,6 +57,17 @@ final class CourseEnrollment extends Model
     public function withdrawalEndsAt(): CarbonImmutable
     {
         return ($this->paid_at ?? $this->created_at)->addDays((int) config('courses.withdrawal_days'));
+    }
+
+    /** What the Stripe payment page charges at enrollment: everything, or the first instalment. */
+    public function checkoutAmountCents(): int
+    {
+        return $this->payment_plan->amountsCents($this->amount_cents)[0];
+    }
+
+    public function installments(): HasMany
+    {
+        return $this->hasMany(CourseInstallment::class)->orderBy('position');
     }
 
     public function user(): BelongsTo

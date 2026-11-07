@@ -28,7 +28,9 @@ import { usePageRestore } from '@/hooks/use-page-restore';
 import {
     describeRhythm,
     formatCoursePrice,
+    splitInstallments,
     type CourseCohort,
+    type InstallmentSettings,
 } from '@/lib/course-cohorts';
 import { cn } from '@/lib/utils';
 import { contact } from '@/routes';
@@ -60,6 +62,7 @@ type Props = {
     withdrawalDays: number;
     holdMinutes: number;
     totalHours: number;
+    installments: InstallmentSettings;
 };
 
 const steps = ['Ton groupe', 'À propos de toi', 'Récapitulatif'];
@@ -76,6 +79,7 @@ export default function CreateCourseEnrollment({
     withdrawalDays,
     holdMinutes,
     totalHours,
+    installments,
 }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const detectedTimezone = useBrowserTimezone();
@@ -94,6 +98,7 @@ export default function CreateCourseEnrollment({
         timezone,
         terms: false,
         early_start: false,
+        payment_plan: 'full' as 'full' | 'installments',
     });
     const [goalError, setGoalError] = useState('');
     // Back from Stripe: reload so the seats and the "processing" state reflect the server again.
@@ -102,6 +107,15 @@ export default function CreateCourseEnrollment({
         (cohort) => cohort.level === level && cohort.format === format,
     );
     const cohort = cohorts.find((item) => item.id === form.data.cohort_id);
+    const split = cohort
+        ? splitInstallments(cohort.price_cents, installments)
+        : null;
+    const dueToday =
+        cohort && split
+            ? form.data.payment_plan === 'installments'
+                ? split.amounts[0]
+                : cohort.price_cents
+            : 0;
     const levelInfo = levels.find((item) => item.value === level);
     const startsWithinWithdrawal =
         cohort !== undefined &&
@@ -480,19 +494,79 @@ export default function CreateCourseEnrollment({
                                     <dd className="break-words">
                                         {form.data.goal}
                                     </dd>
-                                    <dt className="text-muted-foreground">
-                                        Total
-                                    </dt>
-                                    <dd className="text-lg font-semibold">
-                                        {formatCoursePrice(
-                                            cohort.price_cents,
-                                            cohort.currency,
-                                        )}
-                                        <span className="block text-xs font-normal text-muted-foreground">
-                                            Paiement en une fois
-                                        </span>
-                                    </dd>
                                 </dl>
+                                <div className="flex flex-col gap-3">
+                                    <Label>Paiement</Label>
+                                    <div
+                                        className="grid gap-3 sm:grid-cols-2"
+                                        role="radiogroup"
+                                        aria-label="Mode de paiement"
+                                    >
+                                        {(
+                                            ['full', 'installments'] as const
+                                        ).map((plan) => {
+                                            const active =
+                                                form.data.payment_plan === plan;
+
+                                            return (
+                                                <button
+                                                    key={plan}
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={active}
+                                                    onClick={() =>
+                                                        form.setData(
+                                                            'payment_plan',
+                                                            plan,
+                                                        )
+                                                    }
+                                                    className={cn(
+                                                        'flex flex-col gap-1 rounded-2xl border p-4 text-left transition-colors',
+                                                        active
+                                                            ? 'border-primary bg-primary/5'
+                                                            : 'border-border hover:border-primary/40',
+                                                    )}
+                                                >
+                                                    <span className="font-semibold">
+                                                        {plan === 'full'
+                                                            ? 'En une fois'
+                                                            : `En ${installments.count} fois`}
+                                                    </span>
+                                                    <span className="text-lg font-semibold">
+                                                        {plan === 'full'
+                                                            ? formatCoursePrice(
+                                                                  cohort.price_cents,
+                                                                  cohort.currency,
+                                                              )
+                                                            : `${installments.count} × ${formatCoursePrice(split!.amounts[0], cohort.currency)}`}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {plan === 'full'
+                                                            ? 'Réglé aujourd’hui'
+                                                            : `Total ${formatCoursePrice(split!.total, cohort.currency)}${installments.surcharge_percent > 0 ? ` (frais de ${installments.surcharge_percent} % inclus)` : ', sans frais'} · puis tous les ${installments.interval_days} jours`}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {form.data.payment_plan ===
+                                        'installments' &&
+                                        split && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Tu paies{' '}
+                                                {formatCoursePrice(
+                                                    split.amounts[0],
+                                                    cohort.currency,
+                                                )}{' '}
+                                                aujourd’hui. Ta carte est
+                                                enregistrée de façon sécurisée
+                                                par Stripe pour prélever les
+                                                échéances suivantes
+                                                automatiquement ; tu es prévenu
+                                                par email à chaque prélèvement.
+                                            </p>
+                                        )}
+                                </div>
                                 <Alert>
                                     <AlertDescription>
                                         {paymentReady
@@ -527,7 +601,11 @@ export default function CreateCourseEnrollment({
                                         {withdrawalDays} jours suivant mon
                                         inscription, en écrivant à l’école ;
                                         passé ce délai, l’inscription n’est plus
-                                        remboursable.
+                                        remboursable
+                                        {form.data.payment_plan ===
+                                        'installments'
+                                            ? ' et les échéances restent dues. J’autorise le prélèvement automatique des échéances suivantes sur ma carte.'
+                                            : '.'}
                                     </span>
                                 </label>
                                 {startsWithinWithdrawal && (
@@ -620,7 +698,7 @@ export default function CreateCourseEnrollment({
                                     {form.processing
                                         ? 'Ouverture du paiement…'
                                         : step === 2 && cohort
-                                          ? `Payer ${formatCoursePrice(cohort.price_cents, cohort.currency)}`
+                                          ? `Payer ${formatCoursePrice(dueToday, cohort.currency)}`
                                           : 'Continuer'}
                                     <ArrowRight aria-hidden="true" />
                                 </Button>
@@ -667,8 +745,12 @@ export default function CreateCourseEnrollment({
                         </span>
                     </div>
                     <p className="text-xs leading-relaxed text-muted-foreground">
-                        Par personne, paiement unique. Rétractation possible
-                        pendant {withdrawalDays} jours.
+                        Par personne, en une fois ou en {installments.count}{' '}
+                        fois
+                        {installments.surcharge_percent > 0
+                            ? ` (+${installments.surcharge_percent} %)`
+                            : ' sans frais'}
+                        . Rétractation possible pendant {withdrawalDays} jours.
                     </p>
                     {auth.user && auth.can?.viewOwnCourses && (
                         <Link

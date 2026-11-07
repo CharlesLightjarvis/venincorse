@@ -10,6 +10,7 @@ Tout ce qu’il faut faire avant (et pendant) la mise en ligne du cours d’essa
 - [ ] **Faire relire les CGU, CGV et la politique de confidentialité par un juriste** (`/cgu`, `/cgv`, `/confidentialite`), notamment : droit de rétractation de 14 jours, absence non remboursée, créneau offert ni déplaçable ni remboursable, anonymisation des comptes.
 - [ ] À chaque changement des conditions : mettre à jour `legalUpdatedAt` (`legal.ts`) **et** `terms_version` (`config/trials.php`), qui est enregistrée avec chaque réservation.
 - [ ] Vérifier le prix (`trials.amount_cents`, `trialPolicy.price`) et la durée affichés.
+- [ ] **Paiement en 3 fois des parcours** : faire valider par le juriste l’absence de frais (ou les frais choisis), l’autorisation de prélèvement des échéances sur la carte enregistrée, et le fait que les échéances restent dues après le délai de rétractation.
 
 ## 2. Hébergement et services
 
@@ -43,12 +44,13 @@ Tout ce qu’il faut faire avant (et pendant) la mise en ligne du cours d’essa
 | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | Fournisseur d’emails réel (Postmark, Resend, Mailgun, SES…). **Pas** la sandbox Mailtrap |
 | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | Adresse de l’école, sur un domaine dont les enregistrements **SPF, DKIM et DMARC** sont configurés (sinon les emails tombent en spam) |
 | `MAIL_SEND_INTERVAL_SECONDS` | Vide (pas de limite), sauf si le fournisseur impose un délai entre deux emails |
-| `STRIPE_SECRET_KEY` | Clé **live** : de préférence une clé restreinte `rk_live_…` (Checkout Sessions et Refunds en écriture) |
+| `STRIPE_SECRET_KEY` | Clé **live** : de préférence une clé restreinte `rk_live_…` (Checkout Sessions, Payment Intents et Refunds en écriture, Customers en lecture) |
 | `STRIPE_PUBLIC_KEY` | `pk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | Secret `whsec_…` de l’endpoint de production (§ 4), **différent** de celui de la Stripe CLI locale |
 | `TRIAL_TEST_MODE_ONLY` | `false` (sinon les clés live sont refusées et le bouton « Payer » reste désactivé) |
 | `TRIAL_PUBLIC_URL` | `https://<domaine>` (retour depuis Stripe) |
-| `TRIAL_TIMEZONE` | `Europe/Paris` (fuseau des disponibilités et des emails de l’équipe) |
+| `TRIAL_TIMEZONE` | `Europe/Paris` (fuseau des disponibilités, des groupes de parcours et des emails de l’équipe) |
+| `COURSE_INSTALLMENT_SURCHARGE_PERCENT` | `0` (paiement en 3 fois **sans frais**). Ne mettre des frais qu’après validation d’un juriste : un paiement fractionné avec frais non négligeables peut relever du crédit à la consommation (Code de la consommation, art. L312-4 et suivants : fiche d’information, TAEG, vérification de solvabilité). |
 | `LOG_LEVEL` | `warning` (ou `error`) |
 
 Ne jamais commiter le `.env`, ni coller une clé live dans un outil, un ticket ou une conversation.
@@ -59,7 +61,7 @@ Ne jamais commiter le `.env`, ni coller une clé live dans un outil, un ticket o
 - [ ] Créer la clé restreinte live et la mettre dans `STRIPE_SECRET_KEY`.
 - [ ] **Créer l’endpoint de webhook** (Développeurs → Webhooks) :
   - URL : `https://<domaine>/payments/webhook/stripe`
-  - Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `refund.failed`, `charge.dispute.created`
+  - Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `refund.failed`, `charge.dispute.created`, `payment_intent.succeeded`
   - Copier son secret de signature dans `STRIPE_WEBHOOK_SECRET`.
 - [ ] Mettre `TRIAL_TEST_MODE_ONLY=false`. Les événements du mode test sont alors ignorés automatiquement.
 - [ ] Activer les **emails de reçu** Stripe si souhaité, et les **notifications de litiges** dans le tableau de bord (en plus de l’alerte envoyée par l’application).

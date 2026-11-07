@@ -32,7 +32,7 @@ Trois choses doivent tourner en plus du site servi par Herd :
 3. **Le transfert des webhooks** — Stripe ne peut pas joindre `venincorse.test`. Lancer la [Stripe CLI](https://docs.stripe.com/stripe-cli) et la garder ouverte :
 
    ```bash
-   stripe listen --forward-to http://venincorse.test/payments/webhook/stripe --events "checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,refund.failed,charge.dispute.created"
+   stripe listen --forward-to http://venincorse.test/payments/webhook/stripe --events "checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,refund.failed,charge.dispute.created,payment_intent.succeeded"
    ```
 
    Garder la liste d’événements **entre guillemets** : sous PowerShell, sans guillemets, la liste est mal transmise et aucun événement de paiement n’est relayé. Le secret `whsec_…` affiché au démarrage doit être celui de `STRIPE_WEBHOOK_SECRET`.
@@ -48,7 +48,7 @@ Trois choses doivent tourner en plus du site servi par Herd :
 
 - **Enregistrer le webhook** dans le tableau de bord Stripe (Développeurs → Webhooks) :
   - URL : `https://<domaine>/payments/webhook/stripe`
-  - Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `refund.failed`, `charge.dispute.created`
+  - Événements : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `refund.failed`, `charge.dispute.created`, `payment_intent.succeeded`
   - Copier le secret de signature de cet endpoint dans `STRIPE_WEBHOOK_SECRET`.
 - **Lancer un worker de file d’attente** supervisé (Supervisor, Laravel Cloud…) : sans lui, ni les webhooks ni les emails ne partent (tous les emails des essais sont mis en file d’attente).
 - **Lancer le planificateur** chaque minute (cron `* * * * * php artisan schedule:run`) : expiration des tentatives impayées, rattrapage Stripe, publication des créneaux et rappels 24 h avant chaque séance. Détail dans [trial-lifecycle.md](trial-lifecycle.md).

@@ -61,8 +61,8 @@ const services = [
     {
         icon: CreditCard,
         title: 'Paiement en 3×',
-        price: '+5 %',
-        detail: 'Trois échéances mensuelles, sans dossier bancaire. À choisir à l’inscription.',
+        price: 'Sans frais',
+        detail: 'Trois échéances mensuelles prélevées sur ta carte, sans dossier bancaire. À choisir à l’inscription.',
     },
 ] as const;
 
@@ -124,7 +124,7 @@ export default function Pricing() {
                     <TierSwitcher value={tier} onChange={setTier} />
 
                     <p className="hidden text-xs text-foreground/45 lg:block">
-                        Paiement en 3× possible · +5 %
+                        Paiement en 3× sans frais possible
                     </p>
                 </div>
             </div>
@@ -520,7 +520,7 @@ export default function Pricing() {
                             {
                                 icon: CreditCard,
                                 title: 'Paiement flexible',
-                                detail: 'Carte, PayPal ou virement. Trois fois possible avec +5 %.',
+                                detail: 'Par carte, paiement sécurisé par Stripe. Trois fois sans frais possible.',
                             },
                             {
                                 icon: Check,

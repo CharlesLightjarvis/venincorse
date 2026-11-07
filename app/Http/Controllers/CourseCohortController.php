@@ -70,7 +70,7 @@ final readonly class CourseCohortController
 
     public function show(Request $request, CourseCohort $cohort): Response
     {
-        $enrollments = $cohort->enrollments()->with(['user', 'cohort'])
+        $enrollments = $cohort->enrollments()->with(['user', 'cohort', 'installments'])
             ->whereIn('status', [
                 CourseEnrollmentStatus::Pending, CourseEnrollmentStatus::Processing, CourseEnrollmentStatus::Confirmed,
                 CourseEnrollmentStatus::PaymentReview, CourseEnrollmentStatus::Refunded, CourseEnrollmentStatus::Cancelled,

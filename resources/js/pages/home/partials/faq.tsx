@@ -29,7 +29,7 @@ const faqs = [
     },
     {
         question: 'Peut-on payer en plusieurs fois ?',
-        answer: 'Oui. Le paiement en trois fois est possible avec +5 %, par carte, PayPal ou virement. Les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada.',
+        answer: 'Oui. Le paiement en trois fois sans frais est possible, par carte sur la page sécurisée de Stripe. Les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada.',
     },
     {
         question: 'Comment suis-je mes progrès ?',

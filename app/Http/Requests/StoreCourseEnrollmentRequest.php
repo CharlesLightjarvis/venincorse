@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\CoursePaymentPlan;
 use App\Enums\PermissionEnum;
 use App\Models\CourseCohort;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 final class StoreCourseEnrollmentRequest extends FormRequest
@@ -25,6 +27,7 @@ final class StoreCourseEnrollmentRequest extends FormRequest
             'timezone' => ['required', 'timezone:all_with_bc'],
             'terms' => ['required', 'accepted'],
             'early_start' => ['boolean'],
+            'payment_plan' => ['required', Rule::enum(CoursePaymentPlan::class)],
         ];
     }
 
@@ -54,6 +57,7 @@ final class StoreCourseEnrollmentRequest extends FormRequest
             'goal.*' => __('courses.goal_invalid', [], 'fr'),
             'timezone.*' => __('courses.timezone_invalid', [], 'fr'),
             'terms.*' => __('courses.terms_required', [], 'fr'),
+            'payment_plan.*' => __('courses.payment_plan_invalid', [], 'fr'),
         ];
     }
 
@@ -67,13 +71,14 @@ final class StoreCourseEnrollmentRequest extends FormRequest
         return $cohort->starts_at->lt(now()->addDays((int) config('courses.withdrawal_days')));
     }
 
-    /** @return array{goal: string, timezone: string, early_start: bool} */
+    /** @return array{goal: string, timezone: string, early_start: bool, payment_plan: CoursePaymentPlan} */
     public function enrollment(): array
     {
         return [
             'goal' => $this->string('goal')->toString(),
             'timezone' => $this->string('timezone')->toString(),
             'early_start' => $this->boolean('early_start'),
+            'payment_plan' => $this->enum('payment_plan', CoursePaymentPlan::class),
         ];
     }
 }

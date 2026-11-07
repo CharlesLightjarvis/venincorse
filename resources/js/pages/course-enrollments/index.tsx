@@ -34,7 +34,9 @@ import {
     enrollmentStatusVariant,
     formatCoursePrice,
     type CourseEnrollment,
+    type CourseInstallment,
 } from '@/lib/course-cohorts';
+import { checkout as installmentCheckout } from '@/routes/course-installments';
 import { contact, courses } from '@/routes';
 import { checkout, index } from '@/routes/course-enrollments';
 import { sales } from '@/routes/legal';
@@ -242,12 +244,19 @@ function EnrollmentCard({ enrollment }: { enrollment: CourseEnrollment }) {
                         enrollment.currency,
                     )}
                     caption={
-                        enrollment.paid_at
-                            ? `Payé le ${format(enrollment.paid_at, { day: 'numeric', month: 'long' })}`
-                            : 'Paiement en une fois'
+                        enrollment.payment_plan === 'installments'
+                            ? `En ${enrollment.installments?.length || 3} fois · ${enrollment.installments?.filter((item) => item.status === 'paid').length ?? 0} échéance(s) réglée(s)`
+                            : enrollment.paid_at
+                              ? `Payé le ${format(enrollment.paid_at, { day: 'numeric', month: 'long' })}`
+                              : 'Paiement en une fois'
                     }
                 />
             </div>
+
+            {enrollment.payment_plan === 'installments' &&
+                (enrollment.installments ?? []).length > 0 && (
+                    <InstallmentSchedule enrollment={enrollment} />
+                )}
 
             {confirmed && !enrollment.meeting_url && (
                 <p className="text-sm text-muted-foreground">
@@ -344,6 +353,123 @@ function EnrollmentCard({ enrollment }: { enrollment: CourseEnrollment }) {
                 </p>
             )}
         </section>
+    );
+}
+
+const installmentLabels: Record<CourseInstallment['status'], string> = {
+    scheduled: 'À venir',
+    failed: 'Échec du prélèvement',
+    paid: 'Réglée',
+    cancelled: 'Annulée',
+};
+
+const installmentVariants: Record<
+    CourseInstallment['status'],
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+    scheduled: 'secondary',
+    failed: 'destructive',
+    paid: 'default',
+    cancelled: 'outline',
+};
+
+function InstallmentSchedule({ enrollment }: { enrollment: CourseEnrollment }) {
+    const timezone = useUserTimezone();
+    const [payingId, setPayingId] = useState<number | null>(null);
+    const installments = enrollment.installments ?? [];
+    const date = (value: string) =>
+        new Intl.DateTimeFormat('fr-FR', {
+            timeZone: timezone,
+            dateStyle: 'long',
+        }).format(new Date(value));
+    const failed = installments.find((item) => item.status === 'failed');
+
+    return (
+        <div className="flex flex-col gap-3">
+            {failed && (
+                <Alert variant="destructive">
+                    <AlertTitle>
+                        L’échéance {failed.position} n’a pas pu être prélevée
+                    </AlertTitle>
+                    <AlertDescription>
+                        {failed.next_attempt_at
+                            ? `Nouvelle tentative automatique le ${date(failed.next_attempt_at)}. Tu peux aussi la régler dès maintenant.`
+                            : 'Règle-la dès maintenant pour garder ta place dans le groupe.'}
+                    </AlertDescription>
+                </Alert>
+            )}
+            <div className="rounded-lg border border-border">
+                <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+                    <h3 className="font-medium">Échéancier</h3>
+                    <span className="text-sm text-muted-foreground">
+                        Total{' '}
+                        {formatCoursePrice(
+                            enrollment.amount_cents,
+                            enrollment.currency,
+                        )}
+                    </span>
+                </div>
+                <ul className="divide-y divide-border">
+                    {installments.map((installment) => (
+                        <li
+                            key={installment.id}
+                            className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm"
+                        >
+                            <span className="flex flex-col">
+                                <span className="font-medium">
+                                    Échéance {installment.position} ·{' '}
+                                    {formatCoursePrice(
+                                        installment.amount_cents,
+                                        enrollment.currency,
+                                    )}
+                                </span>
+                                <span className="text-muted-foreground">
+                                    {installment.paid_at
+                                        ? `Réglée le ${date(installment.paid_at)}`
+                                        : `Prélevée le ${date(installment.due_at)}`}
+                                </span>
+                            </span>
+                            <span className="flex items-center gap-3">
+                                <Badge
+                                    variant={
+                                        installmentVariants[installment.status]
+                                    }
+                                >
+                                    {installmentLabels[installment.status]}
+                                </Badge>
+                                {installment.can_pay && (
+                                    <Button
+                                        size="sm"
+                                        disabled={payingId !== null}
+                                        onClick={() =>
+                                            router.post(
+                                                installmentCheckout.url(
+                                                    installment.id,
+                                                ),
+                                                {},
+                                                {
+                                                    onStart: () =>
+                                                        setPayingId(
+                                                            installment.id,
+                                                        ),
+                                                    onFinish: () =>
+                                                        setPayingId(null),
+                                                },
+                                            )
+                                        }
+                                    >
+                                        {payingId === installment.id && (
+                                            <Spinner data-icon="inline-start" />
+                                        )}
+                                        Régler maintenant
+                                    </Button>
+                                )}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
     );
 }
 

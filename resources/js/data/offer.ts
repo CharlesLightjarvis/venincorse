@@ -1032,7 +1032,7 @@ export const faqs: FaqItem[] = [
     },
     {
         question: 'Comment se passe le paiement ?',
-        answer: 'Tous les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada. Le paiement se fait par carte, PayPal ou virement. Un paiement en trois fois est possible avec +5 %.',
+        answer: 'Tous les tarifs sont en euros, pensés pour la diaspora francophone en Europe et au Canada. Le paiement se fait par carte, sur la page sécurisée de Stripe. Un paiement en trois fois sans frais est possible.',
     },
 ];
 
@@ -1078,7 +1078,7 @@ export const paymentOptions = [
     {
         icon: CalendarDays,
         title: 'Paiement en 3 fois',
-        detail: 'Trois échéances mensuelles, avec +5 % pour couvrir les frais de gestion.',
+        detail: 'Trois échéances mensuelles, sans frais, prélevées automatiquement sur ta carte.',
     },
     {
         icon: GraduationCap,

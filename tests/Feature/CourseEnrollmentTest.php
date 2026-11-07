@@ -32,7 +32,7 @@ function enrollmentPayload(CourseCohort $cohort, array $overrides = []): array
 {
     return [
         'cohort_id' => $cohort->id, 'goal' => 'Parler allemand au travail', 'timezone' => 'Europe/Paris',
-        'terms' => true, 'early_start' => false, ...$overrides,
+        'terms' => true, 'early_start' => false, 'payment_plan' => 'full', ...$overrides,
     ];
 }
 

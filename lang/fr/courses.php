@@ -24,5 +24,8 @@ return [
     'payment_failed' => 'Impossible de contacter le service de paiement. Réessaie dans quelques instants.',
     'payment_processing' => 'Ton paiement est en cours de vérification. Ne règle pas une deuxième fois.',
     'payment_expired' => 'Le délai de paiement est dépassé et la place a été libérée. Inscris-toi à nouveau si le groupe a encore de la place.',
+    'payment_plan_invalid' => 'Choisis de payer en une fois ou en plusieurs fois.',
+    'payment_plan_locked' => 'Un paiement est déjà en cours pour ce groupe avec un autre mode de paiement. Reprends-le depuis « Mes parcours ».',
+    'installment_not_payable' => 'Cette échéance n’est pas à régler pour le moment.',
     'cohort_not_deletable' => 'Ce groupe a des inscrits : il ne peut pas être supprimé. Ferme-le aux inscriptions à la place.',
 ];
