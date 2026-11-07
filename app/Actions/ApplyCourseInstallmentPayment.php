@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\CourseInstallmentStatus;
 use App\Models\CourseInstallment;
 use App\Services\CoursePaymentGateway;
 use App\Services\TrialPaymentGateway;
@@ -19,6 +20,7 @@ final readonly class ApplyCourseInstallmentPayment
     public function __construct(
         private CoursePaymentGateway $gateway,
         private UpdateCourseInstallmentPaid $markPaid,
+        private CreateTrialPaymentAlert $alert,
         private TrialReservationLock $lock,
     ) {}
 
@@ -39,8 +41,29 @@ final readonly class ApplyCourseInstallmentPayment
         }
 
         $this->lock->run($installment->course_enrollment_id, function () use ($installment, $paymentIntentId, $isSession): void {
-            $this->markPaid->handle($installment, $paymentIntentId, $isSession ? $this->paymentMethod($paymentIntentId) : null);
+            if ($this->markPaid->handle($installment, $paymentIntentId, $isSession ? $this->paymentMethod($paymentIntentId) : null)) {
+                return;
+            }
+            $installment->refresh();
+            if ($installment->status === CourseInstallmentStatus::Paid && $installment->stripe_payment_intent_id !== $paymentIntentId) {
+                $this->refundDuplicate($installment, $paymentIntentId);
+            }
         });
+    }
+
+    /** The instalment was already settled by another payment: the second one is given back in full. */
+    private function refundDuplicate(CourseInstallment $installment, string $paymentIntentId): void
+    {
+        $enrollment = $installment->enrollment;
+        try {
+            $this->gateway->refund($enrollment, $paymentIntentId, $installment->amount_cents);
+            $this->alert->handle(null, 'l’échéance '.$installment->position.' de '.$enrollment->user->name
+                .' a été payée deux fois ; le second paiement a été remboursé automatiquement (inscription '.$enrollment->id.').');
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->alert->handle(null, 'l’échéance '.$installment->position.' de '.$enrollment->user->name
+                .' a été payée deux fois et le remboursement automatique a échoué : rembourse le paiement '.$paymentIntentId.' depuis Stripe.');
+        }
     }
 
     private function paymentMethod(string $paymentIntentId): ?string

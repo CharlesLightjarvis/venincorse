@@ -136,6 +136,46 @@ test('a declined instalment is retried twice, the student can pay it, then the t
     Notification::assertSentTo($teacher, TrialPaymentAlert::class);
 });
 
+test('before retrying the card, the payment page of the instalment is closed; if it was paid there, nothing is charged', function () {
+    $enrollment = installmentEnrollment();
+    $paidThere = CourseInstallment::factory()->create([
+        'course_enrollment_id' => $enrollment->id, 'status' => CourseInstallmentStatus::Failed,
+        'next_attempt_at' => now()->subMinute(), 'stripe_session_id' => 'cs_test_paid_page',
+    ]);
+    $gateway = Mockery::mock(CoursePaymentGateway::class);
+    $gateway->shouldReceive('ready')->andReturnTrue();
+    $gateway->shouldReceive('expireSession')->with('cs_test_paid_page')->andReturn(['payment_status' => 'paid', 'payment_intent' => 'pi_page']);
+    $gateway->shouldNotReceive('chargeInstallment');
+    app()->instance(CoursePaymentGateway::class, $gateway);
+
+    $this->artisan('courses:charge-installments')->assertSuccessful();
+
+    expect($paidThere->fresh())->status->toBe(CourseInstallmentStatus::Paid)->stripe_payment_intent_id->toBe('pi_page');
+});
+
+test('an instalment paid twice gets the second payment refunded automatically', function () {
+    $teacher = User::factory()->create();
+    $teacher->assignRole('administrator');
+    $enrollment = installmentEnrollment();
+    $installment = CourseInstallment::factory()->create([
+        'course_enrollment_id' => $enrollment->id, 'status' => CourseInstallmentStatus::Paid,
+        'paid_at' => now(), 'stripe_payment_intent_id' => 'pi_automatic',
+    ]);
+    $gateway = Mockery::mock(CoursePaymentGateway::class);
+    $gateway->shouldReceive('paymentIntent')->andReturn(['payment_method' => 'pm_new']);
+    $gateway->shouldReceive('refund')->once()->withArgs(fn ($refunded, $paymentIntent, $amount) => $paymentIntent === 'pi_page' && $amount === 24000);
+    app()->instance(CoursePaymentGateway::class, $gateway);
+
+    app(ApplyCourseInstallmentPayment::class)->handle([
+        'object' => 'checkout.session', 'id' => 'cs_test_dup', 'livemode' => false,
+        'metadata' => ['course_installment_id' => (string) $installment->id],
+        'payment_status' => 'paid', 'amount_total' => 24000, 'payment_intent' => 'pi_page',
+    ]);
+
+    expect($installment->fresh()->stripe_payment_intent_id)->toBe('pi_automatic');
+    Notification::assertSentTo($teacher, TrialPaymentAlert::class);
+});
+
 test('instalments of an enrollment that is not confirmed are never charged', function () {
     $enrollment = installmentEnrollment(['status' => CourseEnrollmentStatus::Refunded]);
     CourseInstallment::factory()->create(['course_enrollment_id' => $enrollment->id]);

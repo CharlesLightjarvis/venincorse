@@ -56,6 +56,9 @@ final readonly class CreateCourseInstallmentCharges
     private function charge(CourseInstallment $installment): bool
     {
         $enrollment = $installment->enrollment;
+        if ($installment->stripe_session_id && ! $this->closePaymentPage($installment)) {
+            return $installment->refresh()->status === CourseInstallmentStatus::Paid;
+        }
         [$customerId, $paymentMethodId] = $this->savedCard($enrollment);
         if ($customerId === null || $paymentMethodId === null) {
             $this->fail($installment, 'Aucune carte enregistrée pour le prélèvement automatique.');
@@ -83,6 +86,30 @@ final readonly class CreateCourseInstallmentCharges
         }
 
         return $this->markPaid->handle($installment, (string) $paymentIntent['id']);
+    }
+
+    /**
+     * The student may have opened the instalment's payment page: close it before charging the saved card, so the
+     * instalment can never be paid twice. A page already paid simply settles the instalment.
+     */
+    private function closePaymentPage(CourseInstallment $installment): bool
+    {
+        try {
+            $session = $this->gateway->expireSession((string) $installment->stripe_session_id);
+        } catch (Throwable $exception) {
+            report($exception);
+            $installment->update(['next_attempt_at' => now()->addHour()]);
+
+            return false;
+        }
+        if (($session['payment_status'] ?? '') === 'paid' && is_string($session['payment_intent'] ?? null)) {
+            $this->markPaid->handle($installment, $session['payment_intent']);
+
+            return false;
+        }
+        $installment->update(['stripe_session_id' => null, 'checkout_url' => null]);
+
+        return true;
     }
 
     /** @return array{0: ?string, 1: ?string} */
