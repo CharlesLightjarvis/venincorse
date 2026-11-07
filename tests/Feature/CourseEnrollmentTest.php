@@ -204,6 +204,15 @@ test('the student sees their courses, and the visio link only once enrolled', fu
             ->where('enrollments.1.meeting_url', 'https://meet.google.com/abc-defg-hij'));
 });
 
+test('the student dashboard lists their courses in progress', function () {
+    $student = courseStudent();
+    CourseEnrollment::factory()->confirmed()->create(['user_id' => $student->id]);
+    CourseEnrollment::factory()->confirmed()->create();
+
+    $this->actingAs($student)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->has('courses', 1)->where('courses.0.status', 'confirmed'));
+});
+
 test('a student cannot reopen the payment of someone else’s enrollment', function () {
     $enrollment = CourseEnrollment::factory()->create();
 

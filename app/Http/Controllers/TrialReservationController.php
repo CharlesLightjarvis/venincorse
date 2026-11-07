@@ -7,10 +7,13 @@ namespace App\Http\Controllers;
 use App\Actions\CreateTrialReservation;
 use App\Actions\ReconcileTrialPayment;
 use App\Actions\UpdateEndedTrialSessions;
+use App\Enums\CourseEnrollmentStatus;
 use App\Enums\PermissionEnum;
 use App\Enums\TrialReservationStatus;
 use App\Http\Requests\StoreTrialReservationRequest;
+use App\Http\Resources\CourseEnrollmentResource;
 use App\Http\Resources\TrialReservationResource;
+use App\Models\CourseEnrollment;
 use App\Models\TrialReservation;
 use App\Models\TrialSlot;
 use App\Queries\AvailableTrialSlots;
@@ -134,6 +137,17 @@ final readonly class TrialReservationController
         return Inertia::render('dashboard', [
             'student' => $user->can(PermissionEnum::ViewOwnTrials->value) ? $this->studentDashboard($request, $reconcile) : null,
             'management' => $user->can(PermissionEnum::ViewAllTrials->value) ? $this->managementDashboard($request) : null,
+            'courses' => $user->can(PermissionEnum::ViewOwnCourses->value)
+                ? CourseEnrollmentResource::collection(CourseEnrollment::query()->with(['cohort.sessions', 'user', 'installments'])
+                    ->where('user_id', $user->id)
+                    ->whereIn('status', [
+                        CourseEnrollmentStatus::Pending, CourseEnrollmentStatus::Processing, CourseEnrollmentStatus::Confirmed,
+                        CourseEnrollmentStatus::PaymentReview,
+                    ])
+                    ->where(fn ($query) => $query->where('status', '!=', CourseEnrollmentStatus::Pending)->orWhere('expires_at', '>', now()))
+                    ->whereHas('cohort', fn ($cohort) => $cohort->where('ends_at', '>', now()))
+                    ->orderByDesc('created_at')->limit(5)->get())->resolve($request)
+                : null,
             'canManageAvailability' => $user->can(PermissionEnum::ManageAvailability->value),
         ]);
     }

@@ -40,6 +40,13 @@ export function AppSidebar() {
             icon: Grid,
         },
     ];
+    if (auth.can?.viewOwnCourses) {
+        mainNavItems.push({
+            title: 'Mes parcours',
+            href: myCourses(),
+            icon: BookOpen,
+        });
+    }
     if (auth.can?.viewAllTrials) {
         mainNavItems.push({
             title: 'Gestion des essais',
@@ -81,22 +88,6 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={[]} className="mt-auto" />
-                {auth.can?.viewOwnCourses && (
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={isCurrentUrl(myCourses())}
-                                tooltip={{ children: 'Mes parcours' }}
-                            >
-                                <Link href={myCourses()} prefetch>
-                                    <BookOpen />
-                                    <span>Mes parcours</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                )}
                 {auth.can?.viewOwnTrials && (
                     <SidebarMenu>
                         <SidebarMenuItem>

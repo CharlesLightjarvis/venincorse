@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Warning,
+    BookOpen,
     CalendarCheck,
     CalendarDay,
     CalendarDays,
@@ -10,6 +11,7 @@ import {
     Sliders,
     type IconComponent,
 } from 'reicon-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Empty,
@@ -26,7 +28,16 @@ import {
     reservationStatusLabels,
     type TrialReservation,
 } from '@/lib/trial-reservations';
-import { dashboard } from '@/routes';
+import {
+    enrollmentStatusLabels,
+    enrollmentStatusVariant,
+    type CourseEnrollment,
+} from '@/lib/course-cohorts';
+import { courses as courseCatalog, dashboard } from '@/routes';
+import {
+    create as enroll,
+    index as myCourses,
+} from '@/routes/course-enrollments';
 import { edit as editAvailability } from '@/routes/trial-availability';
 import {
     index as manageTrials,
@@ -234,7 +245,13 @@ function ManagementSection({
     );
 }
 
-function StudentSection({ student }: { student: StudentDashboard }) {
+function StudentSection({
+    student,
+    courses,
+}: {
+    student: StudentDashboard;
+    courses: CourseEnrollment[] | null;
+}) {
     const timezone = useUserTimezone();
     const { overview, reservations } = student;
     const canReserve =
@@ -246,8 +263,7 @@ function StudentSection({ student }: { student: StudentDashboard }) {
                     Ton espace, tes rendez-vous.
                 </h1>
                 <p className="mt-3 text-muted-foreground">
-                    Retrouve tes cours d’essai et leur paiement. Seules tes
-                    propres réservations sont affichées ici.
+                    Retrouve tes parcours, ton cours d’essai et leurs paiements.
                 </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -285,6 +301,7 @@ function StudentSection({ student }: { student: StudentDashboard }) {
                     </div>
                 ))}
             </div>
+            {courses && <CoursesSection courses={courses} />}
             <section className="flex flex-col gap-4">
                 <h2 className="text-2xl font-semibold">
                     Ma réservation d’essai
@@ -347,13 +364,116 @@ function StudentSection({ student }: { student: StudentDashboard }) {
     );
 }
 
+function CoursesSection({ courses }: { courses: CourseEnrollment[] }) {
+    const timezone = useUserTimezone();
+    const canEnroll =
+        usePage<{ auth: Auth }>().props.auth.can?.enrollInCourses ?? false;
+    const date = (value: string) =>
+        new Intl.DateTimeFormat('fr-FR', {
+            timeZone: timezone,
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(new Date(value));
+
+    return (
+        <section className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-2xl font-semibold">Mes parcours</h2>
+                {courses.length > 0 && (
+                    <Button asChild variant="ghost" size="sm">
+                        <Link href={myCourses()}>Tout voir</Link>
+                    </Button>
+                )}
+            </div>
+            {courses.length === 0 ? (
+                <Empty className="border">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <BookOpen />
+                        </EmptyMedia>
+                        <EmptyTitle>Pas encore de parcours</EmptyTitle>
+                        <EmptyDescription>
+                            Un niveau complet de 60 heures, en groupe ou en
+                            individuel, au rythme qui te convient.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent className="flex-row justify-center">
+                        <Button asChild variant="outline">
+                            <Link href={courseCatalog()}>
+                                Découvrir les parcours
+                            </Link>
+                        </Button>
+                        {canEnroll && (
+                            <Button asChild>
+                                <Link href={enroll()}>
+                                    Voir les groupes ouverts
+                                </Link>
+                            </Button>
+                        )}
+                    </EmptyContent>
+                </Empty>
+            ) : (
+                courses.map((enrollment) => {
+                    const next = (enrollment.cohort.sessions ?? []).find(
+                        (session) =>
+                            new Date(session.starts_at).getTime() +
+                                session.duration_minutes * 60_000 >
+                            Date.now(),
+                    );
+
+                    return (
+                        <Link
+                            key={enrollment.id}
+                            href={myCourses()}
+                            className="flex flex-col gap-3 rounded-lg border border-border p-5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                            <div>
+                                <h3 className="font-semibold">
+                                    {enrollment.cohort.level_label}
+                                </h3>
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {enrollment.cohort.format_label} ·{' '}
+                                    {enrollment.cohort.rhythm_label}
+                                </p>
+                            </div>
+                            <div className="sm:text-right">
+                                <Badge
+                                    variant={
+                                        enrollmentStatusVariant[
+                                            enrollment.status
+                                        ]
+                                    }
+                                >
+                                    {enrollmentStatusLabels[enrollment.status]}
+                                </Badge>
+                                <p className="mt-2 text-sm text-muted-foreground first-letter:uppercase">
+                                    {enrollment.can_pay
+                                        ? 'Reprends le paiement pour garder ta place'
+                                        : next
+                                          ? `Prochaine séance : ${date(next.starts_at)}`
+                                          : 'Parcours terminé'}
+                                </p>
+                            </div>
+                        </Link>
+                    );
+                })
+            )}
+        </section>
+    );
+}
+
 export default function Dashboard({
     student,
     management,
+    courses,
     canManageAvailability,
 }: {
     student: StudentDashboard | null;
     management: ManagementDashboard | null;
+    courses: CourseEnrollment[] | null;
     canManageAvailability: boolean;
 }) {
     return (
@@ -365,8 +485,9 @@ export default function Dashboard({
                     canManageAvailability={canManageAvailability}
                 />
             )}
-            {student && <StudentSection student={student} />}
-            {!student && !management && (
+            {student && <StudentSection student={student} courses={courses} />}
+            {!student && courses && <CoursesSection courses={courses} />}
+            {!student && !management && !courses && (
                 <div>
                     <h1 className="text-3xl font-semibold">Mon espace</h1>
                     <p className="mt-3 text-muted-foreground">

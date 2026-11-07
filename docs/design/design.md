@@ -159,6 +159,20 @@ Toutes les icônes de l’app viennent de **[Reicon](https://reicon.dev/icons)**
   `node_modules/reicon-react/icons/<Nom>.js` doit exister (attention à la
   casse : `Logout`, pas `LogOut`).
 
+## Espace connecté (sidebar et tableau de bord)
+
+- **Sidebar** (`resources/js/components/app-sidebar.tsx`) : toutes les entrées
+  vont dans le menu principal, **sous « Mon espace »**, chacune affichée selon
+  la permission de l’utilisateur (élève : « Mes parcours » ; équipe : « Gestion
+  des essais », « Groupes des parcours », « Disponibilités »). **Seule « Ma
+  réservation d’essai » est en bas**, au-dessus du profil.
+- **« Mon espace »** (`resources/js/pages/dashboard.tsx`) résume tout ce qui
+  concerne l’utilisateur : pour l’élève, ses parcours en cours (état vide
+  `Empty` « Pas encore de parcours » avec « Découvrir les parcours » et « Voir
+  les groupes ouverts »), puis sa réservation d’essai. Chaque carte renvoie à la
+  page détaillée (« Mes parcours », « Ma réservation d’essai »).
+- Icônes de la sidebar et des pages : Reicon (voir [§ Icônes](#icônes)).
+
 ## 9. Données & mocks
 
 - Mock-first : les données type catalogue vivent dans **`resources/js/data/*.ts`**
