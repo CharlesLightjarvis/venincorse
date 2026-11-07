@@ -12,7 +12,7 @@ return [
     'change_notice_hours' => 24,
     'max_reschedules' => 1,
     'outcome_reminder_hours' => 12,
-    'terms_version' => '2026-11-06.2',
+    'terms_version' => '2026-11-07',
     'timezone' => env('TRIAL_TIMEZONE', 'Europe/Paris'),
     'late_payment_cutoff_hours' => 12,
     'rebook_offer_days' => 14,

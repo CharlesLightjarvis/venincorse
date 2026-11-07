@@ -19,7 +19,7 @@ export const legalEntity = {
 };
 
 /** Shown on every legal page; bump it together with `config('trials.terms_version')`. */
-export const legalUpdatedAt = '6 novembre 2026';
+export const legalUpdatedAt = '7 novembre 2026';
 
 /** The trial lesson rules, shared by the terms of sale and the booking flow. */
 export const trialPolicy = {
@@ -29,4 +29,17 @@ export const trialPolicy = {
     changeNoticeHours: 24,
     freeReschedules: 1,
     rebookOfferDays: 14,
+};
+
+/**
+ * The course ("parcours") rules shown in the terms of sale. Keep them in sync with `config/courses.php`: if a
+ * fee is ever added to the instalment plan, the terms must say so (and a lawyer must confirm it is allowed).
+ */
+export const coursePolicy = {
+    totalHours: 60,
+    seatHoldMinutes: 45,
+    withdrawalDays: 14,
+    installments: 3,
+    installmentIntervalDays: 30,
+    installmentRetries: 2,
 };

@@ -2,6 +2,17 @@
 
 Points connus, non bloquants pour démarrer, à reprendre après la mise en ligne. Ajouter ici toute idée ou dette repérée, avec le contexte utile pour la reprendre.
 
+## Parcours : évolutions prévues après la V1
+
+Voir [course-enrollment.md](course-enrollment.md) pour ce qui existe.
+
+- **Appel en séance et suivi de présence** : marquer les présents par séance ; utile pour les bilans et en cas de litige.
+- **Replays** des séances de groupe (annoncés dans le marketing : « Replay disponible 30 jours »), à retirer du site ou à construire.
+- **Checkpoints** : les 2 bilans oral et écrit par niveau annoncés dans le marketing.
+- **Changement de groupe** en cours de route (déménagement, horaires) sans annuler l’inscription.
+- **Crédit du cours d’essai** (39 € déduits d’un parcours sous 7 jours), annoncé dans le marketing : à construire ou à retirer des pages.
+- **Plusieurs professeurs** : rattacher chaque groupe à un professeur.
+
 ## Suppression automatique des comptes inactifs (3 ans)
 
 - **Pourquoi** : la politique de confidentialité (`/confidentialite`, section « Durées de conservation ») annonce la suppression des comptes après 3 ans d’inactivité. Ce n’est pas encore automatisé : à faire avant que les premiers comptes atteignent 3 ans.

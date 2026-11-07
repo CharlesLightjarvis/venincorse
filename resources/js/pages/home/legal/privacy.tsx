@@ -52,7 +52,10 @@ export default function PrivacyPolicy() {
                                 <strong>Paiement :</strong> identifiant de la
                                 transaction et montant. Les données de carte
                                 sont traitées uniquement par Stripe, nous n’y
-                                avons pas accès.
+                                avons pas accès. Si tu choisis de payer un
+                                parcours en plusieurs fois, ta carte est
+                                enregistrée chez Stripe, avec ton accord, le
+                                temps de prélever les échéances.
                             </li>
                         </ul>
                     ),
