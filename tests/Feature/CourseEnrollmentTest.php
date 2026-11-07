@@ -213,6 +213,22 @@ test('the student sees their courses, and the visio link only once enrolled', fu
             ->where('enrollments.1.meeting_url', 'https://meet.google.com/abc-defg-hij'));
 });
 
+test('a student opens the detail page of their own course', function () {
+    $student = courseStudent();
+    $enrollment = CourseEnrollment::factory()->confirmed()->create(['user_id' => $student->id]);
+
+    $this->actingAs($student)->get(route('course-enrollments.show', $enrollment))
+        ->assertInertia(fn (Assert $page) => $page->component('course-enrollments/show')
+            ->where('enrollment.id', $enrollment->id)
+            ->where('enrollment.status', 'confirmed'));
+});
+
+test('a student cannot open the detail page of someone else’s course', function () {
+    $enrollment = CourseEnrollment::factory()->confirmed()->create();
+
+    $this->actingAs(courseStudent())->get(route('course-enrollments.show', $enrollment))->assertNotFound();
+});
+
 test('a student cannot reopen the payment of someone else’s enrollment', function () {
     $enrollment = CourseEnrollment::factory()->create();
 

@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->middleware(['can:'.PermissionEnum::EnrollInCourses->value, 'throttle:10,1'])->name('course-enrollments.store');
     Route::get('course-enrollments', [CourseEnrollmentController::class, 'index'])
         ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:60,1'])->name('course-enrollments.index');
+    Route::get('course-enrollments/{enrollment}', [CourseEnrollmentController::class, 'show'])
+        ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:60,1'])->name('course-enrollments.show');
     Route::post('course-enrollments/{enrollment}/checkout', [CourseEnrollmentController::class, 'checkout'])
         ->middleware(['can:'.PermissionEnum::EnrollInCourses->value, 'throttle:10,1'])->name('course-enrollments.checkout');
     Route::post('course-installments/{installment}/checkout', [CourseInstallmentCheckoutController::class, 'store'])

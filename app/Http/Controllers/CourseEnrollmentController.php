@@ -88,6 +88,18 @@ final readonly class CourseEnrollmentController
         return Inertia::location($createCheckout->handle($enrollment));
     }
 
+    /** The student's own course: schedule, payments and visio link. */
+    public function show(Request $request, CourseEnrollment $enrollment): Response
+    {
+        abort_unless($enrollment->user_id === $request->user()->id, 404);
+
+        return Inertia::render('course-enrollments/show', [
+            'enrollment' => CourseEnrollmentResource::make(
+                $enrollment->loadMissing(['cohort.sessions', 'user', 'installments'])
+            )->resolve($request),
+        ]);
+    }
+
     /** The student's courses; payments left unfinished at Stripe are checked first (`?refresh=1` on return). */
     public function index(Request $request, ReconcileCourseEnrollmentPayment $reconcile, CoursePaymentGateway $gateway, ApplyCourseInstallmentPayment $applyInstallment): Response
     {

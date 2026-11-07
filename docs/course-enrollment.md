@@ -65,13 +65,13 @@ Menu **« Groupes des parcours »** (`/teaching/course-cohorts`).
 
 Accessible depuis « Réserver une place » sur la page d’un parcours. Trois étapes, comme le cours d’essai :
 
-1. **Ton groupe** : niveau, format, puis un groupe ouvert (dates, jours, heure dans le fuseau de l’élève, places restantes ; « Complet » et « Déjà inscrit » non sélectionnables). Sans groupe ouvert : « Nous contacter » ou « Réserver un essai ». La connexion est demandée à la fin de cette étape.
+1. **Ton groupe** : si tu arrives depuis la fiche d’un niveau, le niveau et le format sont déjà choisis (un rappel s’affiche, avec « Changer » pour les modifier) ; sinon tu les choisis. Puis un groupe ouvert (dates, jours, heure dans le fuseau de l’élève, places restantes ; « Complet » et « Déjà inscrit » non sélectionnables). Sans groupe ouvert : « Nous contacter » ou « Réserver un essai ». La connexion est demandée à la fin de cette étape.
 2. **À propos de toi** : objectif.
 3. **Récapitulatif** : choix du paiement (en une fois, ou 3 × le montant), acceptation des CGV (rétractation de 14 jours, échéances dues après le délai, autorisation de prélèvement en 3 fois) et, si le groupe commence pendant le délai de rétractation, **demande expresse de commencer tôt** (obligatoire, art. L221-25). Puis paiement sur Stripe.
 
 ### « Mes parcours » (`/course-enrollments`)
 
-Pour chaque inscription : statut, dates, horaires, prochaine séance, séances suivies, planning complet, bouton « Rejoindre la visio » (élèves inscrits seulement), échéancier en 3 fois avec « Régler maintenant », date limite de rétractation, motif et montant en cas d’annulation, « Reprendre le paiement » si l’élève a quitté Stripe.
+La page liste les inscriptions sous forme de **cartes** (niveau, format, rythme, statut, dates, prochaine séance, prix), comme les groupes côté professeur. Chaque carte ouvre une **page de détail** (`/course-enrollments/{id}`) : statut, dates, horaires, prochaine séance, séances suivies, planning complet, bouton « Rejoindre la visio » (élèves inscrits seulement), échéancier en 3 fois avec « Régler maintenant », date limite de rétractation, motif et montant en cas d’annulation, « Reprendre le paiement » si l’élève a quitté Stripe.
 
 ## Statuts
 
@@ -159,7 +159,7 @@ La suppression d’un compte est **refusée** tant qu’un parcours est en cours
 | Stripe | `app/Services/CoursePaymentGateway.php`, webhook `app/Listeners/HandleTrialPaymentWebhook.php` |
 | Contrôleurs | `CourseCohortController`, `CourseCatalogController`, `CourseEnrollmentController`, `CourseInstallmentCheckoutController`, `CourseEnrollmentManagementController`, `CourseEnrollmentCancellationController` |
 | Commandes | `courses:expire-enrollments`, `courses:charge-installments` |
-| Pages | `course-cohorts/{index,create,show}.tsx` (professeur), `course-enrollments/{create,index}.tsx` (élève), `courses/course-detail.tsx` (bandeau du prochain groupe) |
+| Pages | `course-cohorts/{index,create,show}.tsx` (professeur), `course-enrollments/{create,index,show}.tsx` (élève), `courses/course-detail.tsx` (bandeau du prochain groupe) |
 | Tests | `tests/Feature/CourseCohortTest.php`, `CourseEnrollmentTest.php`, `CourseInstallmentTest.php`, `CourseManagementTest.php` |
 
 ## Hors V1 (voir [backlog.md](backlog.md))
