@@ -68,7 +68,16 @@ test('the enrollment page lists the open groups that have not started, with thei
             ->has('cohorts', 1)
             ->where('cohorts.0.id', $open->id)
             ->where('cohorts.0.seats_left', 2)
-            ->where('selected.level', 'a1'));
+            ->where('selected.level', 'a1')
+            ->where('choiceLocked', false));
+});
+
+test('the enrollment page does not ask again for the level and format chosen on the course page', function () {
+    $this->get(route('course-enrollments.create', ['level' => 'a1', 'format' => 'group']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('selected.level', 'a1')
+            ->where('selected.format', 'group')
+            ->where('choiceLocked', true));
 });
 
 test('a student enrolls: the seat is held and they are sent to the Stripe payment page', function () {

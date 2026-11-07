@@ -57,6 +57,7 @@ type Props = {
         format: 'group' | 'solo';
         cohort: number | null;
     };
+    choiceLocked: boolean;
     enrolledCohortIds: number[];
     paymentReady: boolean;
     withdrawalDays: number;
@@ -74,6 +75,7 @@ export default function CreateCourseEnrollment({
     cohorts,
     levels,
     selected,
+    choiceLocked,
     enrolledCohortIds,
     paymentReady,
     withdrawalDays,
@@ -89,6 +91,8 @@ export default function CreateCourseEnrollment({
     const [format, setFormat] = useState<'group' | 'solo'>(
         preselected?.format ?? selected.format,
     );
+    const [changingChoice, setChangingChoice] = useState(false);
+    const choiceEditable = !choiceLocked || changingChoice;
     const [step, setStep] = useState(
         auth.user && preselected?.is_bookable ? 1 : 0,
     );
@@ -167,9 +171,9 @@ export default function CreateCourseEnrollment({
                     Rejoins ton groupe.
                 </h1>
                 <p className="max-w-xl text-muted-foreground">
-                    Choisis ton niveau, ton format et le groupe dont le planning
-                    te convient. Connecte-toi avant de poursuivre vers le
-                    paiement.
+                    {choiceLocked && !changingChoice
+                        ? 'Choisis le groupe dont le planning te convient. Connecte-toi avant de poursuivre vers le paiement.'
+                        : 'Choisis ton niveau, ton format et le groupe dont le planning te convient. Connecte-toi avant de poursuivre vers le paiement.'}
                 </p>
             </div>
             <div className="grid items-start gap-8 lg:grid-cols-[1fr_300px]">
@@ -225,72 +229,114 @@ export default function CreateCourseEnrollment({
                         )}
                         {step === 0 && (
                             <div className="flex flex-col gap-6">
-                                <div className="flex flex-col gap-2">
-                                    <Label>Niveau</Label>
-                                    <ToggleGroup
-                                        type="single"
-                                        variant="outline"
-                                        aria-label="Niveau"
-                                        className="grid w-full grid-cols-4 gap-2 shadow-none"
-                                        value={level}
-                                        onValueChange={(value) => {
-                                            if (value) {
-                                                setLevel(value);
-                                                form.setData('cohort_id', 0);
-                                            }
-                                        }}
-                                    >
-                                        {levels.map((item) => (
-                                            <ToggleGroupItem
-                                                key={item.value}
-                                                value={item.value}
-                                                className={tileClassName}
+                                {choiceEditable ? (
+                                    <>
+                                        <div className="flex flex-col gap-2">
+                                            <Label>Niveau</Label>
+                                            <ToggleGroup
+                                                type="single"
+                                                variant="outline"
+                                                aria-label="Niveau"
+                                                className="grid w-full grid-cols-4 gap-2 shadow-none"
+                                                value={level}
+                                                onValueChange={(value) => {
+                                                    if (value) {
+                                                        setLevel(value);
+                                                        form.setData(
+                                                            'cohort_id',
+                                                            0,
+                                                        );
+                                                    }
+                                                }}
                                             >
-                                                {item.value.toUpperCase()}
-                                            </ToggleGroupItem>
-                                        ))}
-                                    </ToggleGroup>
-                                    {levelInfo && (
-                                        <p className="text-sm text-muted-foreground">
-                                            {levelInfo.label}
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <Label>Format</Label>
-                                    <ToggleGroup
-                                        type="single"
-                                        variant="outline"
-                                        aria-label="Format"
-                                        className="grid w-full grid-cols-2 gap-2 shadow-none"
-                                        value={format}
-                                        onValueChange={(value) => {
-                                            if (value) {
-                                                setFormat(
-                                                    value as 'group' | 'solo',
-                                                );
-                                                form.setData('cohort_id', 0);
+                                                {levels.map((item) => (
+                                                    <ToggleGroupItem
+                                                        key={item.value}
+                                                        value={item.value}
+                                                        className={
+                                                            tileClassName
+                                                        }
+                                                    >
+                                                        {item.value.toUpperCase()}
+                                                    </ToggleGroupItem>
+                                                ))}
+                                            </ToggleGroup>
+                                            {levelInfo && (
+                                                <p className="text-sm text-muted-foreground">
+                                                    {levelInfo.label}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <Label>Format</Label>
+                                            <ToggleGroup
+                                                type="single"
+                                                variant="outline"
+                                                aria-label="Format"
+                                                className="grid w-full grid-cols-2 gap-2 shadow-none"
+                                                value={format}
+                                                onValueChange={(value) => {
+                                                    if (value) {
+                                                        setFormat(
+                                                            value as
+                                                                | 'group'
+                                                                | 'solo',
+                                                        );
+                                                        form.setData(
+                                                            'cohort_id',
+                                                            0,
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                <ToggleGroupItem
+                                                    value="group"
+                                                    className={tileClassName}
+                                                >
+                                                    Groupe (3 à 6)
+                                                    {levelInfo &&
+                                                        ` · ${formatCoursePrice(levelInfo.prices.group, 'EUR')}`}
+                                                </ToggleGroupItem>
+                                                <ToggleGroupItem
+                                                    value="solo"
+                                                    className={tileClassName}
+                                                >
+                                                    Individuel
+                                                    {levelInfo &&
+                                                        ` · ${formatCoursePrice(levelInfo.prices.solo, 'EUR')}`}
+                                                </ToggleGroupItem>
+                                            </ToggleGroup>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between dark:bg-foreground/[0.02]">
+                                        <div>
+                                            <p className="font-semibold">
+                                                {levelInfo?.label ??
+                                                    level.toUpperCase()}{' '}
+                                                ·{' '}
+                                                {format === 'group'
+                                                    ? 'Groupe (3 à 6)'
+                                                    : 'Individuel'}
+                                            </p>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                Le niveau et le format viennent
+                                                de la fiche du parcours.
+                                            </p>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-fit rounded-full"
+                                            onClick={() =>
+                                                setChangingChoice(true)
                                             }
-                                        }}
-                                    >
-                                        <ToggleGroupItem
-                                            value="group"
-                                            className={tileClassName}
                                         >
-                                            Groupe (3 à 6)
-                                            {levelInfo &&
-                                                ` · ${formatCoursePrice(levelInfo.prices.group, 'EUR')}`}
-                                        </ToggleGroupItem>
-                                        <ToggleGroupItem
-                                            value="solo"
-                                            className={tileClassName}
-                                        >
-                                            Individuel
-                                            {levelInfo &&
-                                                ` · ${formatCoursePrice(levelInfo.prices.solo, 'EUR')}`}
-                                        </ToggleGroupItem>
-                                    </ToggleGroup>
-                                </div>
+                                            Changer
+                                        </Button>
+                                    </div>
+                                )}
                                 <div className="flex flex-col gap-3">
                                     <Label>Groupes ouverts</Label>
                                     {visible.length === 0 ? (

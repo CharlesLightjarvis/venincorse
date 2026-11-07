@@ -57,6 +57,9 @@ final readonly class CourseEnrollmentController
                 'format' => CourseFormat::tryFrom((string) $request->query('format'))?->value ?? CourseFormat::Group->value,
                 'cohort' => $request->integer('cohort') ?: null,
             ],
+            // Arriving from a course page: the level and format are already chosen, so the funnel does not ask again.
+            'choiceLocked' => CourseLevel::tryFrom((string) $request->query('level')) !== null
+                && CourseFormat::tryFrom((string) $request->query('format')) !== null,
             'enrolledCohortIds' => $enrolledCohortIds->values(),
             'paymentReady' => $gateway->ready(),
             'withdrawalDays' => config('courses.withdrawal_days'),
