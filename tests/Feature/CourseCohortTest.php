@@ -3,6 +3,7 @@
 use App\Enums\CourseFormat;
 use App\Enums\CourseRhythm;
 use App\Models\CourseCohort;
+use App\Models\CourseSession;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Carbon;
@@ -108,9 +109,40 @@ test('the teacher updates the visio link, the seats and the opening of a group',
         ->assertInvalid(['capacity']);
 });
 
+test('each session can carry its own visio link', function () {
+    $cohort = CourseCohort::factory()->create();
+    $session = CourseSession::factory()->create(['course_cohort_id' => $cohort->id]);
+    $this->actingAs(courseManager());
+
+    $this->put(route('course-sessions.update', $session), ['meeting_url' => 'http://insecure.example'])
+        ->assertInvalid(['meeting_url']);
+    $this->put(route('course-sessions.update', $session), ['meeting_url' => 'https://meet.google.com/session-one'])
+        ->assertSessionHasNoErrors();
+
+    expect($session->fresh()->meeting_url)->toBe('https://meet.google.com/session-one');
+
+    $this->put(route('course-sessions.update', $session), ['meeting_url' => null])
+        ->assertSessionHasNoErrors();
+
+    expect($session->fresh()->meeting_url)->toBeNull();
+});
+
+test('only the teacher can change a session visio link', function () {
+    $session = CourseSession::factory()->create();
+    $student = User::factory()->create();
+    $student->assignRole('student');
+
+    $this->actingAs($student)
+        ->put(route('course-sessions.update', $session), ['meeting_url' => 'https://meet.google.com/session-one'])
+        ->assertForbidden();
+
+    expect($session->fresh()->meeting_url)->toBeNull();
+});
+
 test('the teacher sees the groups and the full schedule of each one', function () {
     $this->actingAs(courseManager())->post(route('course-cohorts.store'), cohortPayload());
     $cohort = CourseCohort::query()->sole();
+    $cohort->sessions()->first()->update(['meeting_url' => 'https://meet.google.com/session-one']);
 
     $this->get(route('course-cohorts.index'))
         ->assertInertia(fn (Assert $page) => $page->component('course-cohorts/index')
@@ -120,7 +152,8 @@ test('the teacher sees the groups and the full schedule of each one', function (
     $this->get(route('course-cohorts.show', $cohort))
         ->assertInertia(fn (Assert $page) => $page->component('course-cohorts/show')
             ->has('cohort.sessions', 20)
-            ->where('cohort.sessions.0.duration_minutes', 180));
+            ->where('cohort.sessions.0.duration_minutes', 180)
+            ->where('cohort.sessions.0.meeting_url', 'https://meet.google.com/session-one'));
 });
 
 test('a group can be deleted with its schedule', function () {

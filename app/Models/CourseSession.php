@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['course_cohort_id', 'position', 'starts_at', 'duration_minutes'])]
+#[Fillable(['course_cohort_id', 'position', 'starts_at', 'duration_minutes', 'meeting_url'])]
 final class CourseSession extends Model
 {
     /** @use HasFactory<CourseSessionFactory> */

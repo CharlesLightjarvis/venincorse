@@ -19,9 +19,11 @@ export type CourseCohort = {
     has_started: boolean;
     sessions_count?: number;
     sessions?: {
+        id: number;
         position: number;
         starts_at: string;
         duration_minutes: number;
+        meeting_url?: string | null;
     }[];
     meeting_url?: string | null;
 };

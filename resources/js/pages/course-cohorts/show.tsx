@@ -1,6 +1,7 @@
 import { Head, router, setLayoutProps, useForm } from '@inertiajs/react';
 import { type FormEvent, useState } from 'react';
 import { CalendarDays, Euro, Repeat, Trash, Users } from 'reicon-react';
+import { CoursePlanningCalendar } from '@/components/course-planning-calendar';
 import { TrialInfoCard } from '@/components/trial-info-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -197,47 +198,19 @@ export default function ShowCourseCohort({
                 )}
             </section>
 
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-                <SettingsForm cohort={cohort} />
-                <section className="flex flex-col rounded-lg border border-border">
-                    <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-                        <h2 className="font-semibold">Planning</h2>
-                        <Badge variant="outline">{sessions.length}</Badge>
-                    </div>
-                    <ol className="grid max-h-[32rem] divide-y divide-border overflow-y-auto">
-                        {sessions.map((session) => {
-                            const past =
-                                new Date(session.starts_at) < new Date();
+            <SettingsForm cohort={cohort} />
 
-                            return (
-                                <li
-                                    key={session.position}
-                                    className={`flex items-center justify-between gap-3 px-5 py-2.5 text-sm ${past ? 'text-muted-foreground' : ''}`}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="w-8 font-mono text-xs text-muted-foreground">
-                                            {session.position}
-                                        </span>
-                                        <span className="first-letter:uppercase">
-                                            {format(session.starts_at, {
-                                                weekday: 'long',
-                                                day: 'numeric',
-                                                month: 'long',
-                                            })}
-                                        </span>
-                                    </span>
-                                    <span className="tabular-nums">
-                                        {format(session.starts_at, {
-                                            timeStyle: 'short',
-                                        })}{' '}
-                                        · {session.duration_minutes / 60} h
-                                    </span>
-                                </li>
-                            );
-                        })}
-                    </ol>
-                </section>
-            </div>
+            <section className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                    <h2 className="font-semibold">Planning</h2>
+                    <Badge variant="outline">{sessions.length}</Badge>
+                </div>
+                <CoursePlanningCalendar
+                    sessions={sessions}
+                    defaultMeetingUrl={cohort.meeting_url ?? null}
+                    canManage
+                />
+            </section>
         </div>
     );
 }
@@ -260,79 +233,101 @@ function SettingsForm({ cohort }: { cohort: CourseCohort }) {
     return (
         <form
             onSubmit={submit}
-            className="flex flex-col gap-5 self-start rounded-lg border border-border p-5"
+            className="flex flex-col gap-5 rounded-lg border border-border p-5"
         >
-            <h2 className="font-semibold">Réglages</h2>
-            <div className="flex flex-col gap-2">
-                <Label htmlFor="meeting_url">Lien de la visio</Label>
-                <Input
-                    id="meeting_url"
-                    type="url"
-                    inputMode="url"
-                    placeholder="https://meet.google.com/…"
-                    maxLength={2048}
-                    value={form.data.meeting_url}
-                    onChange={(event) =>
-                        form.setData('meeting_url', event.target.value)
-                    }
-                    aria-invalid={form.errors.meeting_url ? true : undefined}
-                />
-                <p className="text-xs text-muted-foreground">
-                    Le même lien pour toutes les séances du groupe.
-                </p>
-                {form.errors.meeting_url && (
-                    <p role="alert" className="text-sm text-destructive">
-                        {form.errors.meeting_url}
-                    </p>
-                )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-semibold">Réglages</h2>
+                <Button
+                    type="submit"
+                    disabled={form.processing || !form.isDirty}
+                >
+                    {form.processing && <Spinner data-icon="inline-start" />}
+                    Enregistrer
+                </Button>
             </div>
-            {cohort.format === 'group' && (
-                <div className="flex flex-col gap-2">
-                    <Label htmlFor="capacity">Places</Label>
+            <div className="flex flex-wrap items-start gap-5">
+                <div className="flex min-w-72 flex-1 flex-col gap-2">
+                    <Label htmlFor="meeting_url">Lien visio par défaut</Label>
                     <Input
-                        id="capacity"
-                        type="number"
-                        min={1}
-                        max={6}
-                        className="w-28"
-                        value={form.data.capacity}
+                        id="meeting_url"
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://meet.google.com/…"
+                        maxLength={2048}
+                        value={form.data.meeting_url}
                         onChange={(event) =>
-                            form.setData('capacity', Number(event.target.value))
+                            form.setData('meeting_url', event.target.value)
                         }
-                        aria-invalid={form.errors.capacity ? true : undefined}
+                        aria-invalid={
+                            form.errors.meeting_url ? true : undefined
+                        }
                     />
-                    {form.errors.capacity && (
+                    <p className="text-xs text-muted-foreground">
+                        Sert de lien par défaut : chaque séance peut avoir le
+                        sien depuis le planning.
+                    </p>
+                    {form.errors.meeting_url && (
                         <p role="alert" className="text-sm text-destructive">
-                            {form.errors.capacity}
+                            {form.errors.meeting_url}
                         </p>
                     )}
                 </div>
-            )}
-            <div className="flex items-start gap-3">
-                <Checkbox
-                    id="is_published"
-                    checked={form.data.is_published}
-                    onCheckedChange={(checked) =>
-                        form.setData('is_published', checked === true)
-                    }
-                />
-                <div className="grid gap-1">
-                    <Label htmlFor="is_published">
-                        Ouvert aux inscriptions
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                        Décoche pour masquer le groupe aux élèves.
-                    </p>
+                {cohort.format === 'group' && (
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="capacity">Places</Label>
+                        <Input
+                            id="capacity"
+                            type="number"
+                            min={1}
+                            max={6}
+                            className="w-28"
+                            value={form.data.capacity}
+                            onChange={(event) =>
+                                form.setData(
+                                    'capacity',
+                                    Number(event.target.value),
+                                )
+                            }
+                            aria-invalid={
+                                form.errors.capacity ? true : undefined
+                            }
+                        />
+                        {form.errors.capacity && (
+                            <p
+                                role="alert"
+                                className="text-sm text-destructive"
+                            >
+                                {form.errors.capacity}
+                            </p>
+                        )}
+                    </div>
+                )}
+                <div className="flex flex-col gap-2 xl:max-w-xs">
+                    <span
+                        className="invisible text-sm leading-none font-medium select-none"
+                        aria-hidden="true"
+                    >
+                        Inscriptions
+                    </span>
+                    <div className="flex items-start gap-3">
+                        <Checkbox
+                            id="is_published"
+                            checked={form.data.is_published}
+                            onCheckedChange={(checked) =>
+                                form.setData('is_published', checked === true)
+                            }
+                        />
+                        <div className="grid gap-1">
+                            <Label htmlFor="is_published">
+                                Ouvert aux inscriptions
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                Décoche pour masquer le groupe aux élèves.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <Button
-                type="submit"
-                disabled={form.processing || !form.isDirty}
-                className="self-end"
-            >
-                {form.processing && <Spinner data-icon="inline-start" />}
-                Enregistrer
-            </Button>
         </form>
     );
 }

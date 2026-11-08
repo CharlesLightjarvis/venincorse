@@ -12,6 +12,7 @@ return [
     'meeting_url_invalid' => 'Le lien de la visio doit être une adresse sécurisée commençant par https://.',
     'cohort_created' => 'Groupe créé : il est ouvert aux inscriptions.',
     'cohort_saved' => 'Modifications enregistrées.',
+    'session_saved' => 'Lien de la séance enregistré.',
     'cohort_deleted' => 'Groupe supprimé.',
     'product_name' => 'Parcours d’allemand :level — :format (60 heures)',
     'goal_invalid' => 'Décris ton objectif en quelques mots (5 à 2 000 caractères).',

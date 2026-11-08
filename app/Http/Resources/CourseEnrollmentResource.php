@@ -17,6 +17,7 @@ final class CourseEnrollmentResource extends JsonResource
         $isOwner = $request->user()?->id === $this->user_id;
         $isManager = $request->user()?->can(PermissionEnum::ManageCourses->value) ?? false;
         $cohort = $this->cohort;
+        $canSeeMeetingLinks = $isManager || ($isOwner && $this->status === CourseEnrollmentStatus::Confirmed && $cohort->ends_at->isFuture());
 
         return [
             'id' => $this->id,
@@ -40,11 +41,8 @@ final class CourseEnrollmentResource extends JsonResource
             'expires_at' => $this->expires_at->toIso8601String(),
             'withdrawal_ends_at' => $this->resource->withdrawalEndsAt()->toIso8601String(),
             'can_pay' => $isOwner && $this->resource->isAwaitingPayment(),
-            'cohort' => CourseCohortResource::make($cohort)->resolve($request),
-            'meeting_url' => $this->when(
-                $isManager || ($isOwner && $this->status === CourseEnrollmentStatus::Confirmed && $cohort->ends_at->isFuture()),
-                $cohort->meeting_url,
-            ),
+            'cohort' => new CourseCohortResource($cohort, $canSeeMeetingLinks)->resolve($request),
+            'meeting_url' => $this->when($canSeeMeetingLinks, $cohort->meeting_url),
             'refunded_cents' => $this->refunded_cents,
             'cancellation_reason' => $this->cancellation_reason,
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),

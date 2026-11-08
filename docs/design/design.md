@@ -175,6 +175,36 @@ Toutes les icônes de l’app viennent de **[Reicon](https://reicon.dev/icons)**
   parcours », accessible depuis la sidebar.
 - Icônes de la sidebar et des pages : Reicon (voir [§ Icônes](#icônes)).
 
+## Calendriers & planning (CalendarKit)
+
+- **Tout calendrier ou planning passe par CalendarKit Pro** (`calendarkit-pro`,
+  MIT), jamais par une grille maison. Le composant partagé des séances est
+  `resources/js/components/course-planning-calendar.tsx`.
+- Styles : `import 'calendarkit-pro/styles.css'` dans le composant et
+  `injectStyles={false}` sur `<Scheduler>`. Vite extrait la feuille dans un
+  chunk chargé seulement par les pages concernées (pas dans `app.css`).
+- Couleurs : thème `calm` branché sur les tokens shadcn (`var(--primary)`,
+  `var(--border)`…), donc clair/sombre automatiques. Police `var(--font-sans)`.
+- Langue `fr` (`language="fr"` + `locale={fr}`), fuseau de l’utilisateur
+  (`useUserTimezone()`), vue **mois** par défaut, date initiale = prochaine
+  séance, `scrollToHour` juste avant les séances pour les vues semaine/jour.
+- Plannings de séances : **lecture seule** (`readOnly`, `draggable: false`,
+  `resizable: false`). Vues mois, semaine, jour et agenda.
+- **Clic sur une séance** : popover ancré à la séance, avec les classes et le
+  placement du popover natif de CalendarKit (`ck:` : carte de 340 px placée à
+  côté de l’événement, backdrop transparent sur ordinateur, feuille en bas sur
+  mobile), date, horaire, durée, fuseau et lien visio. Le calendrier reste en
+  lecture seule : le popover est rendu par le composant partagé, avec les
+  tokens `--ck-*` branchés sur shadcn. L’équipe modifie le lien de la séance
+  dans le popover ; l’élève confirmé y retrouve le bouton « Rejoindre la
+  visio » (lien de la séance, sinon lien par défaut du groupe). Les liens ne
+  sont jamais exposés à un élève dont l’inscription n’est pas confirmée.
+- Pages migrées : fiche d’un parcours côté élève
+  (`course-enrollments/show.tsx`) et fiche d’un groupe côté équipe
+  (`course-cohorts/show.tsx`, réglages compacts au-dessus du calendrier pleine
+  largeur). Les autres surfaces de planning (disponibilités, essais, mocks de
+  réservation) doivent migrer progressivement.
+
 ## 9. Données & mocks
 
 - Mock-first : les données type catalogue vivent dans **`resources/js/data/*.ts`**

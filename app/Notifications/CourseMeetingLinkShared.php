@@ -32,9 +32,9 @@ final class CourseMeetingLinkShared extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Le lien de la visio de ton parcours '.strtoupper($this->cohort->level->value))
             ->greeting('Bonjour '.$this->plain($notifiable->name).',')
-            ->line('Ton professeur a partagé le lien de la visio de ton groupe ('.$this->cohort->level->label().'). Il est le même pour toutes les séances.')
+            ->line('Ton professeur a partagé le lien de la visio de ton groupe ('.$this->cohort->level->label().'). Il s’applique aux séances qui n’ont pas leur propre lien.')
             ->action('Rejoindre la visio', (string) $this->cohort->meeting_url)
-            ->line('Tu le retrouves aussi à tout moment dans « Mes parcours ».')
+            ->line('Tu le retrouves aussi à tout moment dans le planning de « Mes parcours ».')
             ->salutation($this->signature());
     }
 }

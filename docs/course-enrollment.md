@@ -6,43 +6,43 @@ Ce document décrit la fonctionnalité « parcours » (branche `feat/course-enro
 
 Un **parcours** = un niveau complet du CECRL (A1, A2, B1, B2) de **60 heures**, suivi en **groupe** (3 à 6 élèves) ou en **individuel**, à un **rythme** fixe. Le professeur crée les groupes ; l’élève choisit un groupe ouvert, paie (en une fois ou en 3 fois sans frais) et retrouve tout dans « Mes parcours ».
 
-| Étape | Commit | Contenu |
-| --- | --- | --- |
-| 1 | `be16336` | Groupes créés par le professeur, planning de 60 h généré automatiquement |
-| 2 | `dbf8858` | Inscription et paiement en une fois (Stripe), espace « Mes parcours » |
-| 3 | `c993081` | Paiement en 3 fois : carte enregistrée, prélèvements automatiques, relances |
-| 4 | `650e6bf` | Outils du professeur : annulation avec remboursement, notes, lien visio par email |
-| 5 | (ce commit) | CGV « Parcours », confidentialité, documentation |
+| Étape | Commit      | Contenu                                                                           |
+| ----- | ----------- | --------------------------------------------------------------------------------- |
+| 1     | `be16336`   | Groupes créés par le professeur, planning de 60 h généré automatiquement          |
+| 2     | `dbf8858`   | Inscription et paiement en une fois (Stripe), espace « Mes parcours »             |
+| 3     | `c993081`   | Paiement en 3 fois : carte enregistrée, prélèvements automatiques, relances       |
+| 4     | `650e6bf`   | Outils du professeur : annulation avec remboursement, notes, lien visio par email |
+| 5     | (ce commit) | CGV « Parcours », confidentialité, documentation                                  |
 
 ## Décisions prises avec le porteur du projet
 
-| Sujet | Décision |
-| --- | --- |
-| Organisation des groupes | **Créés par le professeur** (niveau, format, rythme, date, heure, places). Pas de dates générées automatiquement. |
-| Individuel (1:1) | **Même système** : un « groupe » d’une seule place. |
-| Groupe peu rempli | Il **démarre quel que soit le nombre d’inscrits**. |
-| Paiement | **En une fois ou en 3 fois**, dès la V1. |
-| Frais du paiement en 3 fois | **0 % par défaut** (`COURSE_INSTALLMENT_SURCHARGE_PERCENT`). La maquette prévoyait +5 % : des frais non négligeables peuvent faire du paiement fractionné un crédit à la consommation (art. L312-4 du Code de la consommation). À valider par un juriste avant de mettre des frais. |
-| Remboursement | Pas de bouton « Annuler » pour l’élève. **Seul le droit légal de rétractation** (14 jours, par email) s’applique, au **prorata** si le parcours a commencé. Après le délai : aucun remboursement, échéances dues. |
-| Crédit du cours d’essai (39 €) | **Pas de crédit** en V1. |
+| Sujet                          | Décision                                                                                                                                                                                                                                                                            |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Organisation des groupes       | **Créés par le professeur** (niveau, format, rythme, date, heure, places). Pas de dates générées automatiquement.                                                                                                                                                                   |
+| Individuel (1:1)               | **Même système** : un « groupe » d’une seule place.                                                                                                                                                                                                                                 |
+| Groupe peu rempli              | Il **démarre quel que soit le nombre d’inscrits**.                                                                                                                                                                                                                                  |
+| Paiement                       | **En une fois ou en 3 fois**, dès la V1.                                                                                                                                                                                                                                            |
+| Frais du paiement en 3 fois    | **0 % par défaut** (`COURSE_INSTALLMENT_SURCHARGE_PERCENT`). La maquette prévoyait +5 % : des frais non négligeables peuvent faire du paiement fractionné un crédit à la consommation (art. L312-4 du Code de la consommation). À valider par un juriste avant de mettre des frais. |
+| Remboursement                  | Pas de bouton « Annuler » pour l’élève. **Seul le droit légal de rétractation** (14 jours, par email) s’applique, au **prorata** si le parcours a commencé. Après le délai : aucun remboursement, échéances dues.                                                                   |
+| Crédit du cours d’essai (39 €) | **Pas de crédit** en V1.                                                                                                                                                                                                                                                            |
 
 ## Catalogue et rythmes
 
 Configuration : `config/courses.php`.
 
-| Niveau | Groupe | Individuel |
-| --- | --- | --- |
-| A1 — Les fondations | 720 € | 2 090 € |
-| A2 — Raconter | 720 € | 2 090 € |
-| B1 — S’exprimer | 840 € | 2 090 € |
-| B2 — Structurer | 900 € | 2 090 € |
+| Niveau              | Groupe | Individuel |
+| ------------------- | ------ | ---------- |
+| A1 — Les fondations | 720 €  | 2 090 €    |
+| A2 — Raconter       | 720 €  | 2 090 €    |
+| B1 — S’exprimer     | 840 €  | 2 090 €    |
+| B2 — Structurer     | 900 €  | 2 090 €    |
 
-| Rythme | Jours | Durée d’une séance | Durée du parcours |
-| --- | --- | --- | --- |
-| Extensif | lun., mer., ven. | 1 h | ~20 semaines |
-| Accéléré | mar., jeu. | 3 h | ~10 semaines |
-| Intensif | du lundi au vendredi | 3 h | 4 semaines |
-| Super intensif | du lundi au vendredi | 5 h | ~2,5 semaines |
+| Rythme         | Jours                | Durée d’une séance | Durée du parcours |
+| -------------- | -------------------- | ------------------ | ----------------- |
+| Extensif       | lun., mer., ven.     | 1 h                | ~20 semaines      |
+| Accéléré       | mar., jeu.           | 3 h                | ~10 semaines      |
+| Intensif       | du lundi au vendredi | 3 h                | 4 semaines        |
+| Super intensif | du lundi au vendredi | 5 h                | ~2,5 semaines     |
 
 Le **prix est copié sur le groupe à sa création** : changer la configuration n’affecte jamais les groupes existants ni les élèves déjà inscrits.
 
@@ -52,12 +52,12 @@ Menu **« Groupes des parcours »** (`/teaching/course-cohorts`).
 
 - **Créer un groupe** : niveau, format, rythme, date de début, heure des séances (heure de Paris), places (6 maximum, 1 en individuel), jours sans cours (fériés, vacances). Un aperçu indique le nombre de séances et les dates de début et de fin.
 - **Planning automatique** (`CreateCourseCohort`) : les 60 heures sont réparties à partir de la date de début sur les jours du rythme, en sautant les jours sans cours. Les heures sont lues dans le fuseau de l’école (`TRIAL_TIMEZONE`, `Europe/Paris`) et stockées en UTC : une séance à 9 h reste à 9 h après le passage à l’heure d’été.
-- **Fiche du groupe** : dates, séances à venir, places, prix, planning complet, élèves (statut, paiement, échéances, « Échéance impayée »).
-- **Réglages** : lien visio (unique pour le groupe, envoyé par email aux élèves inscrits quand il est ajouté ou modifié), nombre de places (jamais en dessous du nombre d’inscrits), ouverture aux inscriptions.
+- **Fiche du groupe** : dates, séances à venir, places, prix, planning en calendrier, élèves (statut, paiement, échéances, « Échéance impayée »). Le planning utilise **CalendarKit Pro** (vues mois, semaine, jour, agenda, fuseau de l’équipe, lecture seule) ; les réglages compacts sont au-dessus du calendrier pleine largeur. Un clic sur une séance ouvre un **popover ancré** à la séance avec sa date, son horaire, sa durée et son lien visio ; l’équipe peut y modifier le lien de cette séance.
+- **Réglages** : **lien visio par défaut** du groupe (envoyé par email aux élèves inscrits quand il est ajouté ou modifié), nombre de places (jamais en dessous du nombre d’inscrits), ouverture aux inscriptions. Chaque séance peut avoir **son propre lien**, saisi depuis son popover dans le planning ; sans lien spécifique, c’est le lien par défaut qui s’applique.
 - **Supprimer** : seulement un groupe sans inscrit ; sinon, le fermer aux inscriptions.
 - **« Gérer » un élève** :
-  - notes privées ;
-  - **annuler l’inscription** avec un remboursement **au prorata** (rétractation après le début : l’élève doit la part des heures déjà effectuées), **intégral** (groupe annulé par l’école) ou **nul** (après le délai), ou un montant libre plafonné à ce qui a été payé. Le remboursement est pris sur les paiements réels, le plus récent d’abord ; les échéances restantes sont annulées ; la place est libérée ; l’élève reçoit un email avec le motif et le montant.
+    - notes privées ;
+    - **annuler l’inscription** avec un remboursement **au prorata** (rétractation après le début : l’élève doit la part des heures déjà effectuées), **intégral** (groupe annulé par l’école) ou **nul** (après le délai), ou un montant libre plafonné à ce qui a été payé. Le remboursement est pris sur les paiements réels, le plus récent d’abord ; les échéances restantes sont annulées ; la place est libérée ; l’élève reçoit un email avec le motif et le montant.
 
 ## Côté élève (permissions `course-enrollments.create` et `course-enrollments.view-own`)
 
@@ -71,21 +71,21 @@ Accessible depuis « Réserver une place » sur la page d’un parcours. Trois �
 
 ### « Mes parcours » (`/course-enrollments`)
 
-La page liste les inscriptions sous forme de **cartes** (niveau, format, rythme, statut, dates, prochaine séance, prix), comme les groupes côté professeur. Chaque carte ouvre une **page de détail** (`/course-enrollments/{id}`) : statut, dates, horaires, prochaine séance, séances suivies, planning complet, bouton « Rejoindre la visio » (élèves inscrits seulement), échéancier en 3 fois avec « Régler maintenant », date limite de rétractation, motif et montant en cas d’annulation, « Reprendre le paiement » si l’élève a quitté Stripe.
+La page liste les inscriptions sous forme de **cartes** (niveau, format, rythme, statut, dates, prochaine séance, prix), comme les groupes côté professeur. Chaque carte ouvre une **page de détail** (`/course-enrollments/{id}`) : statut, dates, horaires, prochaine séance, séances suivies, **planning en calendrier CalendarKit** (vues mois, semaine, jour, agenda, fuseau de l’élève, lecture seule, ouverte sur la prochaine séance), **popover de séance** au clic (date, horaire, durée, bouton « Rejoindre la visio » avec le lien propre à la séance ou, à défaut, le lien par défaut du groupe), bouton « Rejoindre la visio », échéancier en 3 fois avec « Régler maintenant », date limite de rétractation, motif et montant en cas d’annulation, « Reprendre le paiement » si l’élève a quitté Stripe. Les liens visio ne sont exposés qu’aux élèves dont l’inscription est **confirmée** et dont le parcours n’est pas terminé.
 
 ## Statuts
 
 **Inscription** (`CourseEnrollmentStatus`) :
 
-| Statut | Signification |
-| --- | --- |
-| `pending` | Place réservée 45 min pendant le paiement |
-| `processing` | Paiement envoyé, en attente de la banque |
-| `confirmed` | Inscrit |
+| Statut           | Signification                                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `pending`        | Place réservée 45 min pendant le paiement                                                                              |
+| `processing`     | Paiement envoyé, en attente de la banque                                                                               |
+| `confirmed`      | Inscrit                                                                                                                |
 | `payment_review` | Paiement reçu mais non confirmable (montant inattendu, groupe complet ou commencé et remboursement automatique échoué) |
-| `expired` | Non payé à temps, place libérée |
-| `refunded` | Paiement arrivé trop tard (groupe complet ou commencé), remboursé automatiquement |
-| `cancelled` | Annulé par le professeur (avec ou sans remboursement) |
+| `expired`        | Non payé à temps, place libérée                                                                                        |
+| `refunded`       | Paiement arrivé trop tard (groupe complet ou commencé), remboursé automatiquement                                      |
+| `cancelled`      | Annulé par le professeur (avec ou sans remboursement)                                                                  |
 
 Une place est occupée par les inscriptions `processing`, `confirmed`, `payment_review`, et `pending` tant que le délai de paiement court.
 
@@ -115,23 +115,23 @@ Verrou par inscription (`TrialReservationLock`) sur toute opération d’argent,
 
 ## Emails (tous en file d’attente, en français)
 
-| Email | Destinataire | Quand |
-| --- | --- | --- |
-| `CourseEnrolled` | Élève | Inscription confirmée : récapitulatif, échéancier, date limite de rétractation |
-| `CourseEnrolledForTeacher` | Équipe | Nouvelle inscription |
-| `CourseEnrollmentRefunded` | Élève | Paiement arrivé trop tard, remboursé |
-| `CourseInstallmentPaid` | Élève | Échéance 2 ou 3 réglée (reçu) |
-| `CourseInstallmentFailed` | Élève | Prélèvement refusé, avec lien de paiement |
-| `CourseMeetingLinkShared` | Élèves inscrits | Lien visio ajouté ou modifié |
-| `CourseEnrollmentCancelled` | Élève | Inscription annulée par le professeur, motif et remboursement |
-| `TrialPaymentAlert` | Équipe | Montant inattendu, remboursement automatique échoué ou interrompu, échéance impayée après la dernière tentative |
+| Email                       | Destinataire    | Quand                                                                                                           |
+| --------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------- |
+| `CourseEnrolled`            | Élève           | Inscription confirmée : récapitulatif, échéancier, date limite de rétractation                                  |
+| `CourseEnrolledForTeacher`  | Équipe          | Nouvelle inscription                                                                                            |
+| `CourseEnrollmentRefunded`  | Élève           | Paiement arrivé trop tard, remboursé                                                                            |
+| `CourseInstallmentPaid`     | Élève           | Échéance 2 ou 3 réglée (reçu)                                                                                   |
+| `CourseInstallmentFailed`   | Élève           | Prélèvement refusé, avec lien de paiement                                                                       |
+| `CourseMeetingLinkShared`   | Élèves inscrits | Lien visio par défaut ajouté ou modifié                                                                         |
+| `CourseEnrollmentCancelled` | Élève           | Inscription annulée par le professeur, motif et remboursement                                                   |
+| `TrialPaymentAlert`         | Équipe          | Montant inattendu, remboursement automatique échoué ou interrompu, échéance impayée après la dernière tentative |
 
 ## Tâches planifiées
 
-| Commande | Fréquence | Rôle |
-| --- | --- | --- |
-| `courses:expire-enrollments` | chaque minute | Libère les places non payées, rattrape les paiements dont le webhook manque |
-| `courses:charge-installments` | toutes les heures | Prélève les échéances dues, gère les relances |
+| Commande                      | Fréquence         | Rôle                                                                        |
+| ----------------------------- | ----------------- | --------------------------------------------------------------------------- |
+| `courses:expire-enrollments`  | chaque minute     | Libère les places non payées, rattrape les paiements dont le webhook manque |
+| `courses:charge-installments` | toutes les heures | Prélève les échéances dues, gère les relances                               |
 
 ## Webhook Stripe
 
@@ -150,17 +150,18 @@ La suppression d’un compte est **refusée** tant qu’un parcours est en cours
 
 ## Code
 
-| Domaine | Fichiers |
-| --- | --- |
-| Configuration | `config/courses.php` |
-| Modèles | `CourseCohort`, `CourseSession`, `CourseEnrollment`, `CourseInstallment` |
-| Enums | `CourseLevel`, `CourseFormat`, `CourseRhythm`, `CourseEnrollmentStatus`, `CoursePaymentPlan`, `CourseInstallmentStatus` |
-| Actions | `CreateCourseCohort`, `UpdateCourseCohort`, `DeleteCourseCohort`, `CreateCourseEnrollment`, `CreateCourseCheckout`, `ApplyCourseEnrollmentPayment`, `ReconcileCourseEnrollmentPayment`, `CreateCourseEnrolledNotifications`, `CreateCourseInstallmentCharges`, `CreateCourseInstallmentCheckout`, `ApplyCourseInstallmentPayment`, `UpdateCourseInstallmentPaid`, `CreateCourseEnrollmentCancellation`, `UpdateCourseEnrollment` |
-| Stripe | `app/Services/CoursePaymentGateway.php`, webhook `app/Listeners/HandleTrialPaymentWebhook.php` |
-| Contrôleurs | `CourseCohortController`, `CourseCatalogController`, `CourseEnrollmentController`, `CourseInstallmentCheckoutController`, `CourseEnrollmentManagementController`, `CourseEnrollmentCancellationController` |
-| Commandes | `courses:expire-enrollments`, `courses:charge-installments` |
-| Pages | `course-cohorts/{index,create,show}.tsx` (professeur), `course-enrollments/{create,index,show}.tsx` (élève), `courses/course-detail.tsx` (bandeau du prochain groupe) |
-| Tests | `tests/Feature/CourseCohortTest.php`, `CourseEnrollmentTest.php`, `CourseInstallmentTest.php`, `CourseManagementTest.php` |
+| Domaine       | Fichiers                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configuration | `config/courses.php`                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Modèles       | `CourseCohort`, `CourseSession`, `CourseEnrollment`, `CourseInstallment`                                                                                                                                                                                                                                                                                                                                                         |
+| Enums         | `CourseLevel`, `CourseFormat`, `CourseRhythm`, `CourseEnrollmentStatus`, `CoursePaymentPlan`, `CourseInstallmentStatus`                                                                                                                                                                                                                                                                                                          |
+| Actions       | `CreateCourseCohort`, `UpdateCourseCohort`, `DeleteCourseCohort`, `CreateCourseEnrollment`, `CreateCourseCheckout`, `ApplyCourseEnrollmentPayment`, `ReconcileCourseEnrollmentPayment`, `CreateCourseEnrolledNotifications`, `CreateCourseInstallmentCharges`, `CreateCourseInstallmentCheckout`, `ApplyCourseInstallmentPayment`, `UpdateCourseInstallmentPaid`, `CreateCourseEnrollmentCancellation`, `UpdateCourseEnrollment` |
+| Stripe        | `app/Services/CoursePaymentGateway.php`, webhook `app/Listeners/HandleTrialPaymentWebhook.php`                                                                                                                                                                                                                                                                                                                                   |
+| Contrôleurs   | `CourseCohortController`, `CourseSessionController`, `CourseCatalogController`, `CourseEnrollmentController`, `CourseInstallmentCheckoutController`, `CourseEnrollmentManagementController`, `CourseEnrollmentCancellationController`                                                                                                                                                                                              |
+| Commandes     | `courses:expire-enrollments`, `courses:charge-installments`                                                                                                                                                                                                                                                                                                                                                                      |
+| Pages         | `course-cohorts/{index,create,show}.tsx` (professeur), `course-enrollments/{create,index,show}.tsx` (élève), `courses/course-detail.tsx` (bandeau du prochain groupe)                                                                                                                                                                                                                                                            |
+| Planning      | `resources/js/components/course-planning-calendar.tsx` (CalendarKit Pro, lecture seule)                                                                                                                                                                                                                                                                                                                                          |
+| Tests         | `tests/Feature/CourseCohortTest.php`, `CourseEnrollmentTest.php`, `CourseInstallmentTest.php`, `CourseManagementTest.php`                                                                                                                                                                                                                                                                                                        |
 
 ## Hors V1 (voir [backlog.md](backlog.md))
 

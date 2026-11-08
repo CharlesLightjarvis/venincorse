@@ -7,6 +7,7 @@ use App\Http\Controllers\CourseEnrollmentCancellationController;
 use App\Http\Controllers\CourseEnrollmentController;
 use App\Http\Controllers\CourseEnrollmentManagementController;
 use App\Http\Controllers\CourseInstallmentCheckoutController;
+use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\TrialAvailabilityController;
 use App\Http\Controllers\TrialCancellationController;
 use App\Http\Controllers\TrialCheckoutController;
@@ -89,6 +90,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::resource('course-cohorts', CourseCohortController::class)
             ->parameters(['course-cohorts' => 'cohort'])
             ->except(['edit']);
+        Route::put('course-sessions/{session}', [CourseSessionController::class, 'update'])
+            ->name('course-sessions.update');
         Route::patch('course-enrollments/{enrollment}', [CourseEnrollmentManagementController::class, 'update'])
             ->name('course-enrollment-management.update');
         Route::post('course-enrollments/{enrollment}/cancellation', [CourseEnrollmentCancellationController::class, 'store'])

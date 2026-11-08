@@ -4,6 +4,7 @@ use App\Actions\ApplyCourseEnrollmentPayment;
 use App\Enums\CourseEnrollmentStatus;
 use App\Models\CourseCohort;
 use App\Models\CourseEnrollment;
+use App\Models\CourseSession;
 use App\Models\User;
 use App\Notifications\CourseEnrolled;
 use App\Notifications\CourseEnrolledForTeacher;
@@ -221,6 +222,34 @@ test('a student opens the detail page of their own course', function () {
         ->assertInertia(fn (Assert $page) => $page->component('course-enrollments/show')
             ->where('enrollment.id', $enrollment->id)
             ->where('enrollment.status', 'confirmed'));
+});
+
+test('a student sees each session visio link once enrolled, not while the payment is pending', function () {
+    $student = courseStudent();
+    $cohort = CourseCohort::factory()->create(['meeting_url' => 'https://meet.google.com/group-default']);
+    CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id,
+        'meeting_url' => 'https://meet.google.com/session-one',
+    ]);
+    $confirmed = CourseEnrollment::factory()->confirmed()->create([
+        'course_cohort_id' => $cohort->id,
+        'user_id' => $student->id,
+    ]);
+
+    $this->actingAs($student)->get(route('course-enrollments.show', $confirmed))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('enrollment.cohort.sessions.0.meeting_url', 'https://meet.google.com/session-one')
+            ->where('enrollment.meeting_url', 'https://meet.google.com/group-default'));
+
+    $pending = CourseEnrollment::factory()->create([
+        'course_cohort_id' => $cohort->id,
+        'user_id' => $student->id,
+    ]);
+
+    $this->actingAs($student)->get(route('course-enrollments.show', $pending))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('enrollment.cohort.sessions.0.meeting_url', null)
+            ->missing('enrollment.meeting_url'));
 });
 
 test('a student cannot open the detail page of someone else’s course', function () {

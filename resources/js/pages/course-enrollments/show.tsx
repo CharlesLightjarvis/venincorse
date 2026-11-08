@@ -1,22 +1,11 @@
 import { Head, Link, router, setLayoutProps } from '@inertiajs/react';
 import { useState } from 'react';
-import {
-    CalendarDays,
-    ChevronDown,
-    Clock,
-    CreditCard,
-    Users,
-    Video,
-} from 'reicon-react';
+import { CalendarDays, Clock, CreditCard, Users, Video } from 'reicon-react';
+import { CoursePlanningCalendar } from '@/components/course-planning-calendar';
 import { TrialInfoCard } from '@/components/trial-info-card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { Spinner } from '@/components/ui/spinner';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import {
@@ -62,6 +51,13 @@ export default function ShowCourseEnrollment({
     const confirmed = enrollment.status === 'confirmed';
     const withdrawalOpen =
         new Date(enrollment.withdrawal_ends_at).getTime() > now;
+    // Each session can have its own link; the group's default link is the fallback.
+    const nextMeetingUrl = next
+        ? (next.meeting_url ?? enrollment.meeting_url ?? null)
+        : null;
+    const hasMeetingUrl =
+        Boolean(enrollment.meeting_url) ||
+        sessions.some((session) => Boolean(session.meeting_url));
 
     setLayoutProps({
         breadcrumbs: [
@@ -89,10 +85,10 @@ export default function ShowCourseEnrollment({
                         {cohort.format_label} · {cohort.rhythm_label}
                     </p>
                 </div>
-                {confirmed && enrollment.meeting_url && (
+                {confirmed && nextMeetingUrl && (
                     <Button asChild>
                         <a
-                            href={enrollment.meeting_url}
+                            href={nextMeetingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                         >
@@ -228,59 +224,30 @@ export default function ShowCourseEnrollment({
                     <InstallmentSchedule enrollment={enrollment} />
                 )}
 
-            {confirmed && !enrollment.meeting_url && (
+            {confirmed && !hasMeetingUrl && (
                 <p className="text-sm text-muted-foreground">
-                    Ton professeur ajoutera le lien de la visio avant la
-                    première séance.
+                    Ton professeur ajoutera les liens de visio avant les
+                    séances.
                 </p>
             )}
 
             {sessions.length > 0 && (
-                <Collapsible className="rounded-lg border border-border">
-                    <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-5 py-3 text-left font-medium">
-                        Planning complet ({sessions.length} séances)
-                        <ChevronDown
-                            className="size-4 transition-transform group-data-[state=open]:rotate-180"
-                            aria-hidden="true"
-                        />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                        <ol className="grid max-h-96 divide-y divide-border overflow-y-auto border-t border-border">
-                            {sessions.map((session) => {
-                                const past =
-                                    new Date(session.starts_at).getTime() +
-                                        session.duration_minutes * 60_000 <=
-                                    now;
-
-                                return (
-                                    <li
-                                        key={session.position}
-                                        className={`flex items-center justify-between gap-3 px-5 py-2.5 text-sm ${past ? 'text-muted-foreground' : ''}`}
-                                    >
-                                        <span className="flex items-center gap-3">
-                                            <span className="w-8 font-mono text-xs text-muted-foreground">
-                                                {session.position}
-                                            </span>
-                                            <span className="first-letter:uppercase">
-                                                {format(session.starts_at, {
-                                                    weekday: 'long',
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                })}
-                                            </span>
-                                        </span>
-                                        <span className="tabular-nums">
-                                            {format(session.starts_at, {
-                                                timeStyle: 'short',
-                                            })}{' '}
-                                            · {session.duration_minutes / 60} h
-                                        </span>
-                                    </li>
-                                );
-                            })}
-                        </ol>
-                    </CollapsibleContent>
-                </Collapsible>
+                <section className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-xl font-semibold">Planning</h2>
+                        <Badge variant="outline">
+                            {sessions.length} séances
+                        </Badge>
+                    </div>
+                    <CoursePlanningCalendar
+                        sessions={sessions}
+                        defaultMeetingUrl={enrollment.meeting_url ?? null}
+                        canJoin={
+                            confirmed &&
+                            new Date(cohort.ends_at).getTime() > now
+                        }
+                    />
+                </section>
             )}
 
             {confirmed && (
