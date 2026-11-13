@@ -1,15 +1,23 @@
 <?php
 
+use App\Enums\CourseAttendanceStatus;
 use App\Enums\CourseEnrollmentStatus;
 use App\Enums\CourseInstallmentStatus;
 use App\Enums\CoursePaymentPlan;
+use App\Enums\CourseRhythm;
 use App\Models\CourseCohort;
 use App\Models\CourseEnrollment;
 use App\Models\CourseInstallment;
 use App\Models\CourseSession;
+use App\Models\CourseSessionAttendance;
 use App\Models\User;
 use App\Notifications\CourseEnrollmentCancelled;
 use App\Notifications\CourseMeetingLinkShared;
+use App\Notifications\CourseScheduleChanged;
+use App\Notifications\CourseSessionCancelled;
+use App\Notifications\CourseSessionMeetingLinkShared;
+use App\Notifications\CourseSessionRescheduled;
+use App\Notifications\TrialPaymentAlert;
 use App\Services\CoursePaymentGateway;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Notification;
@@ -145,4 +153,231 @@ test('an account following a course cannot be deleted; once it is over, it is an
 
     expect($user->fresh()->name)->toBe('Compte supprimé')
         ->and($enrollment->fresh()->goal)->toBe('—');
+});
+
+test('a session can be moved to a new date, and the enrolled students are emailed', function () {
+    $cohort = CourseCohort::factory()->create(['starts_at' => now()->addWeek(), 'ends_at' => now()->addMonth()]);
+    $session = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 1,
+        'starts_at' => now()->addWeek()->setTime(9, 0), 'duration_minutes' => 180,
+    ]);
+    $student = CourseEnrollment::factory()->confirmed()->create(['course_cohort_id' => $cohort->id])->user;
+    $this->actingAs($this->teacher);
+    $previous = $session->starts_at;
+    $newDate = now()->addWeeks(2)->setTime(14, 0);
+
+    $this->put(route('course-sessions.update', $session), ['starts_at' => $newDate->toIso8601String()])
+        ->assertSessionHasNoErrors();
+
+    expect($session->fresh()->starts_at->equalTo($newDate))->toBeTrue()
+        ->and($cohort->fresh()->starts_at->equalTo($newDate))->toBeTrue();
+    Notification::assertSentTo($student, CourseSessionRescheduled::class, fn ($mail) => $mail->previousStartsAt->equalTo($previous));
+
+    $this->put(route('course-sessions.update', $session), ['starts_at' => now()->subDay()->toIso8601String()])
+        ->assertInvalid(['starts_at']);
+});
+
+test('a session can be cancelled with a reason and restored, but a past one cannot be cancelled', function () {
+    $cohort = CourseCohort::factory()->create();
+    $session = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'starts_at' => now()->addWeek(), 'duration_minutes' => 180,
+    ]);
+    $student = CourseEnrollment::factory()->confirmed()->create(['course_cohort_id' => $cohort->id])->user;
+    $this->actingAs($this->teacher);
+
+    $this->put(route('course-sessions.update', $session), [
+        'is_cancelled' => true, 'cancellation_reason' => 'Professeur absent, s�ance report�e.',
+    ])->assertSessionHasNoErrors();
+
+    expect($session->fresh()->cancelled_at)->not->toBeNull()
+        ->and($session->fresh()->cancellation_reason)->toBe('Professeur absent, s�ance report�e.');
+    Notification::assertSentTo($student, CourseSessionCancelled::class);
+
+    $this->put(route('course-sessions.update', $session), ['is_cancelled' => false])
+        ->assertSessionHasNoErrors();
+    expect($session->fresh()->cancelled_at)->toBeNull()
+        ->and($session->fresh()->cancellation_reason)->toBeNull();
+
+    $past = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 2,
+        'starts_at' => now()->subDay(), 'duration_minutes' => 180,
+    ]);
+    $this->put(route('course-sessions.update', $past), [
+        'is_cancelled' => true, 'cancellation_reason' => 'Trop tard pour annuler.',
+    ])->assertInvalid(['is_cancelled']);
+
+    expect($past->fresh()->cancelled_at)->toBeNull();
+});
+
+test('changing the visio link of a future session emails students; a past session only records it', function () {
+    $cohort = CourseCohort::factory()->create();
+    $future = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 1,
+        'starts_at' => now()->addWeek(), 'duration_minutes' => 180,
+    ]);
+    $past = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 2,
+        'starts_at' => now()->subWeek(), 'duration_minutes' => 180,
+    ]);
+    $student = CourseEnrollment::factory()->confirmed()->create(['course_cohort_id' => $cohort->id])->user;
+    $this->actingAs($this->teacher);
+
+    $this->put(route('course-sessions.update', $future), [
+        'meeting_url' => 'https://meet.google.com/session-link',
+    ])->assertSessionHasNoErrors();
+    $this->put(route('course-sessions.update', $past), [
+        'meeting_url' => 'https://meet.google.com/past-link',
+    ])->assertSessionHasNoErrors();
+
+    expect($future->fresh()->meeting_url)->toBe('https://meet.google.com/session-link')
+        ->and($past->fresh()->meeting_url)->toBe('https://meet.google.com/past-link');
+    Notification::assertSentToTimes($student, CourseSessionMeetingLinkShared::class, 1);
+});
+
+test('the teacher records who attended a started session, replacing the previous call', function () {
+    $cohort = CourseCohort::factory()->create();
+    $session = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'starts_at' => now()->subHour(), 'duration_minutes' => 180,
+    ]);
+    $enrollment = CourseEnrollment::factory()->confirmed()->create(['course_cohort_id' => $cohort->id]);
+    $paying = CourseEnrollment::factory()->create(['course_cohort_id' => $cohort->id]);
+    $future = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 2,
+        'starts_at' => now()->addDay(), 'duration_minutes' => 180,
+    ]);
+    $student = $enrollment->user;
+    $this->actingAs($this->teacher);
+
+    $this->put(route('course-sessions.attendance.update', $session), [
+        'attendances' => [$enrollment->id => 'present'],
+    ])->assertSessionHasNoErrors();
+
+    expect(CourseSessionAttendance::query()->where('course_session_id', $session->id)->sole())
+        ->status->toBe(CourseAttendanceStatus::Present)
+        ->course_enrollment_id->toBe($enrollment->id);
+
+    $this->put(route('course-sessions.attendance.update', $session), [
+        'attendances' => [$enrollment->id => 'excused'],
+    ])->assertSessionHasNoErrors();
+
+    expect($session->attendances()->count())->toBe(1)
+        ->and($session->attendances()->sole()->status)->toBe(CourseAttendanceStatus::Excused);
+
+    $this->put(route('course-sessions.attendance.update', $session), [
+        'attendances' => [$paying->id => 'present'],
+    ])->assertInvalid(['attendances']);
+
+    $this->put(route('course-sessions.attendance.update', $future), [
+        'attendances' => [$enrollment->id => 'present'],
+    ])->assertInvalid(['attendances']);
+
+    $student->assignRole('student');
+    $this->actingAs($student)->put(route('course-sessions.attendance.update', $session), [
+        'attendances' => [$enrollment->id => 'present'],
+    ])->assertForbidden();
+});
+
+test('cancelling a whole group refunds confirmed students, releases holds and cancels future sessions', function () {
+    $cohort = CourseCohort::factory()->create(['starts_at' => now()->addWeek(), 'ends_at' => now()->addMonth()]);
+    $first = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 1, 'starts_at' => now()->addWeek(), 'duration_minutes' => 180,
+    ]);
+    $second = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 2, 'starts_at' => now()->addWeeks(2), 'duration_minutes' => 180,
+    ]);
+    $confirmed = CourseEnrollment::factory()->confirmed()->create([
+        'course_cohort_id' => $cohort->id, 'amount_cents' => 72000, 'stripe_session_id' => 'cs_full',
+    ]);
+    $pending = CourseEnrollment::factory()->create(['course_cohort_id' => $cohort->id]);
+    $gateway = Mockery::mock(CoursePaymentGateway::class);
+    $gateway->shouldReceive('session')->andReturn(['payment_intent' => 'pi_full']);
+    $gateway->shouldReceive('refund')->once()
+        ->withArgs(fn ($enrollment, $paymentIntent, $amount) => $paymentIntent === 'pi_full' && $amount === 72000);
+    app()->instance(CoursePaymentGateway::class, $gateway);
+    $this->actingAs($this->teacher);
+
+    $this->post(route('course-cohort-cancellations.store', $cohort), [
+        'reason' => 'Nombre d’inscrits insuffisant pour ouvrir le groupe.',
+    ])->assertSessionHasNoErrors();
+
+    expect($cohort->fresh()->cancelled_at)->not->toBeNull()
+        ->and($cohort->fresh()->is_published)->toBeFalse()
+        ->and($first->fresh()->cancelled_at)->not->toBeNull()
+        ->and($second->fresh()->cancelled_at)->not->toBeNull()
+        ->and($confirmed->fresh())->status->toBe(CourseEnrollmentStatus::Cancelled)
+        ->and($confirmed->fresh()->refunded_cents)->toBe(72000)
+        ->and($pending->fresh())->status->toBe(CourseEnrollmentStatus::Expired)
+        ->and($cohort->fresh()->seatsLeft())->toBe(6);
+    Notification::assertSentTo($confirmed->user, CourseEnrollmentCancelled::class, fn ($mail) => $mail->refundCents === 72000);
+    Notification::assertSentTo($pending->user, CourseEnrollmentCancelled::class);
+    Notification::assertNotSentTo($this->teacher, TrialPaymentAlert::class);
+});
+
+test('a refund refused by the bank still cancels the group and alerts the team', function () {
+    $cohort = CourseCohort::factory()->create(['starts_at' => now()->addWeek(), 'ends_at' => now()->addMonth()]);
+    CourseSession::factory()->create(['course_cohort_id' => $cohort->id, 'starts_at' => now()->addWeek()]);
+    $confirmed = CourseEnrollment::factory()->confirmed()->create([
+        'course_cohort_id' => $cohort->id, 'amount_cents' => 72000, 'stripe_session_id' => 'cs_full',
+    ]);
+    $gateway = Mockery::mock(CoursePaymentGateway::class);
+    $gateway->shouldReceive('session')->andReturn(['payment_intent' => 'pi_full']);
+    $gateway->shouldReceive('refund')->andThrow(new RuntimeException('Stripe down'));
+    app()->instance(CoursePaymentGateway::class, $gateway);
+    $this->actingAs($this->teacher);
+
+    $this->post(route('course-cohort-cancellations.store', $cohort), [
+        'reason' => 'Le groupe est annulé par l’école.',
+    ])->assertSessionHasNoErrors();
+
+    expect($cohort->fresh()->cancelled_at)->not->toBeNull()
+        ->and($confirmed->fresh())->status->toBe(CourseEnrollmentStatus::Confirmed)
+        ->and($confirmed->fresh()->refunded_cents)->toBe(0);
+    Notification::assertSentTo($this->teacher, TrialPaymentAlert::class);
+});
+
+test('the remaining schedule can be replanned without touching sessions already started', function () {
+    $cohort = CourseCohort::factory()->create([
+        'rhythm' => CourseRhythm::Extensive,
+        'starts_at' => now()->subWeek(), 'ends_at' => now()->addMonths(3),
+    ]);
+    $past = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 1,
+        'starts_at' => now()->subWeek(), 'duration_minutes' => 180,
+    ]);
+    $future = CourseSession::factory()->create([
+        'course_cohort_id' => $cohort->id, 'position' => 2,
+        'starts_at' => now()->addWeek(), 'duration_minutes' => 180,
+    ]);
+    $student = CourseEnrollment::factory()->confirmed()->create(['course_cohort_id' => $cohort->id])->user;
+    $this->actingAs($this->teacher);
+
+    $this->put(route('course-cohort-schedules.update', $cohort), [
+        'rhythm' => 'intensif', 'starts_on' => now()->addDays(2)->toDateString(), 'start_hour' => 14,
+    ])->assertSessionHasNoErrors();
+
+    $sessions = $cohort->fresh()->sessions()->orderBy('position')->get();
+    expect($future->fresh())->toBeNull()
+        ->and($sessions)->toHaveCount(20)
+        ->and($sessions->first()->id)->toBe($past->id)
+        ->and($sessions->last()->starts_at->setTimezone(config('trials.timezone'))->format('H:i'))->toBe('14:00')
+        ->and($cohort->fresh()->rhythm)->toBe(CourseRhythm::Intensive);
+    Notification::assertSentTo($student, CourseScheduleChanged::class);
+});
+
+test('a cancelled group cannot be cancelled twice, replanned or have its sessions changed', function () {
+    $cohort = CourseCohort::factory()->create([
+        'starts_at' => now()->addWeek(), 'ends_at' => now()->addMonth(),
+        'cancelled_at' => now(), 'cancellation_reason' => 'Groupe annulé.',
+    ]);
+    $session = CourseSession::factory()->create(['course_cohort_id' => $cohort->id, 'starts_at' => now()->addWeek()]);
+    $this->actingAs($this->teacher);
+
+    $this->post(route('course-cohort-cancellations.store', $cohort), ['reason' => 'Encore une fois.'])
+        ->assertInvalid(['cohort']);
+    $this->put(route('course-cohort-schedules.update', $cohort), [
+        'rhythm' => 'intensif', 'starts_on' => now()->addDays(2)->toDateString(), 'start_hour' => 9,
+    ])->assertInvalid(['starts_on']);
+    $this->put(route('course-sessions.update', $session), [
+        'meeting_url' => 'https://meet.google.com/locked',
+    ])->assertInvalid(['session']);
 });

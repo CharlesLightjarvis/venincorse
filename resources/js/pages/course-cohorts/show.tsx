@@ -1,8 +1,21 @@
 import { Head, router, setLayoutProps, useForm } from '@inertiajs/react';
 import { type FormEvent, useState } from 'react';
-import { CalendarDays, Euro, Repeat, Trash, Users } from 'reicon-react';
+import {
+    CalendarDays,
+    CalendarEdit,
+    CalendarX,
+    ClipboardCheck,
+    Euro,
+    Grid,
+    Repeat,
+    Trash,
+    Users,
+} from 'reicon-react';
+import { CourseEnrollmentDialog } from '@/components/course-enrollment-dialog';
 import { CoursePlanningCalendar } from '@/components/course-planning-calendar';
+import { ManualEnrollmentDialog } from '@/components/manual-enrollment-dialog';
 import { TrialInfoCard } from '@/components/trial-info-card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,7 +31,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import {
@@ -30,22 +51,36 @@ import {
 } from '@/components/ui/empty';
 import {
     cohortState,
-    enrollmentStatusLabels,
-    enrollmentStatusVariant,
     formatCoursePrice,
     type CourseCohort,
     type CourseEnrollment,
 } from '@/lib/course-cohorts';
+import { store as storeCohortCancellation } from '@/routes/course-cohort-cancellations';
+import { update as updateSchedule } from '@/routes/course-cohort-schedules';
 import { destroy, index, show, update } from '@/routes/course-cohorts';
-import { store as storeCancellation } from '@/routes/course-enrollment-cancellations';
-import { update as updateEnrollment } from '@/routes/course-enrollment-management';
+import { update as updateManualVisibility } from '@/routes/course-manual-visibility';
+import { AttendancePanel } from './partials/attendance-panel';
+import { StudentsTable } from './partials/students-table';
+
+type Rhythm = {
+    value: string;
+    label: string;
+    weekdays: number[];
+    session_hours: number;
+};
 
 export default function ShowCourseCohort({
     cohort,
     enrollments,
+    rhythms,
+    startHours,
+    timezone: schoolTimezone,
 }: {
     cohort: CourseCohort;
     enrollments: CourseEnrollment[];
+    rhythms: Rhythm[];
+    startHours: number[];
+    timezone: string;
 }) {
     const timezone = useUserTimezone();
     const state = cohortState(cohort);
@@ -55,9 +90,30 @@ export default function ShowCourseCohort({
             ...options,
         }).format(new Date(value));
     const sessions = cohort.sessions ?? [];
+    const students = enrollments
+        .filter((enrollment) => enrollment.status === 'confirmed')
+        .map((enrollment) => ({
+            enrollmentId: enrollment.id,
+            name:
+                enrollment.student?.name ??
+                enrollment.student?.email ??
+                'Élève',
+        }));
     const upcoming = sessions.filter(
-        (session) => new Date(session.starts_at) > new Date(),
+        (session) =>
+            !session.cancelled_at && new Date(session.starts_at) > new Date(),
     ).length;
+    const startedSessions = sessions
+        .filter(
+            (session) =>
+                !session.cancelled_at &&
+                new Date(session.starts_at) <= new Date(),
+        )
+        .sort(
+            (left, right) =>
+                new Date(right.starts_at).getTime() -
+                new Date(left.starts_at).getTime(),
+        );
     setLayoutProps({
         breadcrumbs: [
             { title: 'Groupes des parcours', href: index() },
@@ -81,136 +137,222 @@ export default function ShowCourseCohort({
                         {sessions.length} séances
                     </p>
                 </div>
-                <DeleteDialog cohort={cohort} />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <TrialInfoCard
-                    icon={CalendarDays}
-                    label="Dates"
-                    value={format(cohort.starts_at, {
-                        day: 'numeric',
-                        month: 'long',
-                    })}
-                    caption={`Fin le ${format(cohort.ends_at, { day: 'numeric', month: 'long', year: 'numeric' })}`}
-                />
-                <TrialInfoCard
-                    icon={Repeat}
-                    label="Séances"
-                    value={`${upcoming} à venir`}
-                    caption={`Sur ${sessions.length}, à ${format(cohort.starts_at, { timeStyle: 'short' })} (${timezone})`}
-                />
-                <TrialInfoCard
-                    icon={Users}
-                    label="Places"
-                    value={`${cohort.seats_left} libre(s)`}
-                    caption={`Sur ${cohort.capacity}`}
-                />
-                <TrialInfoCard
-                    icon={Euro}
-                    label="Prix par élève"
-                    value={formatCoursePrice(
-                        cohort.price_cents,
-                        cohort.currency,
+                <div className="flex flex-wrap gap-2">
+                    {!cohort.cancelled_at && (
+                        <CancelCohortDialog cohort={cohort} />
                     )}
-                    caption="Niveau complet, 60 heures"
-                />
+                    <DeleteDialog cohort={cohort} />
+                </div>
             </div>
 
-            <section className="flex flex-col rounded-lg border border-border">
-                <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-                    <h2 className="font-semibold">Élèves</h2>
-                    <Badge variant="outline">
-                        {cohort.capacity - cohort.seats_left} /{' '}
-                        {cohort.capacity}
-                    </Badge>
-                </div>
-                {enrollments.length === 0 ? (
-                    <Empty>
-                        <EmptyHeader>
-                            <EmptyMedia variant="icon">
-                                <Users />
-                            </EmptyMedia>
-                            <EmptyTitle>Aucun élève inscrit</EmptyTitle>
-                            <EmptyDescription>
-                                {cohort.is_published
-                                    ? 'Le groupe est ouvert : les élèves peuvent s’inscrire depuis la page du parcours.'
-                                    : 'Le groupe est fermé aux inscriptions.'}
-                            </EmptyDescription>
-                        </EmptyHeader>
-                    </Empty>
-                ) : (
-                    <ul className="divide-y divide-border">
-                        {enrollments.map((enrollment) => (
-                            <li
-                                key={enrollment.id}
-                                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
-                            >
-                                <div className="min-w-0">
-                                    <p className="truncate font-medium">
-                                        {enrollment.student?.name}
-                                    </p>
-                                    <p className="truncate text-sm text-muted-foreground">
-                                        {enrollment.student?.email}
-                                    </p>
-                                    <p className="mt-1 line-clamp-2 text-sm break-words text-muted-foreground">
-                                        <span className="font-medium text-foreground">
-                                            Objectif :
-                                        </span>{' '}
-                                        {enrollment.goal}
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-end gap-1">
-                                    <Badge
-                                        variant={
-                                            enrollmentStatusVariant[
-                                                enrollment.status
-                                            ]
-                                        }
-                                    >
-                                        {
-                                            enrollmentStatusLabels[
-                                                enrollment.status
-                                            ]
-                                        }
-                                    </Badge>
-                                    <span className="text-xs text-muted-foreground">
-                                        {enrollment.payment_plan ===
-                                            'installments' &&
-                                        enrollment.installments?.length
-                                            ? `${enrollment.installments.filter((item) => item.status === 'paid').length}/${enrollment.installments.length} échéances réglées`
-                                            : enrollment.paid_at
-                                              ? `Payé le ${format(enrollment.paid_at, { day: 'numeric', month: 'short' })}`
-                                              : 'Non payé'}
-                                    </span>
-                                    {enrollment.installments?.some(
-                                        (item) => item.status === 'failed',
-                                    ) && (
-                                        <span className="text-xs font-medium text-destructive">
-                                            Échéance impayée
-                                        </span>
+            {cohort.cancelled_at && (
+                <Alert variant="destructive">
+                    <CalendarX aria-hidden="true" />
+                    <AlertTitle>Groupe annulé</AlertTitle>
+                    <AlertDescription>
+                        <p>
+                            Annulé le{' '}
+                            {format(cohort.cancelled_at, {
+                                dateStyle: 'long',
+                            })}
+                            .{' '}
+                            {cohort.cancellation_reason ??
+                                'Aucun motif renseigné.'}
+                        </p>
+                        <p className="mt-1">
+                            Les séances à venir sont annulées, les élèves
+                            inscrits ont été remboursés et prévenus par email.
+                            Vérifie les remboursements en échec dans la fiche de
+                            chaque élève.
+                        </p>
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            <Tabs defaultValue="overview" className="gap-6">
+                <TabsList
+                    aria-label="Sections du groupe"
+                    className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4"
+                >
+                    <TabsTrigger
+                        value="overview"
+                        className="h-auto min-h-9 py-2"
+                    >
+                        <Grid aria-hidden="true" />
+                        Vue d’ensemble
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="enrollments"
+                        className="h-auto min-h-9 py-2"
+                    >
+                        <Users aria-hidden="true" />
+                        Inscriptions
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="attendance"
+                        className="h-auto min-h-9 py-2"
+                    >
+                        <ClipboardCheck aria-hidden="true" />
+                        Présences
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="planning"
+                        className="h-auto min-h-9 py-2"
+                    >
+                        <CalendarDays aria-hidden="true" />
+                        Planning
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview" className="flex flex-col gap-6">
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <TrialInfoCard
+                            icon={CalendarDays}
+                            label="Dates"
+                            value={format(cohort.starts_at, {
+                                day: 'numeric',
+                                month: 'long',
+                            })}
+                            caption={`Fin le ${format(cohort.ends_at, { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                        />
+                        <TrialInfoCard
+                            icon={Repeat}
+                            label="Séances"
+                            value={`${upcoming} à venir`}
+                            caption={`Sur ${sessions.length}, à ${format(cohort.starts_at, { timeStyle: 'short' })} (${timezone})`}
+                        />
+                        <TrialInfoCard
+                            icon={Users}
+                            label="Places"
+                            value={`${cohort.seats_left} libre(s)`}
+                            caption={`Sur ${cohort.capacity}`}
+                        />
+                        <TrialInfoCard
+                            icon={Euro}
+                            label="Prix par élève"
+                            value={formatCoursePrice(
+                                cohort.price_cents,
+                                cohort.currency,
+                            )}
+                            caption="Niveau complet, 60 heures"
+                        />
+                    </div>
+                    <SettingsForm cohort={cohort} />
+                    <ManualVisibility cohort={cohort} />
+                </TabsContent>
+
+                <TabsContent
+                    value="enrollments"
+                    className="flex flex-col gap-6"
+                >
+                    <section className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 className="font-semibold">Inscriptions</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Les inscriptions du groupe, tous statuts
+                                    confondus.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {!cohort.cancelled_at &&
+                                    !cohort.has_started &&
+                                    cohort.seats_left > 0 && (
+                                        <ManualEnrollmentDialog
+                                            cohorts={[
+                                                {
+                                                    id: cohort.id,
+                                                    label: cohort.level_label,
+                                                    format_label:
+                                                        cohort.format_label,
+                                                    rhythm_label:
+                                                        cohort.rhythm_label,
+                                                    starts_at: cohort.starts_at,
+                                                    price_cents:
+                                                        cohort.price_cents,
+                                                    currency: cohort.currency,
+                                                    seats_left:
+                                                        cohort.seats_left,
+                                                },
+                                            ]}
+                                            defaultCohortId={cohort.id}
+                                            triggerSize="sm"
+                                        />
                                     )}
-                                    <EnrollmentDialog enrollment={enrollment} />
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </section>
+                                <Badge variant="outline">
+                                    {cohort.capacity - cohort.seats_left} /{' '}
+                                    {cohort.capacity}
+                                </Badge>
+                            </div>
+                        </div>
+                        {enrollments.length === 0 ? (
+                            <Empty>
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon">
+                                        <Users />
+                                    </EmptyMedia>
+                                    <EmptyTitle>Aucun élève inscrit</EmptyTitle>
+                                    <EmptyDescription>
+                                        {cohort.is_published
+                                            ? 'Le groupe est ouvert : les élèves peuvent s’inscrire depuis la page du parcours.'
+                                            : 'Le groupe est fermé aux inscriptions.'}
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        ) : (
+                            <StudentsTable
+                                enrollments={enrollments}
+                                formatDate={format}
+                                renderActions={(enrollment) => (
+                                    <CourseEnrollmentDialog
+                                        enrollment={enrollment}
+                                    />
+                                )}
+                            />
+                        )}
+                    </section>
+                </TabsContent>
 
-            <SettingsForm cohort={cohort} />
+                <TabsContent value="attendance" className="flex flex-col gap-6">
+                    <AttendancePanel
+                        sessions={startedSessions}
+                        students={students}
+                    />
+                </TabsContent>
 
-            <section className="flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-3">
-                    <h2 className="font-semibold">Planning</h2>
-                    <Badge variant="outline">{sessions.length}</Badge>
-                </div>
-                <CoursePlanningCalendar
-                    sessions={sessions}
-                    defaultMeetingUrl={cohort.meeting_url ?? null}
-                    canManage
-                />
-            </section>
+                <TabsContent value="planning" className="flex flex-col gap-6">
+                    <section className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 className="font-semibold">Planning</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Ouvre une séance pour modifier son lien, la
+                                    déplacer, l’annuler ou faire l’appel.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline">
+                                    {sessions.length}
+                                </Badge>
+                                {!cohort.cancelled_at && (
+                                    <EditScheduleDialog
+                                        cohort={cohort}
+                                        rhythms={rhythms}
+                                        startHours={startHours}
+                                        schoolTimezone={schoolTimezone}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                        <CoursePlanningCalendar
+                            sessions={sessions}
+                            defaultMeetingUrl={cohort.meeting_url ?? null}
+                            canManage
+                            students={students}
+                        />
+                    </section>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
@@ -332,40 +474,238 @@ function SettingsForm({ cohort }: { cohort: CourseCohort }) {
     );
 }
 
-function EnrollmentDialog({ enrollment }: { enrollment: CourseEnrollment }) {
-    const [open, setOpen] = useState(false);
-    const management = enrollment.management;
-    const notes = useForm({ notes: enrollment.notes ?? '' });
-    const cancel = useForm({
-        refund_euros: management?.withdrawal_open
-            ? (management.prorata_refund_cents / 100).toFixed(2)
-            : '0.00',
-        reason: '',
-    });
-    const euros = (cents: number) =>
-        formatCoursePrice(cents, enrollment.currency);
+function ManualVisibility({ cohort }: { cohort: CourseCohort }) {
+    const form = useForm({ visible: cohort.second_manuals_visible ?? false });
 
-    if (!management) {
-        return null;
-    }
-
-    function saveNotes(event: FormEvent<HTMLFormElement>) {
+    function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        notes.patch(updateEnrollment.url(enrollment.id), {
+        form.put(updateManualVisibility.url(cohort.id), {
             preserveScroll: true,
-            onSuccess: () => notes.setDefaults(),
+            onSuccess: () => form.setDefaults(),
         });
     }
 
-    function submitCancellation(event: FormEvent<HTMLFormElement>) {
+    return (
+        <form
+            onSubmit={submit}
+            className="flex flex-col gap-4 rounded-lg border border-border p-5"
+        >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-semibold">Manuels du groupe</h2>
+                <Button
+                    type="submit"
+                    size="sm"
+                    disabled={form.processing || !form.isDirty}
+                >
+                    Enregistrer
+                </Button>
+            </div>
+            <div className="flex items-start gap-3">
+                <Checkbox
+                    id="second-manuals"
+                    checked={form.data.visible}
+                    onCheckedChange={(checked) =>
+                        form.setData('visible', checked === true)
+                    }
+                />
+                <div className="grid gap-1">
+                    <Label htmlFor="second-manuals">
+                        Rendre les manuels {cohort.level.toUpperCase()}.2
+                        visibles
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                        Les manuels {cohort.level.toUpperCase()}.1 sont
+                        disponibles automatiquement pour les élèves confirmés.
+                        Ce réglage concerne uniquement ce groupe.
+                    </p>
+                    {form.errors.visible && (
+                        <p role="alert" className="text-sm text-destructive">
+                            {form.errors.visible}
+                        </p>
+                    )}
+                </div>
+            </div>
+        </form>
+    );
+}
+
+function EditScheduleDialog({
+    cohort,
+    rhythms,
+    startHours,
+    schoolTimezone,
+}: {
+    cohort: CourseCohort;
+    rhythms: Rhythm[];
+    startHours: number[];
+    schoolTimezone: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const sessions = cohort.sessions ?? [];
+    const next = sessions.find(
+        (session) =>
+            !session.cancelled_at && new Date(session.starts_at) > new Date(),
+    );
+    const firstHour = Number(
+        new Intl.DateTimeFormat('en-GB', {
+            timeZone: schoolTimezone,
+            hour: '2-digit',
+            hourCycle: 'h23',
+        }).format(new Date(cohort.starts_at)),
+    );
+    const form = useForm({
+        rhythm: cohort.rhythm,
+        starts_on: zonedDate(
+            next?.starts_at ?? cohort.starts_at,
+            schoolTimezone,
+        ),
+        start_hour: startHours.includes(firstHour)
+            ? firstHour
+            : (startHours[0] ?? 9),
+    });
+
+    function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        cancel.transform((data) => ({
-            refund_cents: Math.round(
-                Number(data.refund_euros.replace(',', '.')) * 100,
-            ),
-            reason: data.reason,
-        }));
-        cancel.post(storeCancellation.url(enrollment.id), {
+        form.put(updateSchedule.url(cohort.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setOpen(false);
+                form.setDefaults();
+            },
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <CalendarEdit data-icon="inline-start" />
+                    Modifier le planning
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        Modifier le planning des séances à venir
+                    </DialogTitle>
+                    <DialogDescription>
+                        Les séances déjà commencées sont conservées. Les heures
+                        restantes sont replanifiées à partir de la date choisie.
+                        Les élèves inscrits reçoivent un email avec la prochaine
+                        séance.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={submit} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="schedule-rhythm">Rythme</Label>
+                        <Select
+                            value={form.data.rhythm}
+                            onValueChange={(value) =>
+                                form.setData('rhythm', value)
+                            }
+                        >
+                            <SelectTrigger id="schedule-rhythm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {rhythms.map((rhythm) => (
+                                    <SelectItem
+                                        key={rhythm.value}
+                                        value={rhythm.value}
+                                    >
+                                        {rhythm.label} · {rhythm.session_hours}{' '}
+                                        h par séance
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {form.errors.rhythm && (
+                            <p
+                                role="alert"
+                                className="text-sm text-destructive"
+                            >
+                                {form.errors.rhythm}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-1 flex-col gap-2">
+                            <Label htmlFor="schedule-starts-on">
+                                Reprise le
+                            </Label>
+                            <Input
+                                id="schedule-starts-on"
+                                type="date"
+                                value={form.data.starts_on}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'starts_on',
+                                        event.target.value,
+                                    )
+                                }
+                                aria-invalid={
+                                    form.errors.starts_on ? true : undefined
+                                }
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="schedule-start-hour">Heure</Label>
+                            <Select
+                                value={String(form.data.start_hour)}
+                                onValueChange={(value) =>
+                                    form.setData('start_hour', Number(value))
+                                }
+                            >
+                                <SelectTrigger
+                                    id="schedule-start-hour"
+                                    className="w-28"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {startHours.map((hour) => (
+                                        <SelectItem
+                                            key={hour}
+                                            value={String(hour)}
+                                        >
+                                            {String(hour).padStart(2, '0')}:00
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    {(form.errors.starts_on || form.errors.start_hour) && (
+                        <p role="alert" className="text-sm text-destructive">
+                            {form.errors.starts_on ?? form.errors.start_hour}
+                        </p>
+                    )}
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="ghost">
+                                Garder le planning actuel
+                            </Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && (
+                                <Spinner data-icon="inline-start" />
+                            )}
+                            Replanifier les séances
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function CancelCohortDialog({ cohort }: { cohort: CourseCohort }) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({ reason: '' });
+
+    function submit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        form.post(storeCohortCancellation.url(cohort.id), {
             preserveScroll: true,
             onSuccess: () => setOpen(false),
         });
@@ -374,190 +714,74 @@ function EnrollmentDialog({ enrollment }: { enrollment: CourseEnrollment }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="mt-1">
-                    Gérer
+                <Button variant="destructive">
+                    <CalendarX data-icon="inline-start" />
+                    Annuler le groupe
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{enrollment.student?.name}</DialogTitle>
+                    <DialogTitle>Annuler ce groupe ?</DialogTitle>
                     <DialogDescription>
-                        Payé : {euros(management.paid_cents)}
-                        {enrollment.refunded_cents > 0 &&
-                            ` · remboursé : ${euros(enrollment.refunded_cents)}`}{' '}
-                        · {management.hours_done} h suivies sur 60 ·{' '}
-                        {management.withdrawal_open
-                            ? 'délai de rétractation en cours'
-                            : 'délai de rétractation terminé'}
+                        Les séances à venir sont annulées, les élèves inscrits
+                        sont remboursés intégralement et prévenus par email. Les
+                        places en attente de paiement sont libérées. Le groupe
+                        et son historique restent consultables.
                     </DialogDescription>
                 </DialogHeader>
-
-                <form onSubmit={saveNotes} className="flex flex-col gap-2">
-                    <Label htmlFor={`notes-${enrollment.id}`}>
-                        Notes privées
-                    </Label>
-                    <Textarea
-                        id={`notes-${enrollment.id}`}
-                        rows={4}
-                        maxLength={5000}
-                        value={notes.data.notes}
-                        onChange={(event) =>
-                            notes.setData('notes', event.target.value)
-                        }
-                        placeholder="Niveau, progrès, points à travailler… Visible uniquement par l’équipe."
-                    />
-                    {notes.errors.notes && (
-                        <p role="alert" className="text-sm text-destructive">
-                            {notes.errors.notes}
-                        </p>
-                    )}
-                    <Button
-                        type="submit"
-                        size="sm"
-                        variant="outline"
-                        className="self-end"
-                        disabled={notes.processing || !notes.isDirty}
-                    >
-                        Enregistrer les notes
-                    </Button>
+                <form onSubmit={submit} className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="cohort-cancellation-reason">
+                            Motif communiqué aux élèves
+                        </Label>
+                        <Textarea
+                            id="cohort-cancellation-reason"
+                            rows={3}
+                            required
+                            minLength={5}
+                            maxLength={500}
+                            value={form.data.reason}
+                            onChange={(event) =>
+                                form.setData('reason', event.target.value)
+                            }
+                            placeholder="Ex. : nombre d’inscrits insuffisant pour ouvrir le groupe."
+                            aria-invalid={form.errors.reason ? true : undefined}
+                        />
+                        {form.errors.reason && (
+                            <p
+                                role="alert"
+                                className="text-sm text-destructive"
+                            >
+                                {form.errors.reason}
+                            </p>
+                        )}
+                        {(form.errors as Record<string, string>).cohort && (
+                            <p
+                                role="alert"
+                                className="text-sm text-destructive"
+                            >
+                                {(form.errors as Record<string, string>).cohort}
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="ghost">
+                                Garder le groupe
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            type="submit"
+                            variant="destructive"
+                            disabled={form.processing}
+                        >
+                            {form.processing && (
+                                <Spinner data-icon="inline-start" />
+                            )}
+                            Annuler et rembourser
+                        </Button>
+                    </DialogFooter>
                 </form>
-
-                {management.can_cancel ? (
-                    <form
-                        onSubmit={submitCancellation}
-                        className="flex flex-col gap-3 border-t border-border pt-4"
-                    >
-                        <h3 className="font-medium">Annuler l’inscription</h3>
-                        <p className="text-sm text-muted-foreground">
-                            Rétractation dans les 14 jours : rembourse la part
-                            non suivie (au prorata). Groupe annulé par l’école :
-                            remboursement intégral. Après le délai : aucun
-                            remboursement n’est dû. Les échéances restantes sont
-                            annulées.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                onClick={() =>
-                                    cancel.setData(
-                                        'refund_euros',
-                                        (
-                                            management.refundable_cents / 100
-                                        ).toFixed(2),
-                                    )
-                                }
-                            >
-                                Intégral ({euros(management.refundable_cents)})
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                onClick={() =>
-                                    cancel.setData(
-                                        'refund_euros',
-                                        (
-                                            management.prorata_refund_cents /
-                                            100
-                                        ).toFixed(2),
-                                    )
-                                }
-                            >
-                                Au prorata (
-                                {euros(management.prorata_refund_cents)})
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                onClick={() =>
-                                    cancel.setData('refund_euros', '0.00')
-                                }
-                            >
-                                Sans remboursement
-                            </Button>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor={`refund-${enrollment.id}`}>
-                                Montant remboursé (€)
-                            </Label>
-                            <Input
-                                id={`refund-${enrollment.id}`}
-                                inputMode="decimal"
-                                className="w-36"
-                                value={cancel.data.refund_euros}
-                                onChange={(event) =>
-                                    cancel.setData(
-                                        'refund_euros',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor={`reason-${enrollment.id}`}>
-                                Motif communiqué à l’élève
-                            </Label>
-                            <Textarea
-                                id={`reason-${enrollment.id}`}
-                                required
-                                minLength={5}
-                                maxLength={500}
-                                rows={3}
-                                value={cancel.data.reason}
-                                onChange={(event) =>
-                                    cancel.setData('reason', event.target.value)
-                                }
-                                placeholder="Ex. : rétractation demandée par email le 12 novembre."
-                            />
-                        </div>
-                        {(cancel.errors as Record<string, string>)
-                            .refund_cents && (
-                            <p
-                                role="alert"
-                                className="text-sm text-destructive"
-                            >
-                                {
-                                    (cancel.errors as Record<string, string>)
-                                        .refund_cents
-                                }
-                            </p>
-                        )}
-                        {cancel.errors.reason && (
-                            <p
-                                role="alert"
-                                className="text-sm text-destructive"
-                            >
-                                {cancel.errors.reason}
-                            </p>
-                        )}
-                        <DialogFooter>
-                            <DialogClose asChild>
-                                <Button type="button" variant="ghost">
-                                    Garder l’inscription
-                                </Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={cancel.processing}
-                            >
-                                {cancel.processing && (
-                                    <Spinner data-icon="inline-start" />
-                                )}
-                                Annuler l’inscription
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                ) : (
-                    enrollment.cancellation_reason && (
-                        <p className="border-t border-border pt-4 text-sm text-muted-foreground">
-                            Annulée : {enrollment.cancellation_reason}
-                        </p>
-                    )
-                )}
             </DialogContent>
         </Dialog>
     );
@@ -606,4 +830,18 @@ function DeleteDialog({ cohort }: { cohort: CourseCohort }) {
             </DialogContent>
         </Dialog>
     );
+}
+
+/** The date (YYYY-MM-DD) of an instant in the school's time zone. */
+function zonedDate(value: string, timeZone: string): string {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(new Date(value));
+    const get = (type: string) =>
+        parts.find((part) => part.type === type)?.value ?? '';
+
+    return `${get('year')}-${get('month')}-${get('day')}`;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\BuildCourseDashboard;
 use App\Actions\CreateTrialReservation;
 use App\Actions\ReconcileTrialPayment;
 use App\Actions\UpdateEndedTrialSessions;
@@ -126,7 +127,7 @@ final readonly class TrialReservationController
     }
 
     /** One address for everyone: each block is only sent when the user holds the matching permission. */
-    public function dashboard(Request $request, ReconcileTrialPayment $reconcile, UpdateEndedTrialSessions $updateEnded): Response
+    public function dashboard(Request $request, ReconcileTrialPayment $reconcile, UpdateEndedTrialSessions $updateEnded, BuildCourseDashboard $buildCourseDashboard): Response
     {
         $user = $request->user();
         $updateEnded->handle();
@@ -134,6 +135,7 @@ final readonly class TrialReservationController
         return Inertia::render('dashboard', [
             'student' => $user->can(PermissionEnum::ViewOwnTrials->value) ? $this->studentDashboard($request, $reconcile) : null,
             'management' => $user->can(PermissionEnum::ViewAllTrials->value) ? $this->managementDashboard($request) : null,
+            'courses' => $user->can(PermissionEnum::ManageCourses->value) ? $buildCourseDashboard->handle() : null,
             'canManageAvailability' => $user->can(PermissionEnum::ManageAvailability->value),
         ]);
     }

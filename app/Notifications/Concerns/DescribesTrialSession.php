@@ -59,6 +59,14 @@ trait DescribesTrialSession
         return $at->setTimezone($timezone)->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm').' ('.$timezone.')';
     }
 
+    /** A dated change to one session, read in the recipient's own time zone. */
+    protected function courseSessionDate(CarbonImmutable $at, object $notifiable): string
+    {
+        $timezone = ($notifiable->timezone ?? null) ?? config('trials.timezone');
+
+        return $at->setTimezone($timezone)->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm').' ('.$timezone.')';
+    }
+
     /** Text typed by users is shown as written: Markdown such as links or images is never interpreted. */
     protected function plain(?string $text): string
     {

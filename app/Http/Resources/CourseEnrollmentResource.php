@@ -23,6 +23,8 @@ final class CourseEnrollmentResource extends JsonResource
             'id' => $this->id,
             'status' => $this->status->value,
             'payment_plan' => $this->payment_plan->value,
+            'payment_method' => $this->payment_method?->value ?? 'stripe',
+            'payment_reference' => $this->when($isManager, $this->payment_reference),
             'installments' => $this->whenLoaded('installments', fn (): array => $this->installments->map(fn (CourseInstallment $installment): array => [
                 'id' => $installment->id,
                 'position' => $installment->position,
@@ -31,7 +33,9 @@ final class CourseEnrollmentResource extends JsonResource
                 'due_at' => $installment->due_at->toIso8601String(),
                 'paid_at' => $installment->paid_at?->toIso8601String(),
                 'next_attempt_at' => $installment->next_attempt_at?->toIso8601String(),
+                'failure_message' => $installment->failure_message,
                 'can_pay' => $isOwner && $installment->isPayable(),
+                'can_retry' => $isManager && $this->status === CourseEnrollmentStatus::Confirmed && $installment->isPayable(),
             ])->all()),
             'amount_cents' => $this->amount_cents,
             'currency' => $this->currency,
@@ -47,6 +51,17 @@ final class CourseEnrollmentResource extends JsonResource
             'cancellation_reason' => $this->cancellation_reason,
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
             'management' => $this->when($isManager, fn (): array => $this->management()),
+            'attendances' => $this->whenLoaded('attendances', fn (): array => $this->attendances->map(fn ($attendance): array => [
+                'session_id' => $attendance->course_session_id,
+                'status' => $attendance->status->value,
+                'session' => $attendance->relationLoaded('session') && $attendance->session !== null
+                    ? [
+                        'position' => $attendance->session->position,
+                        'starts_at' => $attendance->session->starts_at->toIso8601String(),
+                        'cancelled_at' => $attendance->session->cancelled_at?->toIso8601String(),
+                    ]
+                    : null,
+            ])->all()),
             'student' => $this->when($isManager, fn (): array => ['name' => $this->user->name, 'email' => $this->user->email]),
             'notes' => $this->when($isManager, $this->notes ?? ''),
         ];
@@ -62,7 +77,9 @@ final class CourseEnrollmentResource extends JsonResource
     {
         $paid = $this->resource->paidCents();
         $refundable = max(0, $paid - $this->refunded_cents);
-        $minutesDone = (int) $this->cohort->sessions()->where('starts_at', '<=', now())->sum('duration_minutes');
+        $minutesDone = $this->cohort->relationLoaded('sessions')
+            ? (int) $this->cohort->sessions->filter(fn ($session): bool => $session->starts_at->lte(now()))->sum('duration_minutes')
+            : (int) $this->cohort->sessions()->where('starts_at', '<=', now())->sum('duration_minutes');
         $totalMinutes = (int) config('courses.total_hours') * 60;
         $owed = (int) round($this->amount_cents * min(1, $minutesDone / $totalMinutes));
 

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * A group (or a one-on-one learner) following one full level on a fixed schedule, created by the teacher.
  */
-#[Fillable(['level', 'format', 'rhythm', 'starts_at', 'ends_at', 'capacity', 'price_cents', 'currency', 'meeting_url', 'is_published'])]
+#[Fillable(['level', 'format', 'rhythm', 'starts_at', 'ends_at', 'capacity', 'price_cents', 'currency', 'meeting_url', 'is_published', 'cancelled_at', 'cancellation_reason'])]
 final class CourseCohort extends Model
 {
     /** @use HasFactory<CourseCohortFactory> */
@@ -33,6 +33,8 @@ final class CourseCohort extends Model
             'capacity' => 'integer',
             'price_cents' => 'integer',
             'is_published' => 'boolean',
+            'second_manuals_visible' => 'boolean',
+            'cancelled_at' => 'immutable_datetime',
         ];
     }
 
@@ -48,10 +50,15 @@ final class CourseCohort extends Model
         return max(0, $this->capacity - (int) $taken);
     }
 
-    /** Students can join a published group that has not started and still has a free seat. */
+    public function isCancelled(): bool
+    {
+        return $this->cancelled_at !== null;
+    }
+
+    /** Students can join a published group that has not started, is not cancelled and still has a free seat. */
     public function isBookable(): bool
     {
-        return $this->is_published && ! $this->hasStarted() && $this->seatsLeft() > 0;
+        return $this->is_published && ! $this->isCancelled() && ! $this->hasStarted() && $this->seatsLeft() > 0;
     }
 
     public function enrollments(): HasMany

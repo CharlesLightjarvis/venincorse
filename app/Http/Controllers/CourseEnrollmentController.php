@@ -18,6 +18,7 @@ use App\Http\Resources\CourseEnrollmentResource;
 use App\Models\CourseCohort;
 use App\Models\CourseEnrollment;
 use App\Models\CourseInstallment;
+use App\Models\CourseManual;
 use App\Services\CoursePaymentGateway;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,6 +34,7 @@ final readonly class CourseEnrollmentController
         $cohorts = CourseCohort::query()
             ->withCount(['enrollments as taken_seats' => fn ($query) => $query->holdingSeat()])
             ->where('is_published', true)
+            ->whereNull('cancelled_at')
             ->where('starts_at', '>', now())
             ->orderBy('starts_at')
             ->get();
@@ -95,8 +97,13 @@ final readonly class CourseEnrollmentController
 
         return Inertia::render('course-enrollments/show', [
             'enrollment' => CourseEnrollmentResource::make(
-                $enrollment->loadMissing(['cohort.sessions', 'user', 'installments'])
+                $enrollment->loadMissing(['cohort.sessions', 'user', 'installments', 'attendances'])
             )->resolve($request),
+            'manuals' => $enrollment->status === CourseEnrollmentStatus::Confirmed && $enrollment->cohort->cancelled_at === null
+                ? CourseManual::query()->where('level', $enrollment->cohort->level->value)
+                    ->where('part', '<=', $enrollment->cohort->second_manuals_visible ? 2 : 1)
+                    ->orderBy('part')->orderBy('type')->get(['id', 'part', 'type'])
+                : [],
         ]);
     }
 

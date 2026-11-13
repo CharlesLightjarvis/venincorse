@@ -2,12 +2,19 @@
 
 use App\Enums\PermissionEnum;
 use App\Http\Controllers\CourseCatalogController;
+use App\Http\Controllers\CourseCohortCancellationController;
 use App\Http\Controllers\CourseCohortController;
+use App\Http\Controllers\CourseCohortScheduleController;
 use App\Http\Controllers\CourseEnrollmentCancellationController;
 use App\Http\Controllers\CourseEnrollmentController;
 use App\Http\Controllers\CourseEnrollmentManagementController;
 use App\Http\Controllers\CourseInstallmentCheckoutController;
+use App\Http\Controllers\CourseInstallmentRetryController;
+use App\Http\Controllers\CourseManualController;
+use App\Http\Controllers\CourseManualVisibilityController;
+use App\Http\Controllers\CourseSessionAttendanceController;
 use App\Http\Controllers\CourseSessionController;
+use App\Http\Controllers\ManualCourseEnrollmentController;
 use App\Http\Controllers\TrialAvailabilityController;
 use App\Http\Controllers\TrialCancellationController;
 use App\Http\Controllers\TrialCheckoutController;
@@ -54,6 +61,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:60,1'])->name('course-enrollments.index');
     Route::get('course-enrollments/{enrollment}', [CourseEnrollmentController::class, 'show'])
         ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:60,1'])->name('course-enrollments.show');
+    Route::get('course-enrollments/{enrollment}/manuals/{manual}', [CourseManualController::class, 'show'])
+        ->middleware(['can:'.PermissionEnum::ViewOwnCourses->value, 'throttle:60,1'])->name('course-manuals.show');
     Route::post('course-enrollments/{enrollment}/checkout', [CourseEnrollmentController::class, 'checkout'])
         ->middleware(['can:'.PermissionEnum::EnrollInCourses->value, 'throttle:10,1'])->name('course-enrollments.checkout');
     Route::post('course-installments/{installment}/checkout', [CourseInstallmentCheckoutController::class, 'store'])
@@ -87,11 +96,26 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::put('teaching/trial-reservations/{reservation}/payment-review', [TrialPaymentReviewController::class, 'update'])
         ->middleware(['can:update,reservation', 'throttle:10,1'])->name('trial-payment-reviews.update');
     Route::prefix('teaching')->middleware('can:'.PermissionEnum::ManageCourses->value)->group(function (): void {
+        Route::get('course-manuals', [CourseManualController::class, 'index'])->name('course-manual-management.index');
+        Route::post('course-manuals', [CourseManualController::class, 'store'])->middleware('throttle:20,1')->name('course-manual-management.store');
+        Route::put('course-cohorts/{cohort}/manual-visibility', [CourseManualVisibilityController::class, 'update'])->name('course-manual-visibility.update');
         Route::resource('course-cohorts', CourseCohortController::class)
             ->parameters(['course-cohorts' => 'cohort'])
             ->except(['edit']);
         Route::put('course-sessions/{session}', [CourseSessionController::class, 'update'])
             ->name('course-sessions.update');
+        Route::put('course-sessions/{session}/attendance', [CourseSessionAttendanceController::class, 'update'])
+            ->name('course-sessions.attendance.update');
+        Route::put('course-cohorts/{cohort}/schedule', [CourseCohortScheduleController::class, 'update'])
+            ->name('course-cohort-schedules.update');
+        Route::post('course-cohorts/{cohort}/cancellation', [CourseCohortCancellationController::class, 'store'])
+            ->middleware('throttle:10,1')->name('course-cohort-cancellations.store');
+        Route::post('course-installments/{installment}/retry', [CourseInstallmentRetryController::class, 'store'])
+            ->middleware('throttle:10,1')->name('course-installments.retry');
+        Route::get('course-enrollments', [CourseEnrollmentManagementController::class, 'index'])
+            ->name('course-enrollment-management.index');
+        Route::post('course-enrollments', [ManualCourseEnrollmentController::class, 'store'])
+            ->middleware('throttle:30,1')->name('manual-course-enrollments.store');
         Route::patch('course-enrollments/{enrollment}', [CourseEnrollmentManagementController::class, 'update'])
             ->name('course-enrollment-management.update');
         Route::post('course-enrollments/{enrollment}/cancellation', [CourseEnrollmentCancellationController::class, 'store'])

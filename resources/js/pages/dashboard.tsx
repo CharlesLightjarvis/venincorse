@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Warning,
+    BookOpen,
     CalendarCheck,
     CalendarDay,
     CalendarDays,
@@ -8,6 +9,8 @@ import {
     Clock,
     Coins,
     Sliders,
+    UserCheck,
+    Users,
     type IconComponent,
 } from 'reicon-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +22,7 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
+import { TrialInfoCard } from '@/components/trial-info-card';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import {
     formatReservationDate,
@@ -27,6 +31,7 @@ import {
     type TrialReservation,
 } from '@/lib/trial-reservations';
 import { dashboard } from '@/routes';
+import { index as manageCohorts } from '@/routes/course-cohorts';
 import { edit as editAvailability } from '@/routes/trial-availability';
 import {
     index as manageTrials,
@@ -49,6 +54,15 @@ type ManagementDashboard = {
         monthRevenueCents: number;
         freeSlots: number;
     };
+};
+
+type CourseDashboard = {
+    monthRevenueCents: number;
+    activeEnrollments: number;
+    fillRate: number;
+    attendanceRate: number | null;
+    paymentReview: number;
+    failedInstallments: number;
 };
 
 type Stat = { label: string; value: string | number; icon: IconComponent };
@@ -234,6 +248,95 @@ function ManagementSection({
     );
 }
 
+function CourseSection({ courses }: { courses: CourseDashboard }) {
+    return (
+        <section className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 className="text-2xl font-semibold">Parcours</h2>
+                    <p className="mt-2 text-muted-foreground">
+                        Le chiffre d’affaires, les places et l’assiduité des
+                        groupes.
+                    </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-sm">
+                    <Link
+                        href={manageCohorts()}
+                        className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 hover:bg-muted/30"
+                    >
+                        <Users className="size-4" aria-hidden="true" />
+                        Groupes
+                    </Link>
+                </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <TrialInfoCard
+                    icon={Coins}
+                    label="CA parcours ce mois-ci"
+                    value={formatReservationPrice(courses.monthRevenueCents)}
+                    caption="Inscriptions et échéances encaissées"
+                />
+                <TrialInfoCard
+                    icon={BookOpen}
+                    label="Inscriptions actives"
+                    value={String(courses.activeEnrollments)}
+                    caption="Élèves confirmés sur un groupe en cours"
+                />
+                <TrialInfoCard
+                    icon={Users}
+                    label="Taux de remplissage"
+                    value={`${courses.fillRate} %`}
+                    caption="Places prises sur les groupes à venir"
+                />
+                <TrialInfoCard
+                    icon={UserCheck}
+                    label="Taux de présence"
+                    value={
+                        courses.attendanceRate === null
+                            ? '—'
+                            : `${courses.attendanceRate} %`
+                    }
+                    caption={
+                        courses.attendanceRate === null
+                            ? 'Aucun appel enregistré'
+                            : 'Sur les séances déjà appelées'
+                    }
+                />
+                <TrialInfoCard
+                    icon={Warning}
+                    label="Paiements à vérifier"
+                    value={String(courses.paymentReview)}
+                    caption="Inscriptions en attente de décision"
+                />
+                <TrialInfoCard
+                    icon={Clock}
+                    label="Échéances en échec"
+                    value={String(courses.failedInstallments)}
+                    caption="Prélèvements à relancer"
+                />
+            </div>
+            {(courses.paymentReview > 0 || courses.failedInstallments > 0) && (
+                <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+                    {courses.paymentReview > 0 &&
+                        (courses.paymentReview === 1
+                            ? 'Un paiement de parcours demande une vérification manuelle. '
+                            : `${courses.paymentReview} paiements de parcours demandent une vérification manuelle. `)}
+                    {courses.failedInstallments > 0 &&
+                        (courses.failedInstallments === 1
+                            ? 'Une échéance n’a pas pu être prélevée. '
+                            : `${courses.failedInstallments} échéances n’ont pas pu être prélevées. `)}{' '}
+                    <Link
+                        href={manageCohorts()}
+                        className="font-medium text-foreground underline underline-offset-4"
+                    >
+                        Voir les groupes
+                    </Link>
+                </p>
+            )}
+        </section>
+    );
+}
+
 function StudentSection({ student }: { student: StudentDashboard }) {
     const timezone = useUserTimezone();
     const { overview, reservations } = student;
@@ -350,10 +453,12 @@ function StudentSection({ student }: { student: StudentDashboard }) {
 export default function Dashboard({
     student,
     management,
+    courses,
     canManageAvailability,
 }: {
     student: StudentDashboard | null;
     management: ManagementDashboard | null;
+    courses: CourseDashboard | null;
     canManageAvailability: boolean;
 }) {
     return (
@@ -365,8 +470,9 @@ export default function Dashboard({
                     canManageAvailability={canManageAvailability}
                 />
             )}
+            {courses && <CourseSection courses={courses} />}
             {student && <StudentSection student={student} />}
-            {!student && !management && (
+            {!student && !management && !courses && (
                 <div>
                     <h1 className="text-3xl font-semibold">Mon espace</h1>
                     <p className="mt-3 text-muted-foreground">

@@ -22,7 +22,7 @@ final readonly class CourseCatalogController
                 $cohort = CourseCohort::query()
                     ->withCount(['enrollments as taken_seats' => fn ($query) => $query->holdingSeat()])
                     ->where('level', $level)->where('format', $format)
-                    ->where('is_published', true)->where('starts_at', '>', now())
+                    ->where('is_published', true)->whereNull('cancelled_at')->where('starts_at', '>', now())
                     ->orderBy('starts_at')->get()
                     ->first(fn (CourseCohort $cohort): bool => $cohort->seatsLeft() > 0);
                 $upcoming[$format->value] = $cohort ? [

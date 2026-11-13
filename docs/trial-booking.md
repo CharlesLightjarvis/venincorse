@@ -43,23 +43,23 @@ Le stockage local n’offre aucune authentification, confidentialité, gestion a
 
 ## Démo et parcours réel
 
-| Fonction | Démo | Parcours réel |
-| --- | --- | --- |
-| Réservation sans compte | Oui | Non : connexion requise avant le paiement |
-| Paiement | Simulé | Stripe Checkout (mode test), webhooks et rattrapage |
-| Créneaux verrouillés, un essai par élève | Non | Oui |
-| Disponibilités du professeur | Stockage local | En base, page « Disponibilités » |
-| Lien de visio fourni par le professeur | Non | Oui, envoyé par email |
-| Emails (confirmation, lien, rappel 24 h, annulation, remboursement) | Aperçu simulé | Oui, en file d’attente (Mailtrap en local) |
-| Annulation par le professeur, avec remboursement | Simulée | Oui |
-| Marquer une séance réalisée ou l’élève absent | Oui | Oui |
-| Notes privées du professeur | Oui | Oui |
-| Report ou annulation **par l’élève** | Oui (jusqu’à 24 h avant) | Oui : report gratuit une fois et annulation remboursée jusqu’à 24 h avant |
-| Absence : nouveau créneau offert par le professeur | Non | Oui |
-| Bilan / recommandation après la séance | Oui | Oui : bilan libre envoyé par email (choix d’un parcours précis : à faire) |
-| Pages juridiques (CGU, CGV, confidentialité, mentions) | Non | Oui, à compléter et faire valider |
-| Plusieurs professeurs | Non | **Non** : à faire |
-| Google Calendar | Non | Hors périmètre |
+| Fonction                                                            | Démo                     | Parcours réel                                                             |
+| ------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------- |
+| Réservation sans compte                                             | Oui                      | Non : connexion requise avant le paiement                                 |
+| Paiement                                                            | Simulé                   | Stripe Checkout (mode test), webhooks et rattrapage                       |
+| Créneaux verrouillés, un essai par élève                            | Non                      | Oui                                                                       |
+| Disponibilités du professeur                                        | Stockage local           | En base, page « Disponibilités »                                          |
+| Lien de visio fourni par le professeur                              | Non                      | Oui, envoyé par email                                                     |
+| Emails (confirmation, lien, rappel 24 h, annulation, remboursement) | Aperçu simulé            | Oui, en file d’attente (Mailtrap en local)                                |
+| Annulation par le professeur, avec remboursement                    | Simulée                  | Oui                                                                       |
+| Marquer une séance réalisée ou l’élève absent                       | Oui                      | Oui                                                                       |
+| Notes privées du professeur                                         | Oui                      | Oui                                                                       |
+| Report ou annulation **par l’élève**                                | Oui (jusqu’à 24 h avant) | Oui : report gratuit une fois et annulation remboursée jusqu’à 24 h avant |
+| Absence : nouveau créneau offert par le professeur                  | Non                      | Oui                                                                       |
+| Bilan / recommandation après la séance                              | Oui                      | Oui : bilan libre envoyé par email (choix d’un parcours précis : à faire) |
+| Pages juridiques (CGU, CGV, confidentialité, mentions)              | Non                      | Oui, à compléter et faire valider                                         |
+| Plusieurs professeurs                                               | Non                      | **Non** : à faire                                                         |
+| Google Calendar                                                     | Non                      | Hors périmètre                                                            |
 
 ## Ce qu’il reste à faire
 

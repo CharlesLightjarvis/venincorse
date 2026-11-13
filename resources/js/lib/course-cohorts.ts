@@ -16,17 +16,77 @@ export type CourseCohort = {
     price_cents: number;
     currency: string;
     is_published: boolean;
+    second_manuals_visible?: boolean;
+    cancelled_at: string | null;
+    cancellation_reason: string | null;
     has_started: boolean;
     sessions_count?: number;
-    sessions?: {
-        id: number;
-        position: number;
-        starts_at: string;
-        duration_minutes: number;
-        meeting_url?: string | null;
-    }[];
+    sessions?: CourseSession[];
     meeting_url?: string | null;
 };
+
+export type CourseAttendanceStatus = 'present' | 'absent' | 'excused';
+
+/** A confirmed student of a group, as listed in the teacher's attendance call. */
+export type CourseAttendanceStudent = {
+    enrollmentId: string;
+    name: string;
+};
+
+export type CourseSession = {
+    id: number;
+    position: number;
+    starts_at: string;
+    duration_minutes: number;
+    meeting_url?: string | null;
+    cancelled_at: string | null;
+    cancellation_reason: string | null;
+    attendances?:
+        | {
+              enrollment_id: string;
+              status: CourseAttendanceStatus;
+          }[]
+        | null;
+};
+
+export const attendanceStatusLabels: Record<CourseAttendanceStatus, string> = {
+    present: 'Présent',
+    absent: 'Absent',
+    excused: 'Absence justifiée',
+};
+
+/** "1 présent · 0 absent · 0 absence justifiée" for a session's call. */
+export function describeAttendance(
+    records: { status: CourseAttendanceStatus }[],
+): string {
+    const count = (status: CourseAttendanceStatus) =>
+        records.filter((record) => record.status === status).length;
+    const present = count('present');
+    const absent = count('absent');
+    const excused = count('excused');
+
+    return `${present} présent${present > 1 ? 's' : ''} · ${absent} absent${absent > 1 ? 's' : ''} · ${excused} absence${excused > 1 ? 's' : ''} justifiée${excused > 1 ? 's' : ''}`;
+}
+
+/** A student's attendance across the sessions already called. */
+export function summarizeAttendance(
+    records: CourseAttendanceRecord[],
+): { present: number; absent: number; excused: number; total: number; rate: number } {
+    const count = (status: CourseAttendanceStatus) =>
+        records.filter((record) => record.status === status).length;
+    const present = count('present');
+    const absent = count('absent');
+    const excused = count('excused');
+    const total = present + absent + excused;
+
+    return {
+        present,
+        absent,
+        excused,
+        total,
+        rate: total > 0 ? Math.round((present / total) * 100) : 0,
+    };
+}
 
 const weekdayNames = [
     '',
@@ -44,6 +104,25 @@ export function describeRhythm(cohort: CourseCohort): string {
     return `${cohort.weekdays.map((day) => weekdayNames[day]).join(', ')} · séances de ${cohort.session_hours} h`;
 }
 
+export type CoursePaymentMethod = 'stripe' | 'offer' | 'bank_transfer' | 'transfer';
+
+export const paymentMethodLabels: Record<CoursePaymentMethod, string> = {
+    stripe: 'Carte bancaire',
+    offer: 'Offert',
+    bank_transfer: 'Virement',
+    transfer: 'Transfert',
+};
+
+export type CourseAttendanceRecord = {
+    session_id: number;
+    status: CourseAttendanceStatus;
+    session: {
+        position: number;
+        starts_at: string;
+        cancelled_at: string | null;
+    } | null;
+};
+
 export type CourseEnrollment = {
     id: string;
     status:
@@ -57,6 +136,8 @@ export type CourseEnrollment = {
     amount_cents: number;
     currency: string;
     payment_plan: 'full' | 'installments';
+    payment_method: CoursePaymentMethod;
+    payment_reference?: string | null;
     installments?: CourseInstallment[];
     goal: string;
     created_at: string;
@@ -77,6 +158,7 @@ export type CourseEnrollment = {
         can_cancel: boolean;
         withdrawal_open: boolean;
     };
+    attendances?: CourseAttendanceRecord[];
     student?: { name: string; email: string };
     notes?: string;
 };
@@ -89,7 +171,9 @@ export type CourseInstallment = {
     due_at: string;
     paid_at: string | null;
     next_attempt_at: string | null;
+    failure_message: string | null;
     can_pay: boolean;
+    can_retry: boolean;
 };
 
 export type InstallmentSettings = {
@@ -147,11 +231,44 @@ export function formatCoursePrice(cents: number, currency: string): string {
     }).format(cents / 100);
 }
 
+export type CohortStateKey =
+    | 'open'
+    | 'closed'
+    | 'running'
+    | 'finished'
+    | 'cancelled';
+
+/** The state of a group as a stable key, used by the list filters. */
+export function cohortStateKey(cohort: CourseCohort): CohortStateKey {
+    if (cohort.cancelled_at) {
+        return 'cancelled';
+    }
+    if (new Date(cohort.ends_at) < new Date()) {
+        return 'finished';
+    }
+    if (cohort.has_started) {
+        return 'running';
+    }
+
+    return cohort.is_published ? 'open' : 'closed';
+}
+
+export const cohortStateFilterLabels: Record<CohortStateKey, string> = {
+    open: 'Ouvert aux inscriptions',
+    closed: 'Fermé aux inscriptions',
+    running: 'En cours',
+    finished: 'Terminé',
+    cancelled: 'Annulé',
+};
+
 /** Where a group stands, as the teacher reads it. */
 export function cohortState(cohort: CourseCohort): {
     label: string;
-    variant: 'default' | 'secondary' | 'outline';
+    variant: 'default' | 'secondary' | 'outline' | 'destructive';
 } {
+    if (cohort.cancelled_at) {
+        return { label: 'Annulé', variant: 'destructive' };
+    }
     if (new Date(cohort.ends_at) < new Date()) {
         return { label: 'Terminé', variant: 'outline' };
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\CourseEnrollmentStatus;
+use App\Enums\CoursePaymentMethod;
 use App\Enums\CoursePaymentPlan;
 use App\Models\CourseCohort;
 use App\Models\CourseEnrollment;
@@ -26,6 +27,7 @@ final class CourseEnrollmentFactory extends Factory
             'course_cohort_id' => CourseCohort::factory(),
             'status' => CourseEnrollmentStatus::Pending,
             'payment_plan' => CoursePaymentPlan::Full,
+            'payment_method' => CoursePaymentMethod::Stripe,
             'goal' => 'Parler allemand au travail',
             'timezone' => 'Europe/Paris',
             'amount_cents' => 72000,

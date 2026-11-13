@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Enums\CoursePaymentMethod;
 use App\Models\CourseEnrollment;
 use App\Notifications\Concerns\DescribesTrialSession;
 use Illuminate\Bus\Queueable;
@@ -30,11 +31,14 @@ final class CourseEnrolled extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $cohort = $this->enrollment->cohort;
+        $method = $this->enrollment->payment_method ?? CoursePaymentMethod::Stripe;
 
         return (new MailMessage)
             ->subject('Ton inscription au parcours '.strtoupper($cohort->level->value).' est confirmée')
             ->greeting('Bonjour '.$this->plain($notifiable->name).',')
-            ->line('Ton paiement est vérifié : ta place dans le parcours est réservée.')
+            ->line($method->isManual()
+                ? 'Ton inscription est confirmée : ta place dans le parcours est réservée.'
+                : 'Ton paiement est vérifié : ta place dans le parcours est réservée.')
             ->line('**Parcours :** '.$cohort->level->label().', '.$cohort->format->label().', rythme '.mb_strtolower($cohort->rhythm->label()))
             ->line('**Première séance :** '.$this->courseDate($this->enrollment, $cohort->starts_at, $notifiable))
             ->line('**Dernière séance :** '.$this->courseDate($this->enrollment, $cohort->ends_at, $notifiable))
@@ -50,6 +54,18 @@ final class CourseEnrolled extends Notification implements ShouldQueue
     private function paymentLine(): string
     {
         $euros = fn (int $cents): string => number_format($cents / 100, 2, ',', ' ').' €';
+        $method = $this->enrollment->payment_method ?? CoursePaymentMethod::Stripe;
+
+        if ($method === CoursePaymentMethod::Offer) {
+            return '**Montant :** place offerte par l’école.';
+        }
+        if ($method === CoursePaymentMethod::BankTransfer) {
+            return '**Montant payé :** '.$euros($this->enrollment->amount_cents).' (virement reçu).';
+        }
+        if ($method === CoursePaymentMethod::Transfer) {
+            return '**Montant payé :** '.$euros($this->enrollment->amount_cents).' (transfert d’une inscription précédente).';
+        }
+
         $amounts = $this->enrollment->payment_plan->amountsCents($this->enrollment->amount_cents);
         if (count($amounts) === 1) {
             return '**Montant payé :** '.$euros($amounts[0]);

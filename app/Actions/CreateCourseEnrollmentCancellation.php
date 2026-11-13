@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Enums\CourseEnrollmentStatus;
 use App\Enums\CourseInstallmentStatus;
+use App\Enums\CoursePaymentMethod;
 use App\Enums\CoursePaymentPlan;
 use App\Models\CourseEnrollment;
 use App\Notifications\CourseEnrollmentCancelled;
@@ -39,36 +40,41 @@ final readonly class CreateCourseEnrollmentCancellation
                 throw ValidationException::withMessages(['refund_cents' => __('courses.refund_too_high', [], 'fr')]);
             }
 
-            try {
-                $payments = $refundCents > 0 ? $this->payments($enrollment) : [];
-            } catch (Throwable $exception) {
-                report($exception);
-                $payments = [];
-            }
-            if ($refundCents > array_sum(array_column($payments, 1))) {
-                throw ValidationException::withMessages(['refund_cents' => __('courses.refund_failed', [], 'fr')]);
-            }
-
-            $remaining = $refundCents;
-            foreach ($payments as [$paymentIntentId, $paidCents]) {
-                if ($remaining === 0) {
-                    break;
-                }
-                $amount = min($remaining, $paidCents);
+            if ($refundCents > 0 && ($enrollment->payment_method ?? CoursePaymentMethod::Stripe)->isManual()) {
+                // The money never went through Stripe: the school refunds it itself and we only record the amount.
+                $enrollment->increment('refunded_cents', $refundCents);
+            } elseif ($refundCents > 0) {
                 try {
-                    $this->gateway->refund($enrollment, $paymentIntentId, $amount);
+                    $payments = $this->payments($enrollment);
                 } catch (Throwable $exception) {
                     report($exception);
-                    if ($remaining !== $refundCents) {
-                        $this->alert->handle(null, 'le remboursement d’un parcours s’est arrêté en cours de route (inscription '.$enrollment->id.') : '
-                            .number_format(($refundCents - $remaining) / 100, 2, ',', ' ').' € remboursés sur '
-                            .number_format($refundCents / 100, 2, ',', ' ').' €. Termine-le depuis Stripe.');
-                    }
-
+                    $payments = [];
+                }
+                if ($refundCents > array_sum(array_column($payments, 1))) {
                     throw ValidationException::withMessages(['refund_cents' => __('courses.refund_failed', [], 'fr')]);
                 }
-                $enrollment->increment('refunded_cents', $amount);
-                $remaining -= $amount;
+
+                $remaining = $refundCents;
+                foreach ($payments as [$paymentIntentId, $paidCents]) {
+                    if ($remaining === 0) {
+                        break;
+                    }
+                    $amount = min($remaining, $paidCents);
+                    try {
+                        $this->gateway->refund($enrollment, $paymentIntentId, $amount);
+                    } catch (Throwable $exception) {
+                        report($exception);
+                        if ($remaining !== $refundCents) {
+                            $this->alert->handle(null, 'le remboursement d’un parcours s’est arrêté en cours de route (inscription '.$enrollment->id.') : '
+                                .number_format(($refundCents - $remaining) / 100, 2, ',', ' ').' € remboursés sur '
+                                .number_format($refundCents / 100, 2, ',', ' ').' €. Termine-le depuis Stripe.');
+                        }
+
+                        throw ValidationException::withMessages(['refund_cents' => __('courses.refund_failed', [], 'fr')]);
+                    }
+                    $enrollment->increment('refunded_cents', $amount);
+                    $remaining -= $amount;
+                }
             }
 
             $enrollment->update([

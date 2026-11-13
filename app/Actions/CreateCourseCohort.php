@@ -8,7 +8,6 @@ use App\Enums\CourseFormat;
 use App\Enums\CourseLevel;
 use App\Enums\CourseRhythm;
 use App\Models\CourseCohort;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,12 +17,14 @@ use Illuminate\Support\Facades\DB;
  */
 final readonly class CreateCourseCohort
 {
+    public function __construct(private GenerateCourseSchedule $schedule) {}
+
     /**
      * @param  array{level: CourseLevel, format: CourseFormat, rhythm: CourseRhythm, starts_on: string, start_hour: int, capacity: int, skipped_dates: list<string>}  $data
      */
     public function handle(array $data): CourseCohort
     {
-        $sessions = $this->schedule($data['rhythm'], $data['starts_on'], $data['start_hour'], $data['skipped_dates']);
+        $sessions = $this->schedule->handle($data['rhythm'], $data['starts_on'], $data['start_hour'], $data['skipped_dates']);
         $last = end($sessions);
 
         return DB::transaction(function () use ($data, $sessions, $last): CourseCohort {
@@ -46,28 +47,5 @@ final readonly class CreateCourseCohort
 
             return $cohort;
         });
-    }
-
-    /**
-     * @param  list<string>  $skippedDates
-     * @return list<array{starts_at: CarbonImmutable, duration_minutes: int}>
-     */
-    public function schedule(CourseRhythm $rhythm, string $startsOn, int $startHour, array $skippedDates = []): array
-    {
-        $timezone = (string) config('trials.timezone');
-        $remainingHours = (int) config('courses.total_hours');
-        $day = CarbonImmutable::parse($startsOn, $timezone)->startOfDay();
-        $sessions = [];
-
-        while ($remainingHours > 0) {
-            if (in_array($day->dayOfWeekIso, $rhythm->weekdays(), true) && ! in_array($day->toDateString(), $skippedDates, true)) {
-                $hours = min($rhythm->sessionHours(), $remainingHours);
-                $sessions[] = ['starts_at' => $day->setTime($startHour, 0)->utc(), 'duration_minutes' => $hours * 60];
-                $remainingHours -= $hours;
-            }
-            $day = $day->addDay();
-        }
-
-        return $sessions;
     }
 }

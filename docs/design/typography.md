@@ -5,8 +5,8 @@ Système typographique du projet (Tailwind CSS v4 + `@theme`). Les polices sont
 
 ## Résumé
 
-| Usage          | Police         | Token Tailwind    | Poids chargés      |
-| -------------- | -------------- | ----------------- | ------------------ |
+| Usage          | Police         | Token Tailwind                    | Poids chargés         |
+| -------------- | -------------- | --------------------------------- | --------------------- |
 | Titres (h1–h6) | **Fredoka**    | `--font-display` → `font-display` | 400 / 500 / 600 / 700 |
 | Texte courant  | **Geist**      | `--font-sans` (par défaut)        | 400 / 500 / 600 / 700 |
 | Labels / code  | **Geist Mono** | `--font-mono` → `font-mono`       | 400 / 500 / 600       |
@@ -91,10 +91,11 @@ fonts: [
 
 ```css
 --font-sans:
-    'Geist', ui-sans-serif, system-ui, sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 --font-display: 'Fredoka', 'Geist', ui-sans-serif, system-ui, sans-serif;
---font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+--font-mono:
+    'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 ```
 
 Si une police manque, la pile suivante prend le relais sans blocage du rendu.
@@ -105,9 +106,9 @@ Si une police manque, la pile suivante prend le relais sans blocage du rendu.
 
 Définies dans `resources/css/app.css` (`:root` + `.dark`), dérivées du logo :
 
-| Token          | Valeur                    | Usage                              |
-| -------------- | ------------------------- | ---------------------------------- |
-| `--primary`    | `oklch(0.5848 0.1357 157.63)` | vert du logo (`#09935B`), boutons/CTA |
-| `--secondary`  | neutre doux (= `muted`)   | boutons secondaires style Nuxt UI  |
+| Token         | Valeur                        | Usage                                 |
+| ------------- | ----------------------------- | ------------------------------------- |
+| `--primary`   | `oklch(0.5848 0.1357 157.63)` | vert du logo (`#09935B`), boutons/CTA |
+| `--secondary` | neutre doux (= `muted`)       | boutons secondaires style Nuxt UI     |
 
 Règle : **seul le primary porte la couleur** ; le secondary reste neutre.

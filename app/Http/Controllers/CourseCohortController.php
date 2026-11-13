@@ -70,7 +70,7 @@ final readonly class CourseCohortController
 
     public function show(Request $request, CourseCohort $cohort): Response
     {
-        $enrollments = $cohort->enrollments()->with(['user', 'cohort', 'installments'])
+        $enrollments = $cohort->enrollments()->with(['user', 'cohort.sessions', 'installments', 'attendances.session'])
             ->whereIn('status', [
                 CourseEnrollmentStatus::Pending, CourseEnrollmentStatus::Processing, CourseEnrollmentStatus::Confirmed,
                 CourseEnrollmentStatus::PaymentReview, CourseEnrollmentStatus::Refunded, CourseEnrollmentStatus::Cancelled,
@@ -80,9 +80,17 @@ final readonly class CourseCohortController
             ->get();
 
         return Inertia::render('course-cohorts/show', [
-            'cohort' => CourseCohortResource::make($cohort->load('sessions')->loadCount('sessions'))->resolve($request),
+            'cohort' => CourseCohortResource::make($cohort->load(['sessions.attendances'])->loadCount('sessions'))->resolve($request),
             'enrollments' => CourseEnrollmentResource::collection($enrollments)->resolve($request),
             'timezone' => config('trials.timezone'),
+            'rhythms' => array_map(fn (CourseRhythm $rhythm): array => [
+                'value' => $rhythm->value,
+                'label' => $rhythm->label(),
+                'weekdays' => $rhythm->weekdays(),
+                'session_hours' => $rhythm->sessionHours(),
+            ], CourseRhythm::cases()),
+            'startHours' => config('courses.session_start_hours'),
+            'totalHours' => config('courses.total_hours'),
         ]);
     }
 

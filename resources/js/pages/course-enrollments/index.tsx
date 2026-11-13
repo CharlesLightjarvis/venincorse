@@ -68,6 +68,7 @@ export default function MyCourses({
                         const cohort = enrollment.cohort;
                         const next = (cohort.sessions ?? []).find(
                             (session) =>
+                                !session.cancelled_at &&
                                 new Date(session.starts_at).getTime() +
                                     session.duration_minutes * 60_000 >
                                 Date.now(),

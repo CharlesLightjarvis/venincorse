@@ -21,7 +21,7 @@ final readonly class UpdateCourseCohort
     {
         $cohort->update($attributes);
 
-        if ($cohort->wasChanged('meeting_url') && $cohort->meeting_url && $cohort->ends_at->isFuture()) {
+        if ($cohort->wasChanged('meeting_url') && $cohort->meeting_url && $cohort->ends_at->isFuture() && ! $cohort->isCancelled()) {
             $students = User::query()->whereHas('courseEnrollments', fn ($query) => $query
                 ->where('course_cohort_id', $cohort->id)
                 ->where('status', CourseEnrollmentStatus::Confirmed))->get();

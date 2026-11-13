@@ -36,6 +36,11 @@ final class UpdateCourseCohortRequest extends FormRequest
             function (Validator $validator): void {
                 /** @var CourseCohort $cohort */
                 $cohort = $this->route('cohort');
+                if ($cohort->isCancelled()) {
+                    $validator->errors()->add('cohort', __('courses.cohort_already_cancelled', [], 'fr'));
+
+                    return;
+                }
                 $taken = $cohort->enrollments()->holdingSeat()->count();
                 if ($this->integer('capacity') < $taken) {
                     $validator->errors()->add('capacity', __('courses.capacity_below_enrolled', ['count' => $taken], 'fr'));

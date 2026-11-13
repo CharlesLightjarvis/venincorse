@@ -215,3 +215,52 @@ test('the student pays a failed instalment on a Stripe page; the card used is ke
         ->and($enrollment->fresh()->stripe_payment_method_id)->toBe('pm_new');
     Notification::assertSentTo($enrollment->user, CourseInstallmentPaid::class);
 });
+
+test('the teacher retries a failed instalment right now and the student gets the receipt', function () {
+    $teacher = User::factory()->create();
+    $teacher->assignRole('administrator');
+    $enrollment = installmentEnrollment();
+    $installment = CourseInstallment::factory()->create([
+        'course_enrollment_id' => $enrollment->id, 'status' => CourseInstallmentStatus::Failed,
+        'next_attempt_at' => now()->addDays(3), 'attempts' => 1, 'failure_message' => 'Solde insuffisant sur la carte.',
+    ]);
+    $gateway = Mockery::mock(CoursePaymentGateway::class);
+    $gateway->shouldReceive('ready')->andReturnTrue();
+    $gateway->shouldReceive('chargeInstallment')->once()->andReturn(['id' => 'pi_retry', 'status' => 'succeeded']);
+    app()->instance(CoursePaymentGateway::class, $gateway);
+
+    $this->actingAs($teacher)->post(route('course-installments.retry', $installment))
+        ->assertSessionHasNoErrors();
+
+    expect($installment->fresh())->status->toBe(CourseInstallmentStatus::Paid)
+        ->stripe_payment_intent_id->toBe('pi_retry')
+        ->next_attempt_at->toBeNull();
+    Notification::assertSentTo($enrollment->user, CourseInstallmentPaid::class);
+    Notification::assertNotSentTo($enrollment->user, CourseInstallmentFailed::class);
+});
+
+test('a retry refused by the bank reports the reason without emailing the student again', function () {
+    $teacher = User::factory()->create();
+    $teacher->assignRole('administrator');
+    $enrollment = installmentEnrollment();
+    $installment = CourseInstallment::factory()->create([
+        'course_enrollment_id' => $enrollment->id, 'status' => CourseInstallmentStatus::Failed,
+        'next_attempt_at' => now()->addDays(3), 'attempts' => 1,
+    ]);
+    $gateway = Mockery::mock(CoursePaymentGateway::class);
+    $gateway->shouldReceive('ready')->andReturnTrue();
+    $gateway->shouldReceive('chargeInstallment')->once()->andThrow(declined());
+    app()->instance(CoursePaymentGateway::class, $gateway);
+
+    $this->actingAs($teacher)->post(route('course-installments.retry', $installment))
+        ->assertInvalid(['installment' => 'Ta banque a refusé le prélèvement.']);
+
+    expect($installment->fresh())->status->toBe(CourseInstallmentStatus::Failed)
+        ->failure_message->toBe('Ta banque a refusé le prélèvement.');
+    Notification::assertNotSentTo($enrollment->user, CourseInstallmentFailed::class);
+
+    $student = $enrollment->user;
+    $student->assignRole('student');
+    $this->actingAs($student)->post(route('course-installments.retry', $installment))
+        ->assertForbidden();
+});

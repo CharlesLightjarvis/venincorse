@@ -144,7 +144,7 @@ final readonly class ApplyCourseEnrollmentPayment
     private function seatStillAvailable(CourseEnrollment $enrollment): bool
     {
         $cohort = CourseCohort::query()->lockForUpdate()->findOrFail($enrollment->course_cohort_id);
-        if ($cohort->hasStarted()) {
+        if ($cohort->isCancelled() || $cohort->hasStarted()) {
             return false;
         }
         if ($enrollment->status === CourseEnrollmentStatus::Processing

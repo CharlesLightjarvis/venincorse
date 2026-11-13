@@ -40,6 +40,9 @@ final class CourseCohortResource extends JsonResource
             'price_cents' => $this->price_cents,
             'currency' => $this->currency,
             'is_published' => $this->is_published,
+            'second_manuals_visible' => $this->when($isManager, $this->second_manuals_visible),
+            'cancelled_at' => $this->cancelled_at?->toIso8601String(),
+            'cancellation_reason' => $this->cancellation_reason,
             'has_started' => $this->resource->hasStarted(),
             'sessions_count' => $this->whenCounted('sessions'),
             'sessions' => $this->whenLoaded('sessions', fn (): array => $this->sessions->map(fn (CourseSession $session): array => [
@@ -48,6 +51,14 @@ final class CourseCohortResource extends JsonResource
                 'starts_at' => $session->starts_at->toIso8601String(),
                 'duration_minutes' => $session->duration_minutes,
                 'meeting_url' => $showMeetingUrls ? $session->meeting_url : null,
+                'cancelled_at' => $session->cancelled_at?->toIso8601String(),
+                'cancellation_reason' => $session->cancellation_reason,
+                'attendances' => $isManager && $session->relationLoaded('attendances')
+                    ? $session->attendances->map(fn ($attendance): array => [
+                        'enrollment_id' => $attendance->course_enrollment_id,
+                        'status' => $attendance->status->value,
+                    ])->all()
+                    : null,
             ])->all()),
             'meeting_url' => $this->when($isManager, $this->meeting_url),
         ];

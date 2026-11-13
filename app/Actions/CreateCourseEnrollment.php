@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Enums\CourseEnrollmentStatus;
+use App\Enums\CoursePaymentMethod;
 use App\Enums\CoursePaymentPlan;
 use App\Models\CourseCohort;
 use App\Models\CourseEnrollment;
@@ -63,6 +64,7 @@ final readonly class CreateCourseEnrollment
                 'user_id' => $user->id,
                 'course_cohort_id' => $cohort->id,
                 'status' => CourseEnrollmentStatus::Pending,
+                'payment_method' => CoursePaymentMethod::Stripe,
                 'currency' => $cohort->currency,
                 'expires_at' => now()->addMinutes((int) config('courses.hold_minutes')),
             ]);

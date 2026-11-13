@@ -6,7 +6,7 @@ import {
     type ViewType,
 } from 'calendarkit-pro';
 import { fr } from 'date-fns/locale';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import {
     type CSSProperties,
     type FormEvent,
@@ -19,25 +19,44 @@ import {
 } from 'react';
 import {
     CalendarDays,
+    CalendarX,
     Clock,
+    Refresh,
+    UserCheck,
     Video,
     X,
     type IconComponent,
 } from 'reicon-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CourseSessionAttendanceDialog } from '@/components/course-session-attendance-form';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { useUserTimezone } from '@/hooks/use-browser-timezone';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+    attendanceStatusLabels,
+    describeAttendance,
+    type CourseAttendanceStatus,
+    type CourseAttendanceStudent,
+    type CourseSession,
+} from '@/lib/course-cohorts';
 import { update as updateSession } from '@/routes/course-sessions';
 
-export type CoursePlanningSession = {
-    id: number;
-    position: number;
-    starts_at: string;
-    duration_minutes: number;
-    meeting_url?: string | null;
-};
+export type CoursePlanningSession = CourseSession;
+
+export type CoursePlanningStudent = CourseAttendanceStudent;
 
 /** CalendarKit's colours follow the shadcn tokens, so the calendar matches the rest of the app. */
 const theme: CalendarTheme = {
@@ -77,7 +96,7 @@ const popoverTheme: CSSProperties = {
     '--ck-font-display': 'var(--font-sans)',
 } as CSSProperties;
 
-const POPOVER_WIDTH = 340;
+const POPOVER_WIDTH = 360;
 const POPOVER_MARGIN = 8;
 const POPOVER_GAP = 12;
 const FOCUSABLE =
@@ -95,11 +114,17 @@ export function CoursePlanningCalendar({
     defaultMeetingUrl = null,
     canManage = false,
     canJoin = false,
+    students = [],
+    selfAttendances = [],
 }: {
     sessions: CoursePlanningSession[];
     defaultMeetingUrl?: string | null;
     canManage?: boolean;
     canJoin?: boolean;
+    /** The confirmed students of the group, for the attendance call. */
+    students?: CoursePlanningStudent[];
+    /** The student's own attendance, to show them whether they were marked present. */
+    selfAttendances?: { session_id: number; status: CourseAttendanceStatus }[];
 }) {
     const browserTimezone = useUserTimezone();
     const [timezone, setTimezone] = useState(browserTimezone);
@@ -114,9 +139,10 @@ export function CoursePlanningCalendar({
 
         return {
             id: `session-${session.id}`,
-            title: `Séance ${session.position}`,
+            title: `Séance ${session.position}${session.cancelled_at ? ' · annulée' : ''}`,
             start,
             end: new Date(start.getTime() + session.duration_minutes * 60_000),
+            color: session.cancelled_at ? 'var(--destructive)' : undefined,
             draggable: false,
             resizable: false,
         };
@@ -125,7 +151,10 @@ export function CoursePlanningCalendar({
     const focus = sessions.reduce<Date | null>((next, session) => {
         const start = new Date(session.starts_at);
 
-        if (start.getTime() + session.duration_minutes * 60_000 < Date.now()) {
+        if (
+            session.cancelled_at ||
+            start.getTime() + session.duration_minutes * 60_000 < Date.now()
+        ) {
             return next;
         }
 
@@ -197,6 +226,13 @@ export function CoursePlanningCalendar({
                     defaultMeetingUrl={defaultMeetingUrl}
                     canManage={canManage}
                     canJoin={canJoin}
+                    students={students}
+                    selfAttendance={
+                        selfAttendances.find(
+                            (attendance) =>
+                                attendance.session_id === selectedSession.id,
+                        )?.status ?? null
+                    }
                     onClose={() => setSelected(null)}
                 />
             )}
@@ -212,6 +248,8 @@ function SessionPopover({
     defaultMeetingUrl,
     canManage,
     canJoin,
+    students,
+    selfAttendance,
     onClose,
 }: {
     session: CoursePlanningSession;
@@ -221,6 +259,8 @@ function SessionPopover({
     defaultMeetingUrl: string | null;
     canManage: boolean;
     canJoin: boolean;
+    students: CoursePlanningStudent[];
+    selfAttendance: CourseAttendanceStatus | null;
     onClose: () => void;
 }) {
     const docked = useIsMobile();
@@ -258,6 +298,14 @@ function SessionPopover({
         node?.focus();
 
         const onKey = (event: KeyboardEvent) => {
+            // Let a dialog opened from the card keep its own focus trap and Escape handling.
+            if (
+                event.target instanceof Element &&
+                event.target.closest('[data-slot="dialog-content"]')
+            ) {
+                return;
+            }
+
             if (event.key === 'Escape') {
                 onCloseRef.current();
 
@@ -323,6 +371,11 @@ function SessionPopover({
         minute: '2-digit',
     });
     const meetingUrl = session.meeting_url || defaultMeetingUrl;
+    const cancelled = Boolean(session.cancelled_at);
+    const started = start.getTime() <= Date.now();
+    const upcoming = start.getTime() > Date.now();
+    const attendanceRecords = session.attendances ?? [];
+    const dateLabel = `${date.charAt(0).toUpperCase()}${date.slice(1)} à ${time.format(start)}`;
     const width = Math.min(POPOVER_WIDTH, viewport.width - 2 * POPOVER_MARGIN);
     const place = anchor
         ? placeBeside(anchor, { width, height }, viewport)
@@ -371,6 +424,7 @@ function SessionPopover({
                               width,
                               maxWidth: `calc(100vw - ${2 * POPOVER_MARGIN}px)`,
                               maxHeight: viewport.height - 2 * POPOVER_MARGIN,
+                              scrollbarGutter: 'stable',
                               boxShadow:
                                   '0 18px 40px -16px rgb(0 0 0 / 0.35), 0 2px 6px -2px rgb(0 0 0 / 0.12)',
                           }
@@ -379,7 +433,11 @@ function SessionPopover({
                 <div className="ck:flex ck:items-start ck:gap-3">
                     <span
                         className="ck:mt-2 ck:h-3 ck:w-3 ck:shrink-0 ck:rounded-[4px]"
-                        style={{ backgroundColor: 'var(--primary)' }}
+                        style={{
+                            backgroundColor: cancelled
+                                ? 'var(--destructive)'
+                                : 'var(--primary)',
+                        }}
                         aria-hidden="true"
                     />
                     <h2
@@ -388,6 +446,7 @@ function SessionPopover({
                     >
                         Séance {session.position}
                     </h2>
+                    {cancelled && <Badge variant="destructive">Annulée</Badge>}
                     <button
                         type="button"
                         onClick={onClose}
@@ -414,34 +473,109 @@ function SessionPopover({
                             Séance {session.position} sur {totalSessions}
                         </p>
                     </PopoverRow>
+                    {cancelled && session.cancellation_reason && (
+                        <PopoverRow icon={CalendarX}>
+                            <p className="ck:text-foreground">Séance annulée</p>
+                            <p className="ck:text-xs">
+                                {session.cancellation_reason}
+                            </p>
+                        </PopoverRow>
+                    )}
+                    {selfAttendance && (
+                        <PopoverRow icon={UserCheck}>
+                            <p className="ck:text-foreground">
+                                Présence :{' '}
+                                {attendanceStatusLabels[selfAttendance]}
+                            </p>
+                        </PopoverRow>
+                    )}
                 </div>
 
-                {canManage ? (
-                    <SessionMeetingLinkForm
-                        key={session.id}
-                        session={session}
-                        defaultMeetingUrl={defaultMeetingUrl}
-                    />
-                ) : canJoin && meetingUrl ? (
-                    <div className="ck:mt-3 ck:flex ck:flex-wrap ck:items-center ck:gap-1.5 ck:border-t ck:border-border ck:pt-3">
-                        <Button asChild>
-                            <a
-                                href={meetingUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <Video data-icon="inline-start" />
-                                Rejoindre la visio
-                            </a>
-                        </Button>
+                {canManage && (
+                    <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
+                        <SessionMeetingLinkForm
+                            key={session.id}
+                            session={session}
+                            defaultMeetingUrl={defaultMeetingUrl}
+                        />
+                        {started && !cancelled && students.length > 0 && (
+                            <div className="flex flex-wrap items-start justify-between gap-3 border-t border-border pt-3">
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium text-foreground">
+                                        Appel de la séance
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {attendanceRecords.length === 0
+                                            ? 'Appel non fait'
+                                            : describeAttendance(
+                                                  attendanceRecords,
+                                              )}
+                                    </p>
+                                </div>
+                                <CourseSessionAttendanceDialog
+                                    key={`attendance-${session.id}`}
+                                    session={session}
+                                    students={students}
+                                    dateLabel={dateLabel}
+                                />
+                            </div>
+                        )}
+                        {upcoming && !cancelled && students.length > 0 && (
+                            <p className="border-t border-border pt-3 text-xs text-muted-foreground">
+                                L’appel sera disponible dès le début de la
+                                séance.
+                            </p>
+                        )}
+                        {upcoming && !cancelled && (
+                            <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                                <SessionRescheduleDialog
+                                    key={`reschedule-${session.id}`}
+                                    session={session}
+                                    timezone={timezone}
+                                />
+                                <SessionCancellationDialog
+                                    key={`cancel-${session.id}`}
+                                    session={session}
+                                />
+                            </div>
+                        )}
+                        {upcoming && cancelled && (
+                            <SessionRestoreButton
+                                key={`restore-${session.id}`}
+                                session={session}
+                            />
+                        )}
                     </div>
-                ) : (
-                    <p className="ck:mt-3 ck:border-t ck:border-border ck:pt-3 ck:text-sm ck:text-muted-foreground">
-                        {canJoin
-                            ? 'Ton professeur ajoutera le lien de cette séance avant qu’elle ne commence.'
-                            : 'Le lien de visio sera disponible une fois ton inscription confirmée.'}
-                    </p>
                 )}
+
+                {!canManage &&
+                    (cancelled ? (
+                        <p className="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">
+                            Cette séance est annulée.
+                            {session.cancellation_reason
+                                ? ` ${session.cancellation_reason}`
+                                : ''}
+                        </p>
+                    ) : canJoin && meetingUrl ? (
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+                            <Button asChild>
+                                <a
+                                    href={meetingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <Video data-icon="inline-start" />
+                                    Rejoindre la visio
+                                </a>
+                            </Button>
+                        </div>
+                    ) : (
+                        <p className="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">
+                            {canJoin
+                                ? 'Ton professeur ajoutera le lien de cette séance avant qu’elle ne commence.'
+                                : 'Le lien de visio sera disponible une fois ton inscription confirmée.'}
+                        </p>
+                    ))}
             </div>
         </>
     );
@@ -483,17 +617,11 @@ function SessionMeetingLinkForm({
     }
 
     return (
-        <form
-            onSubmit={submit}
-            className="ck:mt-3 ck:flex ck:flex-col ck:gap-2 ck:border-t ck:border-border ck:pt-3"
-        >
-            <label
-                htmlFor={`session-meeting-url-${session.id}`}
-                className="ck:text-sm ck:font-medium ck:text-foreground"
-            >
+        <form onSubmit={submit} className="flex flex-col gap-2">
+            <Label htmlFor={`session-meeting-url-${session.id}`}>
                 Lien visio de cette séance
-            </label>
-            <div className="ck:flex ck:items-center ck:gap-2">
+            </Label>
+            <div className="flex items-center gap-2">
                 <Input
                     id={`session-meeting-url-${session.id}`}
                     type="url"
@@ -517,17 +645,295 @@ function SessionMeetingLinkForm({
                     Enregistrer
                 </Button>
             </div>
-            <p className="ck:text-xs ck:text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
                 {defaultMeetingUrl
                     ? 'Laisse vide pour utiliser le lien par défaut du groupe.'
                     : 'Sans lien, les élèves ne pourront pas rejoindre cette séance.'}
             </p>
             {form.errors.meeting_url && (
-                <p role="alert" className="ck:text-sm ck:text-destructive">
+                <p role="alert" className="text-sm text-destructive">
                     {form.errors.meeting_url}
                 </p>
             )}
         </form>
+    );
+}
+
+function SessionRescheduleDialog({
+    session,
+    timezone,
+}: {
+    session: CoursePlanningSession;
+    timezone: string;
+}) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button type="button" size="sm" variant="outline">
+                    <Refresh data-icon="inline-start" />
+                    Déplacer
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        Déplacer la séance {session.position}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Les élèves inscrits reçoivent un email avec l’ancienne
+                        et la nouvelle date.
+                    </DialogDescription>
+                </DialogHeader>
+                <SessionRescheduleForm
+                    session={session}
+                    timezone={timezone}
+                    onSaved={() => setOpen(false)}
+                />
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function SessionRescheduleForm({
+    session,
+    timezone,
+    onSaved,
+}: {
+    session: CoursePlanningSession;
+    timezone: string;
+    onSaved?: () => void;
+}) {
+    const initial = zonedInputs(session.starts_at, timezone);
+    const [date, setDate] = useState(initial.date);
+    const [time, setTime] = useState(initial.time);
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function submit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (!date || !time) {
+            setError('Choisis la nouvelle date et l’heure de la séance.');
+
+            return;
+        }
+
+        router.put(
+            updateSession.url(session.id),
+            { starts_at: fromZonedInputs(date, time, timezone).toISOString() },
+            {
+                preserveScroll: true,
+                onStart: () => setProcessing(true),
+                onFinish: () => setProcessing(false),
+                onSuccess: () => {
+                    setError(null);
+                    onSaved?.();
+                },
+                onError: (errors) =>
+                    setError(
+                        errors.starts_at ??
+                            'La séance n’a pas pu être déplacée.',
+                    ),
+            },
+        );
+    }
+
+    return (
+        <form onSubmit={submit} className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
+                <Label htmlFor={`session-date-${session.id}`}>
+                    Nouvelle date et heure
+                </Label>
+                <div className="flex flex-wrap items-end gap-2">
+                    <Input
+                        id={`session-date-${session.id}`}
+                        type="date"
+                        className="w-auto flex-1"
+                        value={date}
+                        onChange={(event) => setDate(event.target.value)}
+                        aria-invalid={error ? true : undefined}
+                    />
+                    <Input
+                        type="time"
+                        className="w-auto"
+                        value={time}
+                        onChange={(event) => setTime(event.target.value)}
+                        aria-invalid={error ? true : undefined}
+                    />
+                </div>
+            </div>
+            {error && (
+                <p role="alert" className="text-sm text-destructive">
+                    {error}
+                </p>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+                <DialogClose asChild>
+                    <Button type="button" variant="ghost">
+                        Retour
+                    </Button>
+                </DialogClose>
+                <Button type="submit" disabled={processing}>
+                    {processing && <Spinner data-icon="inline-start" />}
+                    Déplacer la séance
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function SessionCancellationDialog({
+    session,
+}: {
+    session: CoursePlanningSession;
+}) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive"
+                >
+                    <CalendarX data-icon="inline-start" />
+                    Annuler
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        Annuler la séance {session.position}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Les élèves inscrits reçoivent un email avec le motif. Tu
+                        pourras rétablir la séance ensuite.
+                    </DialogDescription>
+                </DialogHeader>
+                <SessionCancellationForm
+                    session={session}
+                    onSaved={() => setOpen(false)}
+                />
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function SessionCancellationForm({
+    session,
+    onSaved,
+}: {
+    session: CoursePlanningSession;
+    onSaved?: () => void;
+}) {
+    const [reason, setReason] = useState('');
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function submit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (reason.trim().length < 5) {
+            setError('Explique en quelques mots la raison de l’annulation.');
+
+            return;
+        }
+
+        router.put(
+            updateSession.url(session.id),
+            { is_cancelled: true, cancellation_reason: reason.trim() },
+            {
+                preserveScroll: true,
+                onStart: () => setProcessing(true),
+                onFinish: () => setProcessing(false),
+                onSuccess: () => {
+                    setError(null);
+                    onSaved?.();
+                },
+                onError: (errors) =>
+                    setError(
+                        errors.cancellation_reason ??
+                            errors.is_cancelled ??
+                            'La séance n’a pas pu être annulée.',
+                    ),
+            },
+        );
+    }
+
+    return (
+        <form onSubmit={submit} className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
+                <Label htmlFor={`session-cancel-reason-${session.id}`}>
+                    Raison de l’annulation
+                </Label>
+                <Textarea
+                    id={`session-cancel-reason-${session.id}`}
+                    rows={3}
+                    required
+                    minLength={5}
+                    maxLength={500}
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    placeholder="Ex. : professeur absent, séance reportée à la semaine suivante."
+                    aria-invalid={error ? true : undefined}
+                />
+            </div>
+            {error && (
+                <p role="alert" className="text-sm text-destructive">
+                    {error}
+                </p>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+                <DialogClose asChild>
+                    <Button type="button" variant="ghost">
+                        Retour
+                    </Button>
+                </DialogClose>
+                <Button
+                    type="submit"
+                    variant="destructive"
+                    disabled={processing}
+                >
+                    {processing && <Spinner data-icon="inline-start" />}
+                    Annuler la séance
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+function SessionRestoreButton({ session }: { session: CoursePlanningSession }) {
+    const [processing, setProcessing] = useState(false);
+
+    return (
+        <Button
+            type="button"
+            variant="outline"
+            className="self-start"
+            disabled={processing}
+            onClick={() =>
+                router.put(
+                    updateSession.url(session.id),
+                    { is_cancelled: false },
+                    {
+                        preserveScroll: true,
+                        onStart: () => setProcessing(true),
+                        onFinish: () => setProcessing(false),
+                    },
+                )
+            }
+        >
+            {processing ? (
+                <Spinner data-icon="inline-start" />
+            ) : (
+                <Refresh data-icon="inline-start" />
+            )}
+            Rétablir la séance
+        </Button>
     );
 }
 
@@ -566,6 +972,65 @@ function placeBeside(
     }
 
     return { left, top };
+}
+
+/** A session's date and time as the teacher sees them in the chosen time zone. */
+function zonedInputs(
+    iso: string,
+    timeZone: string,
+): { date: string; time: string } {
+    const value = new Date(iso);
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(value);
+    const timeParts = new Intl.DateTimeFormat('en-GB', {
+        timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(value);
+    const get = (source: Intl.DateTimeFormatPart[], type: string) =>
+        source.find((part) => part.type === type)?.value ?? '';
+
+    return {
+        date: `${get(parts, 'year')}-${get(parts, 'month')}-${get(parts, 'day')}`,
+        time: `${get(timeParts, 'hour')}:${get(timeParts, 'minute')}`,
+    };
+}
+
+/** The UTC instant matching a wall-clock date and time in the given time zone. */
+function fromZonedInputs(date: string, time: string, timeZone: string): Date {
+    const [year, month, day] = date.split('-').map(Number);
+    const [hour, minute] = time.split(':').map(Number);
+    const target = Date.UTC(year, month - 1, day, hour, minute);
+    let timestamp = target;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23',
+        }).formatToParts(new Date(timestamp));
+        const get = (type: string) =>
+            Number(parts.find((part) => part.type === type)?.value);
+        const rendered = Date.UTC(
+            get('year'),
+            get('month') - 1,
+            get('day'),
+            get('hour'),
+            get('minute'),
+        );
+        timestamp += target - rendered;
+    }
+
+    return new Date(timestamp);
 }
 
 /** "1 h", "1 h 30 min" or "45 min". */
